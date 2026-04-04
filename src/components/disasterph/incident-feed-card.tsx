@@ -4,7 +4,10 @@ import type { Incident } from "@/types/incident";
 interface IncidentFeedCardProps {
   incident: Incident;
   selected: boolean;
+  hovered: boolean;
   onClick: () => void;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
 }
 
 const severityDot: Record<string, string> = {
@@ -17,16 +20,23 @@ const severityDot: Record<string, string> = {
 export function IncidentFeedCard({
   incident,
   selected,
+  hovered,
   onClick,
+  onMouseEnter,
+  onMouseLeave,
 }: IncidentFeedCardProps) {
   return (
     <button
       className={`w-full rounded-lg border-b border-white/[0.04] p-2.5 text-left transition last:border-b-0 ${
         selected
           ? "border-l-2 border-l-cyan-400/70 bg-cyan-400/8"
-          : "border-l-2 border-l-transparent hover:bg-white/[0.04]"
+          : hovered
+            ? "border-l-2 border-l-cyan-400/30 bg-cyan-400/[0.04]"
+            : "border-l-2 border-l-transparent hover:bg-white/[0.04]"
       }`}
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       type="button"
     >
       <div className="flex items-center gap-1.5">

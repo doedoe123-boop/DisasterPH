@@ -4,12 +4,16 @@ import { IncidentFeedCard } from "./incident-feed-card";
 interface AlertFeedProps {
   incidents: Incident[];
   selectedIncidentId: string;
+  hoveredIncidentId: string | null;
+  onHoverIncident: (id: string | null) => void;
   onSelectIncident: (incident: Incident) => void;
 }
 
 export function AlertFeed({
   incidents,
   selectedIncidentId,
+  hoveredIncidentId,
+  onHoverIncident,
   onSelectIncident,
 }: AlertFeedProps) {
   return (
@@ -30,7 +34,10 @@ export function AlertFeed({
               key={incident.id}
               incident={incident}
               selected={selectedIncidentId === incident.id}
+              hovered={hoveredIncidentId === incident.id}
               onClick={() => onSelectIncident(incident)}
+              onMouseEnter={() => onHoverIncident(incident.id)}
+              onMouseLeave={() => onHoverIncident(null)}
             />
           ))
         ) : (

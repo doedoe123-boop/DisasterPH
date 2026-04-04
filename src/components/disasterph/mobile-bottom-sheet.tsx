@@ -82,6 +82,8 @@ export function MobileBottomSheet({
             <AlertFeed
               incidents={incidents}
               selectedIncidentId={incident.id}
+              hoveredIncidentId={null}
+              onHoverIncident={() => {}}
               onSelectIncident={onSelectIncident}
             />
             <QuickStats stats={stats} />

@@ -5,12 +5,16 @@ import { IncidentMarker } from "./incident-marker";
 interface MapMarkerLayerProps {
   incidents: Incident[];
   selectedIncidentId: string;
+  hoveredIncidentId: string | null;
+  onHoverIncident: (id: string | null) => void;
   onSelectIncident: (incident: Incident) => void;
 }
 
 export function MapMarkerLayer({
   incidents,
   selectedIncidentId,
+  hoveredIncidentId,
+  onHoverIncident,
   onSelectIncident,
 }: MapMarkerLayerProps) {
   return (
@@ -30,7 +34,9 @@ export function MapMarkerLayer({
             key={incident.id}
             incident={incident}
             isSelected={incident.id === selectedIncidentId}
+            isHovered={incident.id === hoveredIncidentId}
             onSelect={() => onSelectIncident(incident)}
+            onHover={onHoverIncident}
             x={point.x}
             y={point.y}
           />

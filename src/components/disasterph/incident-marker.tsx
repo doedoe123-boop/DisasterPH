@@ -1,9 +1,12 @@
+import { eventTypeLabel } from "@/lib/incidents";
 import type { Incident, IncidentEventType } from "@/types/incident";
 
 interface IncidentMarkerProps {
   incident: Incident;
   isSelected: boolean;
+  isHovered: boolean;
   onSelect: () => void;
+  onHover: (id: string | null) => void;
   x: number;
   y: number;
 }
@@ -246,11 +249,15 @@ function MarkerEffects({
 export function IncidentMarker({
   incident,
   isSelected,
+  isHovered,
   onSelect,
+  onHover,
   x,
   y,
 }: IncidentMarkerProps) {
   const color = hazardColor[incident.event_type];
+  const isHighPriority =
+    incident.severity === "warning" || incident.severity === "critical";
 
   return (
     <g className="group" transform={`translate(${x} ${y})`}>
@@ -266,11 +273,18 @@ export function IncidentMarker({
         cx="0"
         cy="0"
         fill="rgba(5, 12, 20, 0.94)"
-        r={isSelected ? 16 : 13}
+        r={isSelected ? 22 : isHovered ? 20 : 18}
         stroke={color}
-        strokeWidth={isSelected ? 2.5 : 2}
+        strokeWidth={isSelected ? 3 : isHovered ? 3 : 2.5}
         style={{
-          filter: isSelected ? `drop-shadow(0 0 8px ${color})` : undefined,
+          filter: isSelected
+            ? `drop-shadow(0 0 8px ${color})`
+            : isHovered
+              ? `drop-shadow(0 0 6px ${color})`
+              : isHighPriority
+                ? `drop-shadow(0 0 3px ${color})`
+                : undefined,
+          transition: "r 0.15s, stroke-width 0.15s, filter 0.15s",
         }}
       />
 
@@ -286,15 +300,17 @@ export function IncidentMarker({
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={incident.event_type === "earthquake" ? 1.6 : 2}
-        transform="scale(0.62)"
+        transform="scale(0.82)"
       />
 
       {/* Hit area */}
-      <foreignObject height="56" width="180" x="-90" y="20">
+      <foreignObject height="80" width="80" x="-40" y="-40">
         <button
           aria-label={incident.title}
-          className="h-14 w-full cursor-pointer bg-transparent"
+          className="h-[80px] w-[80px] cursor-pointer rounded-full bg-transparent"
           onClick={onSelect}
+          onMouseEnter={() => onHover(incident.id)}
+          onMouseLeave={() => onHover(null)}
           type="button"
         />
       </foreignObject>
@@ -302,27 +318,41 @@ export function IncidentMarker({
       {/* Tooltip label */}
       <g
         className={`transition-opacity duration-200 ${
-          isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          isSelected || isHovered
+            ? "opacity-100"
+            : "opacity-0 group-hover:opacity-100"
         }`}
       >
         <rect
-          fill="rgba(5, 13, 22, 0.92)"
-          height="24"
-          rx="12"
-          stroke="rgba(255,255,255,0.1)"
-          width={118}
-          x="-59"
-          y="-42"
+          fill="rgba(5, 13, 22, 0.94)"
+          height="80"
+          rx="14"
+          stroke="rgba(255,255,255,0.12)"
+          strokeWidth="1"
+          width={380}
+          x="-190"
+          y="-108"
         />
         <text
-          fill="white"
-          fontSize="10"
-          letterSpacing="0.12em"
+          fill="rgba(255,255,255,0.5)"
+          fontSize="18"
+          letterSpacing="0.14em"
           textAnchor="middle"
           x="0"
-          y="-26"
+          y="-74"
         >
-          {incident.region}
+          {eventTypeLabel[incident.event_type].toUpperCase()} ·{" "}
+          {incident.severity.toUpperCase()}
+        </text>
+        <text
+          fill="white"
+          fontSize="24"
+          fontWeight="500"
+          textAnchor="middle"
+          x="0"
+          y="-44"
+        >
+          {incident.title.length > 28 ? incident.title.slice(0, 28) + "…" : incident.title}
         </text>
       </g>
     </g>
