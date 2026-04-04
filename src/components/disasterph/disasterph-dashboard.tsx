@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { mockIncidents, mockSourceStatuses } from "@/data/mock-incidents";
+import {
+  mockIncidents,
+  mockSourceStatuses,
+  mockWatchedPlaces,
+  mockAdvisories,
+  mockHelpActions,
+} from "@/data/mock-incidents";
 import {
   buildDashboardStats,
   eventTypeLabel,
@@ -12,6 +18,10 @@ import { AppHeader } from "./header";
 import { CommandMap } from "./command-map";
 import { AlertFeed } from "./alert-feed";
 import { IncidentDetails } from "./incident-details";
+import { AreaRiskSummary } from "./area-risk-summary";
+import { OfficialAdvisoryPanel } from "./official-advisory-panel";
+import { WatchlistPanel } from "./watchlist-panel";
+import { HelpActions } from "./help-actions";
 import { QuickStats } from "./quick-stats";
 import { SourceHealth } from "./source-health";
 import { MobileBottomSheet } from "./mobile-bottom-sheet";
@@ -26,7 +36,7 @@ const filters: Array<{ label: string; value: IncidentEventType | "all" }> = [
   { label: eventTypeLabel.landslide, value: "landslide" },
 ];
 
-export function DisasterPHDashboard() {
+export function BantayPHDashboard() {
   const [activeFilter, setActiveFilter] = useState<IncidentEventType | "all">(
     "all",
   );
@@ -36,6 +46,7 @@ export function DisasterPHDashboard() {
     mockIncidents[0]?.id ?? "",
   );
   const [systemOpen, setSystemOpen] = useState(false);
+  const [feedOpen, setFeedOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [hoveredIncidentId, setHoveredIncidentId] = useState<string | null>(
@@ -85,7 +96,7 @@ export function DisasterPHDashboard() {
 
   const gridCols =
     effectiveSidebar === "expanded"
-      ? "lg:grid-cols-[minmax(0,1fr)_340px]"
+      ? "lg:grid-cols-[minmax(0,1fr)_380px]"
       : effectiveSidebar === "collapsed"
         ? "lg:grid-cols-[minmax(0,1fr)_48px]"
         : "";
@@ -147,19 +158,63 @@ export function DisasterPHDashboard() {
           </section>
 
           {effectiveSidebar === "expanded" && (
-            <aside className="hidden min-h-0 flex-col gap-2 lg:flex">
+            <aside className="hidden min-h-0 flex-col gap-2 overflow-y-auto lg:flex">
               <IncidentDetails incident={selectedIncident} />
 
-              <div className="min-h-0 flex-1">
-                <AlertFeed
-                  incidents={incidents}
-                  selectedIncidentId={selectedIncident.id}
-                  hoveredIncidentId={hoveredIncidentId}
-                  onHoverIncident={setHoveredIncidentId}
-                  onSelectIncident={(incident) =>
-                    setSelectedIncidentId(incident.id)
-                  }
-                />
+              <AreaRiskSummary
+                region={selectedIncident.region}
+                incidents={incidents}
+              />
+
+              <OfficialAdvisoryPanel advisories={mockAdvisories} />
+
+              <WatchlistPanel
+                places={mockWatchedPlaces}
+                onSelectPlace={() => {}}
+              />
+
+              <HelpActions actions={mockHelpActions} />
+
+              <div className="shrink-0">
+                <button
+                  className="flex w-full items-center justify-between rounded-xl border border-white/8 bg-[var(--bg-panel)] px-3 py-2 text-left backdrop-blur"
+                  onClick={() => setFeedOpen(!feedOpen)}
+                  type="button"
+                >
+                  <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
+                    Live Feed
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-[var(--text-dim)]">
+                      {incidents.length} active
+                    </span>
+                    <svg
+                      className={`h-3 w-3 text-[var(--text-dim)] transition ${feedOpen ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </button>
+                {feedOpen && (
+                  <div className="mt-1 max-h-60 overflow-y-auto rounded-xl border border-white/8 bg-[var(--bg-panel)]">
+                    <AlertFeed
+                      incidents={incidents}
+                      selectedIncidentId={selectedIncident.id}
+                      hoveredIncidentId={hoveredIncidentId}
+                      onHoverIncident={setHoveredIncidentId}
+                      onSelectIncident={(incident) =>
+                        setSelectedIncidentId(incident.id)
+                      }
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="shrink-0">
@@ -173,8 +228,7 @@ export function DisasterPHDashboard() {
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] text-[var(--text-dim)]">
-                      {stats.sourcesOnline} sources · {stats.activeAlerts}{" "}
-                      active
+                      {stats.sourcesOnline} sources
                     </span>
                     <svg
                       className={`h-3 w-3 text-[var(--text-dim)] transition ${systemOpen ? "rotate-180" : ""}`}
@@ -264,8 +318,9 @@ export function DisasterPHDashboard() {
         onSelectIncident={(incident) => setSelectedIncidentId(incident.id)}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        sourceStatuses={mockSourceStatuses}
-        stats={stats}
+        advisories={mockAdvisories}
+        watchedPlaces={mockWatchedPlaces}
+        helpActions={mockHelpActions}
       />
     </main>
   );

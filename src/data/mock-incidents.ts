@@ -1,4 +1,10 @@
-import type { Incident, SourceStatus } from "@/types/incident";
+import type {
+  Incident,
+  SourceStatus,
+  WatchedPlace,
+  OfficialAdvisory,
+  HelpAction,
+} from "@/types/incident";
 
 export const mockIncidents: Incident[] = [
   {
@@ -140,5 +146,98 @@ export const mockSourceStatuses: SourceStatus[] = [
     last_fetch_at: "2026-04-04T07:10:00+08:00",
     latency_ms: 4120,
     notes: "Reference feed is available but operating outside dispatch SLA.",
+  },
+];
+
+export const mockWatchedPlaces: WatchedPlace[] = [
+  {
+    id: "wp-001",
+    label: "Lola's house",
+    region: "Eastern Visayas",
+    latitude: 11.25,
+    longitude: 124.96,
+    activeHazards: 1,
+    highestSeverity: "warning",
+  },
+  {
+    id: "wp-002",
+    label: "Family in Batangas",
+    region: "CALABARZON",
+    latitude: 13.76,
+    longitude: 121.06,
+    activeHazards: 2,
+    highestSeverity: "watch",
+  },
+  {
+    id: "wp-003",
+    label: "Ate's place",
+    region: "Cagayan Valley",
+    latitude: 17.61,
+    longitude: 121.73,
+    activeHazards: 1,
+    highestSeverity: "watch",
+  },
+];
+
+export const mockAdvisories: OfficialAdvisory[] = [
+  {
+    id: "adv-001",
+    source: "PAGASA",
+    title: "Severe Weather Bulletin #3 — Low Pressure Area",
+    summary:
+      "PAGASA warns of heavy to intense rainfall over Eastern Visayas and Bicol Region in the next 24 hours. Residents in flood- and landslide-prone areas should take precautions.",
+    severity: "warning",
+    issued_at: "2026-04-04T06:00:00+08:00",
+  },
+  {
+    id: "adv-002",
+    source: "PHIVOLCS",
+    title: "Taal Volcano Bulletin — Alert Level 1",
+    summary:
+      "Taal Volcano remains at Alert Level 1. Entry into the main crater is prohibited. Communities within the 7-km radius should remain vigilant.",
+    severity: "warning",
+    issued_at: "2026-04-04T05:30:00+08:00",
+  },
+  {
+    id: "adv-003",
+    source: "PHIVOLCS",
+    title: "Earthquake Information — Batangas",
+    summary:
+      "A magnitude 5.6 earthquake struck west of Batangas at 6:17 AM. No tsunami threat. Aftershocks are expected.",
+    severity: "watch",
+    issued_at: "2026-04-04T06:48:00+08:00",
+  },
+];
+
+export const mockHelpActions: HelpAction[] = [
+  {
+    id: "help-001",
+    label: "Emergency Hotlines",
+    description: "NDRRMC, Red Cross, local rescue",
+    icon: "phone",
+  },
+  {
+    id: "help-002",
+    label: "Share This Area",
+    description: "Send hazard info to family",
+    icon: "share",
+  },
+  {
+    id: "help-003",
+    label: "Safety Checklist",
+    description: "Prepare for this hazard type",
+    icon: "checklist",
+  },
+  {
+    id: "help-004",
+    label: "Nearest Evacuation",
+    description: "Find shelters and routes",
+    icon: "locate",
+  },
+  {
+    id: "help-005",
+    label: "Request Help",
+    description: "Report your situation",
+    icon: "alert",
   },
 ];

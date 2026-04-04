@@ -352,7 +352,9 @@ export function IncidentMarker({
           x="0"
           y="-44"
         >
-          {incident.title.length > 28 ? incident.title.slice(0, 28) + "…" : incident.title}
+          {incident.title.length > 28
+            ? incident.title.slice(0, 28) + "…"
+            : incident.title}
         </text>
       </g>
     </g>

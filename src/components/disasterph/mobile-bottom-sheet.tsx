@@ -1,10 +1,16 @@
 "use client";
 
-import type { DashboardStats, Incident, SourceStatus } from "@/types/incident";
-import { AlertFeed } from "./alert-feed";
+import type {
+  HelpAction,
+  Incident,
+  OfficialAdvisory,
+  WatchedPlace,
+} from "@/types/incident";
 import { IncidentDetails } from "./incident-details";
-import { QuickStats } from "./quick-stats";
-import { SourceHealth } from "./source-health";
+import { AreaRiskSummary } from "./area-risk-summary";
+import { OfficialAdvisoryPanel } from "./official-advisory-panel";
+import { WatchlistPanel } from "./watchlist-panel";
+import { HelpActions } from "./help-actions";
 
 interface MobileBottomSheetProps {
   incident: Incident;
@@ -12,8 +18,9 @@ interface MobileBottomSheetProps {
   onSelectIncident: (incident: Incident) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  sourceStatuses: SourceStatus[];
-  stats: DashboardStats;
+  advisories: OfficialAdvisory[];
+  watchedPlaces: WatchedPlace[];
+  helpActions: HelpAction[];
 }
 
 export function MobileBottomSheet({
@@ -22,8 +29,9 @@ export function MobileBottomSheet({
   onSelectIncident,
   open,
   onOpenChange,
-  sourceStatuses,
-  stats,
+  advisories,
+  watchedPlaces,
+  helpActions,
 }: MobileBottomSheetProps) {
   return (
     <>
@@ -79,15 +87,10 @@ export function MobileBottomSheet({
 
           <div className="grid min-h-0 gap-3 overflow-y-auto pr-1">
             <IncidentDetails incident={incident} />
-            <AlertFeed
-              incidents={incidents}
-              selectedIncidentId={incident.id}
-              hoveredIncidentId={null}
-              onHoverIncident={() => {}}
-              onSelectIncident={onSelectIncident}
-            />
-            <QuickStats stats={stats} />
-            <SourceHealth sourceStatuses={sourceStatuses} />
+            <AreaRiskSummary region={incident.region} incidents={incidents} />
+            <OfficialAdvisoryPanel advisories={advisories} />
+            <WatchlistPanel places={watchedPlaces} onSelectPlace={() => {}} />
+            <HelpActions actions={helpActions} />
           </div>
         </div>
       </section>

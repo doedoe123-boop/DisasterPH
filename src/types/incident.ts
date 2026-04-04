@@ -42,3 +42,31 @@ export interface DashboardStats {
   sourcesOnline: number;
   regionsTracked: number;
 }
+
+export interface WatchedPlace {
+  id: string;
+  label: string;
+  region: string;
+  latitude: number;
+  longitude: number;
+  activeHazards: number;
+  highestSeverity: IncidentSeverity | null;
+}
+
+export interface OfficialAdvisory {
+  id: string;
+  source: IncidentSource;
+  title: string;
+  summary: string;
+  severity: IncidentSeverity;
+  issued_at: string;
+  url?: string;
+}
+
+export interface HelpAction {
+  id: string;
+  label: string;
+  description: string;
+  icon: "phone" | "share" | "checklist" | "locate" | "alert";
+  href?: string;
+}
