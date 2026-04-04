@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DisasterPH
 
-## Getting Started
+DisasterPH is a mobile-first, Philippines-focused disaster awareness dashboard built as a map-first command center. The MVP centers on a live national incident map, compact alert panels, source health visibility, and a normalized event model that can unify NASA EONET, PAGASA, and PHIVOLCS inputs.
 
-First, run the development server:
+## Current Starter Scope
+
+- Next.js 16 App Router starter with a tactical command-center UI
+- Responsive map-first homepage with desktop sidebar and mobile bottom sheet
+- Normalized incident model and realistic Philippine mock data
+- Mock API route at `/api/incidents`
+- Product, technical, frontend, and backend planning docs
+- Laravel example stubs for jobs, transformers, routes, and controller flow
+
+## Folder Structure
+
+```text
+.
+├── docs/
+│   ├── alert-engine.md
+│   ├── api-design.md
+│   ├── architecture.md
+│   ├── backend-implementation-plan.md
+│   ├── data-model.md
+│   ├── frontend-implementation-plan.md
+│   ├── ingestion-pipeline.md
+│   ├── mvp-scope.md
+│   ├── product-overview.md
+│   ├── roadmap.md
+│   └── two-week-build-plan.md
+├── skills/
+│   └── disasterph/
+│       ├── agents/openai.yaml
+│       ├── references/
+│       └── SKILL.md
+├── src/
+│   ├── app/
+│   │   ├── api/incidents/route.ts
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── loading.tsx
+│   │   └── page.tsx
+│   ├── components/disasterph/
+│   ├── data/mock-incidents.ts
+│   ├── lib/
+│   └── types/incident.ts
+├── laravel-stubs/
+│   ├── app/Http/Controllers/
+│   ├── app/Jobs/
+│   ├── app/Models/
+│   └── app/Transformers/
+└── README.md
+```
+
+## Design Direction
+
+- Dark, tactical, modern command-center aesthetic
+- Map-first layout with compact cards and fast scanning
+- Mobile bottom sheet instead of a cramped sidebar
+- Severity-forward incident markers and status surfaces
+- Minimal but purposeful animation: pulsing markers, transitions, shimmer
+
+## Data Model
+
+Normalized incident shape:
+
+```ts
+{
+  id,
+  source,
+  external_id,
+  event_type,
+  title,
+  description,
+  latitude,
+  longitude,
+  severity,
+  region,
+  started_at,
+  updated_at,
+  metadata
+}
+```
+
+## Major Design Decisions
+
+- The starter uses a custom tactical map canvas instead of shipping Leaflet immediately, so the UI runs with the repo's current dependencies and stays easy to review.
+- The code is adapter-ready: incident projection, marker rendering, and the map viewport are isolated so a Leaflet or Mapbox implementation can replace the current canvas without disturbing the sidebar or data model.
+- NASA EONET is treated as situational awareness metadata, not as an operational dispatch source.
+
+## Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Next Steps
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Add actual ingestion jobs and persistence in Laravel 11.
+2. Replace the tactical map canvas with Leaflet while preserving the marker contract.
+3. Add alert dedupe, escalation rules, and subscriptions.

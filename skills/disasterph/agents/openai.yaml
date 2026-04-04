@@ -1,0 +1,8 @@
+interface:
+  display_name: "DisasterPH"
+  short_description: "Map-first disaster app conventions"
+  brand_color: "#39D0FF"
+  default_prompt: "Use $disasterph to build or refine a map-first DisasterPH feature while preserving the product's normalized data and alerting conventions."
+
+policy:
+  allow_implicit_invocation: true
