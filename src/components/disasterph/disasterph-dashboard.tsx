@@ -1,19 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  mockIncidents,
-  mockSourceStatuses,
-  mockWatchedPlaces,
-  mockAdvisories,
-  mockHelpActions,
-} from "@/data/mock-incidents";
-import {
-  buildDashboardStats,
-  eventTypeLabel,
-  filterIncidentsByType,
-} from "@/lib/incidents";
+import { useEffect, useState } from "react";
+import { mockWatchedPlaces, mockHelpActions } from "@/data/mock-incidents";
+import { eventTypeLabel } from "@/lib/incidents";
 import type { Incident, IncidentEventType } from "@/types/incident";
+import { useIncidents } from "@/hooks/use-incidents";
+import { useAdvisories } from "@/hooks/use-advisories";
 import { AppHeader } from "./header";
 import { CommandMap } from "./command-map";
 import { AlertFeed } from "./alert-feed";
@@ -42,9 +34,7 @@ export function BantayPHDashboard() {
   );
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isBooting, setIsBooting] = useState(true);
-  const [selectedIncidentId, setSelectedIncidentId] = useState(
-    mockIncidents[0]?.id ?? "",
-  );
+  const [selectedIncidentId, setSelectedIncidentId] = useState("");
   const [systemOpen, setSystemOpen] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
@@ -53,15 +43,13 @@ export function BantayPHDashboard() {
     null,
   );
 
-  const incidents = useMemo(
-    () => filterIncidentsByType(mockIncidents, activeFilter),
-    [activeFilter],
-  );
+  // ── Live data hooks ──
+  const { incidents, stats, sourceStatuses, isLoading, error, staleAt } =
+    useIncidents(activeFilter);
+  const { advisories } = useAdvisories();
 
-  const selectedIncident: Incident =
-    incidents.find((incident) => incident.id === selectedIncidentId) ??
-    incidents[0] ??
-    mockIncidents[0];
+  const selectedIncident: Incident | undefined =
+    incidents.find((i) => i.id === selectedIncidentId) ?? incidents[0];
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setIsBooting(false), 900);
@@ -101,7 +89,23 @@ export function BantayPHDashboard() {
         ? "lg:grid-cols-[minmax(0,1fr)_48px]"
         : "";
 
-  const stats = useMemo(() => buildDashboardStats(incidents), [incidents]);
+  // ── Loading guard: show boot screen until first data arrives ──
+  if (isLoading && incidents.length === 0) {
+    return (
+      <main className="flex h-screen items-center justify-center bg-[var(--bg-base)] text-[var(--text-primary)]">
+        <div className="rounded-2xl border border-white/10 bg-[var(--bg-panel)] p-6 text-center backdrop-blur">
+          <div className="loading-shimmer mx-auto h-3 w-28 rounded-full" />
+          <div className="loading-shimmer mt-3 h-6 w-36 rounded-xl mx-auto" />
+          <p className="mt-4 text-xs text-[var(--text-dim)]">
+            Fetching live data from PAGASA, PHIVOLCS, and EONET…
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  // When incidents have loaded but none match the filter
+  const noData = incidents.length === 0;
 
   return (
     <main className="h-screen overflow-hidden bg-[var(--bg-base)] p-2 text-[var(--text-primary)]">
@@ -122,6 +126,18 @@ export function BantayPHDashboard() {
           />
         </div>
 
+        {/* ── Error / stale-data banners ── */}
+        {error && (
+          <div className="mx-2 rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-1.5 text-xs text-red-200">
+            Data fetch error: {error}
+          </div>
+        )}
+        {staleAt && !error && (
+          <div className="mx-2 rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-1.5 text-xs text-amber-200">
+            Showing cached data — live feeds may be delayed.
+          </div>
+        )}
+
         <div className={`grid min-h-0 flex-1 gap-2 ${gridCols}`}>
           <section
             className={`relative min-h-0 overflow-hidden ${
@@ -130,7 +146,7 @@ export function BantayPHDashboard() {
           >
             <CommandMap
               incidents={incidents}
-              selectedIncidentId={selectedIncident.id}
+              selectedIncidentId={selectedIncident?.id ?? ""}
               hoveredIncidentId={hoveredIncidentId}
               onHoverIncident={setHoveredIncidentId}
               onSelectIncident={(incident) => {
@@ -152,21 +168,28 @@ export function BantayPHDashboard() {
               </div>
             )}
 
-            {effectiveSidebar !== "expanded" && (
+            {effectiveSidebar !== "expanded" && selectedIncident && (
               <FloatingIncidentCard incident={selectedIncident} />
             )}
           </section>
 
           {effectiveSidebar === "expanded" && (
             <aside className="hidden min-h-0 flex-col gap-2 overflow-y-auto lg:flex">
-              <IncidentDetails incident={selectedIncident} />
+              {selectedIncident ? (
+                <>
+                  <IncidentDetails incident={selectedIncident} />
+                  <AreaRiskSummary
+                    region={selectedIncident.region}
+                    incidents={incidents}
+                  />
+                </>
+              ) : noData ? (
+                <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-4 text-center text-sm text-[var(--text-dim)]">
+                  No incidents match this filter.
+                </div>
+              ) : null}
 
-              <AreaRiskSummary
-                region={selectedIncident.region}
-                incidents={incidents}
-              />
-
-              <OfficialAdvisoryPanel advisories={mockAdvisories} />
+              <OfficialAdvisoryPanel advisories={advisories} />
 
               <WatchlistPanel
                 places={mockWatchedPlaces}
@@ -206,7 +229,7 @@ export function BantayPHDashboard() {
                   <div className="mt-1 max-h-60 overflow-y-auto rounded-xl border border-white/8 bg-[var(--bg-panel)]">
                     <AlertFeed
                       incidents={incidents}
-                      selectedIncidentId={selectedIncident.id}
+                      selectedIncidentId={selectedIncident?.id ?? ""}
                       hoveredIncidentId={hoveredIncidentId}
                       onHoverIncident={setHoveredIncidentId}
                       onSelectIncident={(incident) =>
@@ -247,7 +270,7 @@ export function BantayPHDashboard() {
                 {systemOpen && (
                   <div className="mt-1 space-y-1">
                     <QuickStats stats={stats} />
-                    <SourceHealth sourceStatuses={mockSourceStatuses} />
+                    <SourceHealth sourceStatuses={sourceStatuses} />
                   </div>
                 )}
               </div>
@@ -283,7 +306,7 @@ export function BantayPHDashboard() {
                   <button
                     key={incident.id}
                     className={`h-2.5 w-2.5 cursor-pointer rounded-full transition-all ${
-                      incident.id === selectedIncident.id
+                      incident.id === selectedIncident?.id
                         ? "scale-150 shadow-[0_0_4px_rgba(34,211,238,0.6)]"
                         : "opacity-60 hover:scale-125 hover:opacity-100"
                     } ${
@@ -312,16 +335,18 @@ export function BantayPHDashboard() {
         </div>
       </div>
 
-      <MobileBottomSheet
-        incident={selectedIncident}
-        incidents={incidents}
-        onSelectIncident={(incident) => setSelectedIncidentId(incident.id)}
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        advisories={mockAdvisories}
-        watchedPlaces={mockWatchedPlaces}
-        helpActions={mockHelpActions}
-      />
+      {selectedIncident && (
+        <MobileBottomSheet
+          incident={selectedIncident}
+          incidents={incidents}
+          onSelectIncident={(incident) => setSelectedIncidentId(incident.id)}
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          advisories={advisories}
+          watchedPlaces={mockWatchedPlaces}
+          helpActions={mockHelpActions}
+        />
+      )}
     </main>
   );
 }
