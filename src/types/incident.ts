@@ -53,6 +53,27 @@ export interface WatchedPlace {
   highestSeverity: IncidentSeverity | null;
 }
 
+export interface SavedPlace {
+  id: string;
+  label: string;
+  /** e.g. "home", "work", "family", "school" */
+  tag: "home" | "work" | "family" | "school" | "other";
+  latitude: number;
+  longitude: number;
+  /** Free-text note, e.g. "Lola's house" */
+  note?: string;
+  createdAt: string;
+}
+
+export interface PlaceRiskSummary {
+  place: SavedPlace;
+  nearbyIncidents: Incident[];
+  highestSeverity: IncidentSeverity | null;
+  /** Distance to nearest incident in km */
+  nearestDistanceKm: number | null;
+  riskLevel: "safe" | "monitor" | "at-risk" | "danger";
+}
+
 export interface OfficialAdvisory {
   id: string;
   source: IncidentSource;

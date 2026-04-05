@@ -1,9 +1,11 @@
 "use client";
 
 import type { HelpAction, Incident, OfficialAdvisory } from "@/types/incident";
+import type { PrepTip } from "@/lib/prep-guidance";
 import { IncidentDetails } from "./incident-details";
 import { OfficialAdvisoryPanel } from "./official-advisory-panel";
 import { HelpActions } from "./help-actions";
+import { PrepGuidance } from "./prep-guidance";
 
 interface MobileBottomSheetProps {
   incident: Incident;
@@ -11,6 +13,7 @@ interface MobileBottomSheetProps {
   onOpenChange: (open: boolean) => void;
   advisories: OfficialAdvisory[];
   helpActions: HelpAction[];
+  prepTips: PrepTip[];
 }
 
 export function MobileBottomSheet({
@@ -19,6 +22,7 @@ export function MobileBottomSheet({
   onOpenChange,
   advisories,
   helpActions,
+  prepTips,
 }: MobileBottomSheetProps) {
   return (
     <>
@@ -74,6 +78,7 @@ export function MobileBottomSheet({
 
           <div className="grid min-h-0 gap-3 overflow-y-auto pr-1">
             <IncidentDetails incident={incident} />
+            <PrepGuidance tips={prepTips} />
             <HelpActions actions={helpActions} />
             <OfficialAdvisoryPanel advisories={advisories} />
           </div>

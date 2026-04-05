@@ -1,0 +1,226 @@
+"use client";
+
+import { useState } from "react";
+import type { PlaceRiskSummary, SavedPlace } from "@/types/incident";
+
+interface SavedPlacesProps {
+  risks: PlaceRiskSummary[];
+  selectedPlaceId: string | null;
+  onSelectPlace: (id: string) => void;
+  onAddPlace: (place: Omit<SavedPlace, "id" | "createdAt">) => void;
+  onRemovePlace: (id: string) => void;
+}
+
+const tagIcon: Record<SavedPlace["tag"], string> = {
+  home: "🏠",
+  work: "💼",
+  family: "👨‍👩‍👧‍👦",
+  school: "🏫",
+  other: "📍",
+};
+
+const riskColor: Record<PlaceRiskSummary["riskLevel"], string> = {
+  safe: "bg-emerald-400",
+  monitor: "bg-amber-300",
+  "at-risk": "bg-orange-400",
+  danger: "bg-red-400",
+};
+
+const riskBorder: Record<PlaceRiskSummary["riskLevel"], string> = {
+  safe: "border-l-emerald-400/40",
+  monitor: "border-l-amber-400/40",
+  "at-risk": "border-l-orange-400/40",
+  danger: "border-l-red-400/40",
+};
+
+const riskLabel: Record<PlaceRiskSummary["riskLevel"], string> = {
+  safe: "Safe",
+  monitor: "Monitor",
+  "at-risk": "At Risk",
+  danger: "Danger",
+};
+
+const PRESET_PLACES: Array<{
+  label: string;
+  tag: SavedPlace["tag"];
+  latitude: number;
+  longitude: number;
+}> = [
+  {
+    label: "Metro Manila",
+    tag: "home",
+    latitude: 14.5995,
+    longitude: 120.9842,
+  },
+  { label: "Cebu City", tag: "family", latitude: 10.3157, longitude: 123.8854 },
+  { label: "Davao City", tag: "family", latitude: 7.1907, longitude: 125.4553 },
+  { label: "Tacloban City", tag: "family", latitude: 11.25, longitude: 125.0 },
+  {
+    label: "Legazpi City",
+    tag: "family",
+    latitude: 13.1391,
+    longitude: 123.7438,
+  },
+  {
+    label: "Baguio City",
+    tag: "family",
+    latitude: 16.4023,
+    longitude: 120.596,
+  },
+];
+
+export function SavedPlaces({
+  risks,
+  selectedPlaceId,
+  onSelectPlace,
+  onAddPlace,
+  onRemovePlace,
+}: SavedPlacesProps) {
+  const [showAdd, setShowAdd] = useState(false);
+
+  return (
+    <section className="rounded-xl border border-white/8 bg-[var(--bg-panel)] backdrop-blur">
+      <div className="flex items-center justify-between border-b border-white/8 px-3 py-2">
+        <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
+          My Places
+        </span>
+        <button
+          className="flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] text-[var(--text-muted)] transition hover:bg-white/[0.08] hover:text-white"
+          onClick={() => setShowAdd(!showAdd)}
+          type="button"
+        >
+          <svg
+            className="h-3 w-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeWidth="2"
+              d={showAdd ? "M6 18L18 6M6 6l12 12" : "M12 4v16m8-8H4"}
+            />
+          </svg>
+          {showAdd ? "Cancel" : "Add"}
+        </button>
+      </div>
+
+      {showAdd && (
+        <div className="border-b border-white/8 p-2">
+          <p className="mb-1.5 px-1 text-[10px] text-[var(--text-dim)]">
+            Quick add a location:
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {PRESET_PLACES.map((preset) => (
+              <button
+                key={preset.label}
+                className="rounded-lg border border-white/8 bg-white/[0.02] px-2 py-1 text-[11px] text-[var(--text-muted)] transition hover:bg-white/[0.06] hover:text-white"
+                onClick={() => {
+                  onAddPlace({
+                    label: preset.label,
+                    tag: preset.tag,
+                    latitude: preset.latitude,
+                    longitude: preset.longitude,
+                  });
+                  setShowAdd(false);
+                }}
+                type="button"
+              >
+                {tagIcon[preset.tag]} {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {risks.length === 0 ? (
+        <div className="p-4 text-center">
+          <p className="text-[12px] text-[var(--text-muted)]">
+            No saved places yet.
+          </p>
+          <p className="mt-1 text-[11px] text-[var(--text-dim)]">
+            Add places where your family lives to monitor nearby hazards.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-0.5 p-1.5">
+          {risks.map((risk) => (
+            <button
+              key={risk.place.id}
+              className={`group flex w-full items-center gap-2.5 rounded-lg border-l-2 p-2 text-left transition hover:bg-white/[0.04] ${
+                selectedPlaceId === risk.place.id
+                  ? "bg-cyan-400/8 border-l-cyan-400/70"
+                  : riskBorder[risk.riskLevel]
+              }`}
+              onClick={() => onSelectPlace(risk.place.id)}
+              type="button"
+            >
+              <span className="text-base leading-none">
+                {tagIcon[risk.place.tag]}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate text-[13px] font-medium text-white">
+                    {risk.place.label}
+                  </span>
+                  <span
+                    className={`ml-auto h-1.5 w-1.5 shrink-0 rounded-full ${riskColor[risk.riskLevel]}`}
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-dim)]">
+                  <span
+                    className={
+                      risk.riskLevel === "danger"
+                        ? "text-red-300"
+                        : risk.riskLevel === "at-risk"
+                          ? "text-orange-300"
+                          : risk.riskLevel === "monitor"
+                            ? "text-amber-300"
+                            : "text-emerald-300"
+                    }
+                  >
+                    {riskLabel[risk.riskLevel]}
+                  </span>
+                  {risk.nearbyIncidents.length > 0 && (
+                    <>
+                      <span className="text-white/10">·</span>
+                      <span>{risk.nearbyIncidents.length} nearby</span>
+                    </>
+                  )}
+                  {risk.nearestDistanceKm !== null && (
+                    <>
+                      <span className="text-white/10">·</span>
+                      <span>{Math.round(risk.nearestDistanceKm)} km</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <button
+                className="shrink-0 rounded p-0.5 text-[var(--text-dim)] opacity-0 transition hover:text-red-300 group-hover:opacity-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemovePlace(risk.place.id);
+                }}
+                title="Remove place"
+                type="button"
+              >
+                <svg
+                  className="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}

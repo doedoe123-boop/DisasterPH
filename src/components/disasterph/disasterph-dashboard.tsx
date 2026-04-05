@@ -3,9 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { eventTypeLabel } from "@/lib/incidents";
 import { getHelpActions } from "@/lib/help-actions";
+import { computeAllPlaceRisks } from "@/lib/risk-summary";
+import { getPrepTips } from "@/lib/prep-guidance";
 import type { Incident, IncidentEventType } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
 import { useAdvisories } from "@/hooks/use-advisories";
+import { useSavedPlaces } from "@/hooks/use-saved-places";
 import { AppHeader } from "./header";
 import { CommandMap } from "./command-map";
 import { AlertFeed } from "./alert-feed";
@@ -14,6 +17,9 @@ import { OfficialAdvisoryPanel } from "./official-advisory-panel";
 import { HelpActions } from "./help-actions";
 import { MobileBottomSheet } from "./mobile-bottom-sheet";
 import { FloatingIncidentCard } from "./floating-incident-card";
+import { SavedPlaces } from "./saved-places";
+import { RiskSummary } from "./risk-summary";
+import { PrepGuidance } from "./prep-guidance";
 
 const filters: Array<{ label: string; value: IncidentEventType | "all" }> = [
   { label: "All", value: "all" },
@@ -37,17 +43,39 @@ export function BantayPHDashboard() {
   const [hoveredIncidentId, setHoveredIncidentId] = useState<string | null>(
     null,
   );
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
 
   // ── Live data hooks ──
   const { incidents, stats, isLoading, error, staleAt } =
     useIncidents(activeFilter);
   const { advisories } = useAdvisories();
+  const { places, addPlace, removePlace } = useSavedPlaces();
 
   const selectedIncident: Incident | undefined =
     incidents.find((i) => i.id === selectedIncidentId) ?? incidents[0];
 
   const helpActions = useMemo(
     () => getHelpActions(selectedIncident),
+    [selectedIncident],
+  );
+
+  // ── Risk computation for saved places ──
+  const placeRisks = useMemo(
+    () => computeAllPlaceRisks(places, incidents),
+    [places, incidents],
+  );
+
+  const selectedPlaceRisk = useMemo(
+    () => placeRisks.find((r) => r.place.id === selectedPlaceId) ?? null,
+    [placeRisks, selectedPlaceId],
+  );
+
+  // ── Prep tips based on selected incident ──
+  const prepTips = useMemo(
+    () =>
+      selectedIncident
+        ? getPrepTips(selectedIncident.event_type, selectedIncident.severity)
+        : [],
     [selectedIncident],
   );
 
@@ -178,13 +206,39 @@ export function BantayPHDashboard() {
 
           {effectiveSidebar === "expanded" && (
             <aside className="hidden min-h-0 flex-col gap-2 overflow-y-auto lg:flex">
-              {selectedIncident ? (
+              {/* ── Saved Places (family monitoring) ── */}
+              <SavedPlaces
+                risks={placeRisks}
+                selectedPlaceId={selectedPlaceId}
+                onSelectPlace={(id) => {
+                  setSelectedPlaceId(id === selectedPlaceId ? null : id);
+                }}
+                onAddPlace={addPlace}
+                onRemovePlace={removePlace}
+              />
+
+              {/* ── Place Risk Summary (when a place is selected) ── */}
+              {selectedPlaceRisk && (
+                <RiskSummary
+                  risk={selectedPlaceRisk}
+                  onSelectIncident={(id) => {
+                    setSelectedIncidentId(id);
+                    setSelectedPlaceId(null);
+                  }}
+                />
+              )}
+
+              {/* ── Incident Details (when no place selected or after clicking an incident) ── */}
+              {!selectedPlaceRisk && selectedIncident ? (
                 <IncidentDetails incident={selectedIncident} />
-              ) : noData ? (
+              ) : !selectedPlaceRisk && noData ? (
                 <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-4 text-center text-sm text-[var(--text-dim)]">
                   No incidents match this filter.
                 </div>
               ) : null}
+
+              {/* ── Preparation Guidance ── */}
+              <PrepGuidance tips={prepTips} />
 
               <HelpActions actions={helpActions} />
 
@@ -309,6 +363,7 @@ export function BantayPHDashboard() {
           onOpenChange={setSheetOpen}
           advisories={advisories}
           helpActions={helpActions}
+          prepTips={prepTips}
         />
       )}
     </main>
