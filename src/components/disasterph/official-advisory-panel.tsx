@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { OfficialAdvisory } from "@/types/incident";
 import { formatShortTime } from "@/lib/incidents";
 
@@ -15,19 +18,39 @@ const severityBorder: Record<string, string> = {
 export function OfficialAdvisoryPanel({
   advisories,
 }: OfficialAdvisoryPanelProps) {
+  const [expanded, setExpanded] = useState(false);
+  const visible = expanded ? advisories : advisories.slice(0, 2);
+  const remaining = advisories.length - 2;
+
+  if (advisories.length === 0) return null;
+
   return (
     <section className="rounded-xl border border-white/8 bg-[var(--bg-panel)] backdrop-blur">
-      <div className="flex items-center justify-between border-b border-white/8 px-3 py-2">
+      <button
+        className="flex w-full items-center justify-between border-b border-white/8 px-3 py-2 text-left"
+        onClick={() => setExpanded(!expanded)}
+        type="button"
+      >
         <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
           Official Alerts
         </span>
-        <span className="text-[11px] text-[var(--text-dim)]">
-          {advisories.length} active
-        </span>
-      </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-[var(--text-dim)]">
+            {advisories.length} active
+          </span>
+          <svg
+            className={`h-3 w-3 text-[var(--text-dim)] transition ${expanded ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
 
       <div className="space-y-0.5 p-1.5">
-        {advisories.map((advisory) => (
+        {visible.map((advisory) => (
           <div
             key={advisory.id}
             className={`rounded-lg border-l-2 p-2.5 transition hover:bg-white/[0.03] ${severityBorder[advisory.severity]}`}
@@ -49,6 +72,16 @@ export function OfficialAdvisoryPanel({
           </div>
         ))}
       </div>
+
+      {!expanded && remaining > 0 && (
+        <button
+          className="w-full border-t border-white/8 py-2 text-center text-[11px] text-[var(--text-muted)] transition hover:text-white"
+          onClick={() => setExpanded(true)}
+          type="button"
+        >
+          +{remaining} more alert{remaining !== 1 ? "s" : ""}
+        </button>
+      )}
     </section>
   );
 }

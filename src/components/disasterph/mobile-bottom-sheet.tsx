@@ -1,36 +1,23 @@
 "use client";
 
-import type {
-  HelpAction,
-  Incident,
-  OfficialAdvisory,
-  WatchedPlace,
-} from "@/types/incident";
+import type { HelpAction, Incident, OfficialAdvisory } from "@/types/incident";
 import { IncidentDetails } from "./incident-details";
-import { AreaRiskSummary } from "./area-risk-summary";
 import { OfficialAdvisoryPanel } from "./official-advisory-panel";
-import { WatchlistPanel } from "./watchlist-panel";
 import { HelpActions } from "./help-actions";
 
 interface MobileBottomSheetProps {
   incident: Incident;
-  incidents: Incident[];
-  onSelectIncident: (incident: Incident) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   advisories: OfficialAdvisory[];
-  watchedPlaces: WatchedPlace[];
   helpActions: HelpAction[];
 }
 
 export function MobileBottomSheet({
   incident,
-  incidents,
-  onSelectIncident,
   open,
   onOpenChange,
   advisories,
-  watchedPlaces,
   helpActions,
 }: MobileBottomSheetProps) {
   return (
@@ -87,10 +74,8 @@ export function MobileBottomSheet({
 
           <div className="grid min-h-0 gap-3 overflow-y-auto pr-1">
             <IncidentDetails incident={incident} />
-            <AreaRiskSummary region={incident.region} incidents={incidents} />
-            <OfficialAdvisoryPanel advisories={advisories} />
-            <WatchlistPanel places={watchedPlaces} onSelectPlace={() => {}} />
             <HelpActions actions={helpActions} />
+            <OfficialAdvisoryPanel advisories={advisories} />
           </div>
         </div>
       </section>

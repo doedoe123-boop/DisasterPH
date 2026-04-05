@@ -42,11 +42,7 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
         <span>{formatShortTime(incident.updated_at)}</span>
       </div>
 
-      <p className="mt-2.5 text-[13px] leading-[1.6] text-[var(--text-muted)]">
-        {incident.description}
-      </p>
-
-      <details className="group mt-3 border-t border-white/6 pt-2.5">
+      <details className="group mt-2 border-t border-white/6 pt-2">
         <summary className="flex cursor-pointer items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-[var(--text-dim)] hover:text-[var(--text-muted)]">
           <svg
             className="h-3 w-3 transition group-open:rotate-90"
@@ -56,8 +52,11 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
           >
             <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
-          Metadata
+          Details
         </summary>
+        <p className="mt-2 text-[12px] leading-[1.5] text-[var(--text-muted)]">
+          {incident.description}
+        </p>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {Object.entries(incident.metadata).map(([key, value]) => (
             <span

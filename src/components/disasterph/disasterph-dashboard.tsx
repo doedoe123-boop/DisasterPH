@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { mockWatchedPlaces, mockHelpActions } from "@/data/mock-incidents";
+import { mockHelpActions } from "@/data/mock-incidents";
 import { eventTypeLabel } from "@/lib/incidents";
 import type { Incident, IncidentEventType } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
@@ -10,12 +10,8 @@ import { AppHeader } from "./header";
 import { CommandMap } from "./command-map";
 import { AlertFeed } from "./alert-feed";
 import { IncidentDetails } from "./incident-details";
-import { AreaRiskSummary } from "./area-risk-summary";
 import { OfficialAdvisoryPanel } from "./official-advisory-panel";
-import { WatchlistPanel } from "./watchlist-panel";
 import { HelpActions } from "./help-actions";
-import { QuickStats } from "./quick-stats";
-import { SourceHealth } from "./source-health";
 import { MobileBottomSheet } from "./mobile-bottom-sheet";
 import { FloatingIncidentCard } from "./floating-incident-card";
 
@@ -35,7 +31,6 @@ export function BantayPHDashboard() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isBooting, setIsBooting] = useState(true);
   const [selectedIncidentId, setSelectedIncidentId] = useState("");
-  const [systemOpen, setSystemOpen] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
@@ -44,7 +39,7 @@ export function BantayPHDashboard() {
   );
 
   // ── Live data hooks ──
-  const { incidents, stats, sourceStatuses, isLoading, error, staleAt } =
+  const { incidents, stats, isLoading, error, staleAt } =
     useIncidents(activeFilter);
   const { advisories } = useAdvisories();
 
@@ -84,7 +79,7 @@ export function BantayPHDashboard() {
 
   const gridCols =
     effectiveSidebar === "expanded"
-      ? "lg:grid-cols-[minmax(0,1fr)_380px]"
+      ? "lg:grid-cols-[minmax(0,1fr)_320px]"
       : effectiveSidebar === "collapsed"
         ? "lg:grid-cols-[minmax(0,1fr)_48px]"
         : "";
@@ -176,27 +171,16 @@ export function BantayPHDashboard() {
           {effectiveSidebar === "expanded" && (
             <aside className="hidden min-h-0 flex-col gap-2 overflow-y-auto lg:flex">
               {selectedIncident ? (
-                <>
-                  <IncidentDetails incident={selectedIncident} />
-                  <AreaRiskSummary
-                    region={selectedIncident.region}
-                    incidents={incidents}
-                  />
-                </>
+                <IncidentDetails incident={selectedIncident} />
               ) : noData ? (
                 <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-4 text-center text-sm text-[var(--text-dim)]">
                   No incidents match this filter.
                 </div>
               ) : null}
 
-              <OfficialAdvisoryPanel advisories={advisories} />
-
-              <WatchlistPanel
-                places={mockWatchedPlaces}
-                onSelectPlace={() => {}}
-              />
-
               <HelpActions actions={mockHelpActions} />
+
+              <OfficialAdvisoryPanel advisories={advisories} />
 
               <div className="shrink-0">
                 <button
@@ -240,39 +224,14 @@ export function BantayPHDashboard() {
                 )}
               </div>
 
-              <div className="shrink-0">
-                <button
-                  className="flex w-full items-center justify-between rounded-xl border border-white/8 bg-[var(--bg-panel)] px-3 py-2 text-left backdrop-blur"
-                  onClick={() => setSystemOpen(!systemOpen)}
-                  type="button"
-                >
-                  <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
-                    System
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-[var(--text-dim)]">
-                      {stats.sourcesOnline} sources
-                    </span>
-                    <svg
-                      className={`h-3 w-3 text-[var(--text-dim)] transition ${systemOpen ? "rotate-180" : ""}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </div>
-                </button>
-                {systemOpen && (
-                  <div className="mt-1 space-y-1">
-                    <QuickStats stats={stats} />
-                    <SourceHealth sourceStatuses={sourceStatuses} />
-                  </div>
-                )}
+              {/* Compact system status */}
+              <div className="mt-auto flex shrink-0 items-center gap-2 rounded-lg border border-white/8 bg-[var(--bg-panel)] px-2.5 py-1.5 text-[10px] text-[var(--text-dim)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(57,217,138,0.6)]" />
+                <span>{stats.sourcesOnline} sources</span>
+                <span className="text-white/10">·</span>
+                <span>{stats.activeAlerts} active</span>
+                <span className="text-white/10">·</span>
+                <span>{stats.regionsTracked} regions</span>
               </div>
             </aside>
           )}
@@ -338,12 +297,9 @@ export function BantayPHDashboard() {
       {selectedIncident && (
         <MobileBottomSheet
           incident={selectedIncident}
-          incidents={incidents}
-          onSelectIncident={(incident) => setSelectedIncidentId(incident.id)}
           open={sheetOpen}
           onOpenChange={setSheetOpen}
           advisories={advisories}
-          watchedPlaces={mockWatchedPlaces}
           helpActions={mockHelpActions}
         />
       )}
