@@ -1,4 +1,5 @@
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
+import { severityLabel, visualFromSeverity } from "@/lib/severity";
 import type { Incident } from "@/types/incident";
 
 interface IncidentFeedCardProps {
@@ -11,20 +12,6 @@ interface IncidentFeedCardProps {
   onMouseLeave: () => void;
 }
 
-const severityDot: Record<string, string> = {
-  advisory: "bg-cyan-300",
-  watch: "bg-amber-300",
-  warning: "bg-orange-400",
-  critical: "bg-red-400",
-};
-
-const severityBorder: Record<string, string> = {
-  advisory: "border-l-cyan-400/30",
-  watch: "border-l-amber-400/40",
-  warning: "border-l-orange-400/60",
-  critical: "border-l-red-400/70",
-};
-
 export function IncidentFeedCard({
   incident,
   selected,
@@ -36,6 +23,7 @@ export function IncidentFeedCard({
 }: IncidentFeedCardProps) {
   const isCritical =
     incident.severity === "critical" || incident.severity === "warning";
+  const severityVisual = visualFromSeverity(incident.severity);
 
   return (
     <button
@@ -44,7 +32,7 @@ export function IncidentFeedCard({
           ? "border-l-cyan-400/70 bg-cyan-400/8"
           : hovered
             ? "border-l-cyan-400/30 bg-cyan-400/[0.04]"
-            : `${severityBorder[incident.severity]} hover:bg-white/[0.04]`
+            : `${severityVisual.accent} hover:bg-white/[0.04]`
       } ${isCritical ? "p-4 border-b border-white/[0.06]" : "px-3.5 py-3 border-b border-white/[0.04]"}`}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
@@ -53,13 +41,13 @@ export function IncidentFeedCard({
     >
       <div className="flex items-center gap-1.5">
         <span
-          className={`shrink-0 rounded-full ${severityDot[incident.severity]} ${isCritical ? "h-2 w-2" : "h-1.5 w-1.5"}`}
+          className={`shrink-0 rounded-full ${severityVisual.dot} ${isCritical ? "h-2 w-2" : "h-1.5 w-1.5"}`}
         />
         <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-dim)]">
           {eventTypeLabel[incident.event_type]}
         </span>
         <span className="text-[10px] uppercase tracking-wider text-[var(--text-dim)]">
-          · {incident.severity}
+          · {severityLabel[incident.severity]}
         </span>
         {nearPlaceName && (
           <span className="ml-1 rounded-full bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-px text-[9px] text-cyan-300">

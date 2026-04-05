@@ -2,17 +2,10 @@ import type {
   DashboardStats,
   Incident,
   IncidentEventType,
-  IncidentSeverity,
   SavedPlace,
 } from "@/types/incident";
 import { haversineKm } from "@/lib/risk-summary";
-
-export const severityRank: Record<IncidentSeverity, number> = {
-  critical: 4,
-  warning: 3,
-  watch: 2,
-  advisory: 1,
-};
+import { severityRank } from "@/lib/severity";
 
 export const eventTypeLabel: Record<IncidentEventType, string> = {
   typhoon: "Typhoon",

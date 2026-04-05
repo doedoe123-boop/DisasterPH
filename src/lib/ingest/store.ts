@@ -106,7 +106,7 @@ export function getSourceHealth(): SourceStatus[] {
     if (!out.find((s) => s.source === src)) {
       out.push({
         source: src,
-        status: "degraded",
+        status: "unavailable",
         last_fetch_at: new Date().toISOString(),
         latency_ms: 0,
         notes: "Awaiting first fetch.",

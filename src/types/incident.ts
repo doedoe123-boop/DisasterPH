@@ -10,7 +10,13 @@ export type IncidentEventType =
 
 export type IncidentSeverity = "advisory" | "watch" | "warning" | "critical";
 
-export type SourceHealthStatus = "healthy" | "delayed" | "degraded";
+export type SourceHealthStatus =
+  | "healthy"
+  | "delayed"
+  | "degraded"
+  | "unavailable";
+
+export type SeverityTone = "safe" | "yellow" | "orange" | "red";
 
 export interface Incident {
   id: string;
@@ -68,10 +74,15 @@ export interface SavedPlace {
 export interface PlaceRiskSummary {
   place: SavedPlace;
   nearbyIncidents: Incident[];
+  monitoredIncidents: Incident[];
   highestSeverity: IncidentSeverity | null;
   /** Distance to nearest incident in km */
   nearestDistanceKm: number | null;
   riskLevel: "safe" | "monitor" | "at-risk" | "danger";
+  strongestIncident: Incident | null;
+  freshestUpdateAt: string | null;
+  placeRegion: string;
+  matchingSummary: string;
 }
 
 export interface OfficialAdvisory {
@@ -93,4 +104,31 @@ export interface HelpAction {
   href?: string;
   /** For copy actions, the text to copy */
   copyText?: string;
+}
+
+export type AlertTrigger =
+  | "new-warning"
+  | "new-critical"
+  | "escalation"
+  | "new-place-impact";
+
+export interface AlertEvent {
+  id: string;
+  dedupeKey: string;
+  incidentId: string;
+  incidentTitle: string;
+  incidentSeverity: IncidentSeverity;
+  trigger: AlertTrigger;
+  placeIds: string[];
+  placeLabels: string[];
+  generatedAt: string;
+  updatedAt: string;
+  message: string;
+}
+
+export interface AlertSnapshot {
+  incidentId: string;
+  severity: IncidentSeverity;
+  placeIds: string[];
+  updatedAt: string;
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { MapPin, ChevronRight } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
+import { severityLabel, visualFromSeverity } from "@/lib/severity";
 import type { HelpAction, Incident } from "@/types/incident";
 import type { PrepTip } from "@/lib/prep-guidance";
 import { HelpActions } from "./help-actions";
@@ -12,20 +13,6 @@ interface SituationCardProps {
   prepTips: PrepTip[];
   nearPlaceName?: string | null;
 }
-
-const severityBg: Record<string, string> = {
-  advisory: "from-cyan-950/40 to-transparent border-l-cyan-400/40",
-  watch: "from-amber-950/40 to-transparent border-l-amber-400/50",
-  warning: "from-orange-950/40 to-transparent border-l-orange-400/60",
-  critical: "from-red-950/50 to-transparent border-l-red-400/70",
-};
-
-const severityBadge: Record<string, string> = {
-  advisory: "text-cyan-200 border-cyan-300/20 bg-cyan-300/10",
-  watch: "text-amber-200 border-amber-300/20 bg-amber-300/10",
-  warning: "text-orange-200 border-orange-300/20 bg-orange-300/10",
-  critical: "text-white border-red-500 bg-red-600 font-bold shadow-[inset_0_4px_24px_rgba(239,68,68,0.15)]",
-};
 
 const urgencyColor: Record<string, string> = {
   now: "text-red-300",
@@ -40,10 +27,11 @@ export function SituationCard({
   nearPlaceName,
 }: SituationCardProps) {
   const topTips = prepTips.slice(0, 3);
+  const severityVisual = visualFromSeverity(incident.severity);
 
   return (
     <section
-      className={`shrink-0 rounded-lg border border-white/10 border-l-2 bg-gradient-to-r ${severityBg[incident.severity]}`}
+      className={`shrink-0 rounded-lg border border-white/10 border-l-2 bg-gradient-to-r ${severityVisual.panel}`}
     >
       {/* ── Status Block ── */}
       <div className="p-3 pb-2">
@@ -52,9 +40,9 @@ export function SituationCard({
             {eventTypeLabel[incident.event_type]}
           </span>
           <span
-            className={`rounded-full border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${severityBadge[incident.severity]}`}
+            className={`rounded-full border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${severityVisual.badge}`}
           >
-            {incident.severity}
+            {severityLabel[incident.severity]}
           </span>
           {nearPlaceName && (
             <span className="rounded-full bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-0.5 text-[9px] text-cyan-300">

@@ -1,38 +1,27 @@
-import { MapPin, ChevronRight } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
+import { severityLabel, visualFromSeverity } from "@/lib/severity";
 import type { Incident } from "@/types/incident";
 
 interface IncidentDetailsProps {
   incident: Incident;
 }
 
-const severityStyle: Record<string, string> = {
-  advisory: "text-cyan-200 border-cyan-300/20 bg-cyan-300/10",
-  watch: "text-amber-200 border-amber-300/20 bg-amber-300/10",
-  warning: "text-orange-200 border-orange-300/20 bg-orange-300/10",
-  critical: "text-white border-red-500 bg-red-600 font-bold",
-};
-
-const severityAccent: Record<string, string> = {
-  advisory: "border-l-cyan-400/40",
-  watch: "border-l-amber-400/40",
-  warning: "border-l-orange-400/40",
-  critical: "border-l-red-500 border-red-500/50 bg-red-500/10 shadow-[inset_0_4px_24px_rgba(239,68,68,0.15)]",
-};
-
 export function IncidentDetails({ incident }: IncidentDetailsProps) {
+  const severityVisual = visualFromSeverity(incident.severity);
+
   return (
     <section
-      className={`shrink-0 rounded-lg border border-white/10 border-l-2 bg-[var(--bg-panel-strong)] p-3 ${severityAccent[incident.severity]}`}
+      className={`shrink-0 rounded-lg border border-white/10 border-l-2 bg-[var(--bg-panel-strong)] p-3 ${severityVisual.accent}`}
     >
       <div className="flex items-center gap-1.5">
         <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
           {eventTypeLabel[incident.event_type]}
         </span>
         <span
-          className={`rounded-full border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${severityStyle[incident.severity]}`}
+          className={`rounded-full border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${severityVisual.badge}`}
         >
-          {incident.severity}
+          {severityLabel[incident.severity]}
         </span>
         <span className="ml-auto text-[10px] text-[var(--text-dim)]">
           {incident.source}

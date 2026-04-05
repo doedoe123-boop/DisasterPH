@@ -4,9 +4,13 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { OfficialAdvisory } from "@/types/incident";
 import { formatShortTime } from "@/lib/incidents";
+import { StateCard } from "./state-card";
 
 interface OfficialAdvisoryPanelProps {
   advisories: OfficialAdvisory[];
+  emptyTitle?: string;
+  emptyMessage?: string;
+  emptyTone?: "neutral" | "warning" | "danger" | "info";
 }
 
 const severityBorder: Record<string, string> = {
@@ -18,12 +22,24 @@ const severityBorder: Record<string, string> = {
 
 export function OfficialAdvisoryPanel({
   advisories,
+  emptyTitle = "No official advisories available",
+  emptyMessage = "Official source bulletins are currently unavailable or there are no active advisories.",
+  emptyTone,
 }: OfficialAdvisoryPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? advisories : advisories.slice(0, 2);
   const remaining = advisories.length - 2;
 
-  if (advisories.length === 0) return null;
+  if (advisories.length === 0) {
+    return (
+      <StateCard
+        compact
+        message={emptyMessage}
+        title={emptyTitle}
+        tone={emptyTone}
+      />
+    );
+  }
 
   return (
     <section className="rounded-lg border border-white/8 bg-[var(--bg-panel)]">
