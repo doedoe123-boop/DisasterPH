@@ -10,14 +10,14 @@ const severityStyle: Record<string, string> = {
   advisory: "text-cyan-200 border-cyan-300/20 bg-cyan-300/10",
   watch: "text-amber-200 border-amber-300/20 bg-amber-300/10",
   warning: "text-orange-200 border-orange-300/20 bg-orange-300/10",
-  critical: "text-red-200 border-red-300/20 bg-red-300/10",
+  critical: "text-white border-red-500 bg-red-600 font-bold",
 };
 
 const severityAccent: Record<string, string> = {
   advisory: "border-l-cyan-400/40",
   watch: "border-l-amber-400/40",
   warning: "border-l-orange-400/40",
-  critical: "border-l-red-400/40",
+  critical: "border-l-red-500 border-red-500/50 bg-red-500/10 shadow-[inset_0_4px_24px_rgba(239,68,68,0.15)]",
 };
 
 export function IncidentDetails({ incident }: IncidentDetailsProps) {
@@ -50,27 +50,27 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
         <span>{formatShortTime(incident.updated_at)}</span>
       </div>
 
-      <details className="group mt-2.5 border-t border-white/6 pt-2">
-        <summary className="flex cursor-pointer items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-[var(--text-dim)] hover:text-[var(--text-muted)]">
-          <ChevronRight className="h-3 w-3 transition group-open:rotate-90" />
-          Details
-        </summary>
-        <p className="mt-2 text-[12px] leading-[1.5] text-[var(--text-muted)]">
+      <div className="mt-2.5 border-t border-white/6 pt-3">
+        <p className="text-[12px] leading-[1.6] text-[var(--text-muted)]">
           {incident.description}
         </p>
         {Object.keys(incident.metadata).length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-3 flex flex-wrap gap-1.5">
             {Object.entries(incident.metadata).map(([key, value]) => (
               <span
                 key={key}
-                className="rounded-full border border-white/8 bg-white/[0.03] px-2 py-1 text-[11px] text-[var(--text-muted)]"
+                className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                  incident.severity === "critical"
+                    ? "border-red-500/30 bg-red-500/20 text-red-200"
+                    : "border-white/8 bg-white/[0.03] text-[var(--text-muted)]"
+                }`}
               >
                 {key}: {String(value)}
               </span>
             ))}
           </div>
         )}
-      </details>
+      </div>
     </section>
   );
 }

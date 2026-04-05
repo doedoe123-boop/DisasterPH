@@ -29,23 +29,23 @@ const iconComponent: Record<HelpAction["icon"], LucideIcon> = {
 };
 
 const iconColor: Record<HelpAction["icon"], string> = {
-  phone: "text-emerald-300",
+  phone: "text-white",
   share: "text-cyan-300",
   checklist: "text-amber-300",
   locate: "text-blue-300",
-  alert: "text-orange-300",
+  alert: "text-white",
   link: "text-blue-300",
   copy: "text-violet-300",
 };
 
-const buttonBorder: Record<HelpAction["icon"], string> = {
-  phone: "hover:border-emerald-400/30",
-  share: "hover:border-cyan-400/30",
-  checklist: "hover:border-amber-400/30",
-  locate: "hover:border-blue-400/30",
-  alert: "hover:border-orange-400/30",
-  link: "hover:border-blue-400/30",
-  copy: "hover:border-violet-400/30",
+const buttonStyle: Record<HelpAction["icon"], string> = {
+  phone: "bg-emerald-600/90 hover:bg-emerald-500 border-emerald-500",
+  share: "bg-white/[0.02] hover:bg-white/[0.05] border-white/8 hover:border-cyan-400/30",
+  checklist: "bg-white/[0.02] hover:bg-white/[0.05] border-white/8 hover:border-amber-400/30",
+  locate: "bg-white/[0.02] hover:bg-white/[0.05] border-white/8 hover:border-blue-400/30",
+  alert: "bg-orange-600/90 hover:bg-orange-500 border-orange-500",
+  link: "bg-white/[0.02] hover:bg-white/[0.05] border-white/8 hover:border-blue-400/30",
+  copy: "bg-white/[0.02] hover:bg-white/[0.05] border-white/8 hover:border-violet-400/30",
 };
 
 const actionTypeLabel: Record<HelpAction["actionType"], string> = {
@@ -114,7 +114,7 @@ export function HelpActions({ actions, compact = false }: HelpActionsProps) {
         {primary.map((action) => (
           <button
             key={action.id}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/8 bg-white/[0.02] px-2 py-1.5 text-center transition hover:bg-white/[0.05] ${buttonBorder[action.icon]}`}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-center transition ${buttonStyle[action.icon]}`}
             onClick={() => handleAction(action)}
             type="button"
           >
@@ -145,7 +145,7 @@ export function HelpActions({ actions, compact = false }: HelpActionsProps) {
         {primary.map((action) => (
           <button
             key={action.id}
-            className={`group flex flex-col items-center gap-1.5 rounded-xl border border-white/8 bg-white/[0.02] p-3 text-center transition hover:bg-white/[0.05] ${buttonBorder[action.icon]}`}
+            className={`group flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition ${buttonStyle[action.icon]}`}
             onClick={() => handleAction(action)}
             type="button"
           >
@@ -153,10 +153,10 @@ export function HelpActions({ actions, compact = false }: HelpActionsProps) {
               const Icon = iconComponent[action.icon];
               return <Icon className={`h-5 w-5 ${iconColor[action.icon]}`} />;
             })()}
-            <span className="text-[11px] font-medium text-white">
+            <span className={`text-[11px] font-medium ${action.icon === 'phone' || action.icon === 'alert' ? 'text-white' : 'text-white'}`}>
               {action.label}
             </span>
-            <span className="text-[10px] leading-tight text-[var(--text-dim)]">
+            <span className={`text-[10px] leading-tight ${action.icon === 'phone' || action.icon === 'alert' ? 'text-white/80' : 'text-[var(--text-dim)]'}`}>
               {copiedId === action.id ? "Copied!" : action.description}
             </span>
             {actionTypeLabel[action.actionType] && (

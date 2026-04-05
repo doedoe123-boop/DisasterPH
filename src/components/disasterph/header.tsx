@@ -13,7 +13,7 @@ export function AppHeader({
   onFilterChange,
 }: HeaderProps) {
   return (
-    <header className="flex items-center gap-3 px-3 py-1.5">
+    <header className="flex items-center gap-3 px-3 py-1.5 border-t border-white/5 bg-black/20">
       <div className="flex shrink-0 items-center gap-2">
         <div className="flex h-6 w-6 items-center justify-center rounded border border-cyan-400/20 bg-cyan-400/8">
           <Eye className="h-3.5 w-3.5 text-cyan-200" />
@@ -34,7 +34,7 @@ export function AppHeader({
               key={filter.value}
               className={`shrink-0 rounded-full px-3 py-1 text-xs transition ${
                 active
-                  ? "border border-cyan-300/35 bg-cyan-300/12 text-cyan-100"
+                  ? "border-transparent bg-cyan-400/20 text-cyan-200"
                   : "border border-transparent text-[var(--text-muted)] hover:bg-white/5 hover:text-white"
               }`}
               onClick={() => onFilterChange(filter.value)}

@@ -37,7 +37,7 @@ const severityBadge: Record<string, string> = {
   advisory: "text-cyan-200 border-cyan-300/20 bg-cyan-300/10",
   watch: "text-amber-200 border-amber-300/20 bg-amber-300/10",
   warning: "text-orange-200 border-orange-300/20 bg-orange-300/10",
-  critical: "text-red-200 border-red-300/20 bg-red-300/10",
+  critical: "text-white border-red-500 bg-red-600 font-bold shadow-[inset_0_4px_24px_rgba(239,68,68,0.15)]",
 };
 
 const severityAccent: Record<string, string> = {
@@ -290,12 +290,12 @@ export function FloatingIncidentCard({
               {prepTips.slice(0, 4).map((tip) => (
                 <div key={tip.id} className="flex items-start gap-2">
                   <span
-                    className={`mt-0.5 text-[10px] font-bold uppercase shrink-0 ${urgencyColor[tip.urgency]}`}
+                    className={`mt-1 text-[12px] font-bold uppercase shrink-0 ${urgencyColor[tip.urgency]}`}
                   >
                     {tip.urgency === "now"
-                      ? "▸"
+                      ? "✓"
                       : tip.urgency === "soon"
-                        ? "▹"
+                        ? "✓"
                         : "·"}
                   </span>
                   <div className="min-w-0">
@@ -383,22 +383,22 @@ export function FloatingIncidentCard({
 
         {/* ── Section: Details (metadata) ── */}
         {Object.keys(incident.metadata).length > 0 && (
-          <details className="group border-t border-white/6 px-3 py-2">
-            <summary className="flex cursor-pointer items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--text-dim)] hover:text-[var(--text-muted)]">
-              <ChevronRight className="h-3 w-3 transition group-open:rotate-90" />
-              Details
-            </summary>
-            <div className="mt-1.5 flex flex-wrap gap-1.5 overflow-hidden">
+          <div className="border-t border-white/6 px-3 py-3">
+            <div className="flex flex-wrap gap-1.5 overflow-hidden">
               {Object.entries(incident.metadata).map(([key, value]) => (
                 <span
                   key={key}
-                  className="max-w-full truncate rounded-full border border-white/8 bg-white/[0.03] px-2 py-1 text-[11px] text-[var(--text-muted)]"
+                  className={`max-w-full truncate rounded-full border px-2 py-1 text-[11px] ${
+                    incident.severity === 'critical'
+                      ? 'border-red-500/30 bg-red-500/20 text-red-200 font-medium'
+                      : 'border-white/8 bg-white/[0.03] text-[var(--text-muted)]'
+                  }`}
                 >
                   {key}: {String(value)}
                 </span>
               ))}
             </div>
-          </details>
+          </div>
         )}
       </div>
     </div>

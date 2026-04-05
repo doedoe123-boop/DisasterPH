@@ -33,13 +33,11 @@ export function PrepGuidance({ tips }: PrepGuidanceProps) {
               className="rounded-lg p-2.5 transition hover:bg-white/[0.03]"
             >
               <div className="flex items-center gap-1.5">
+
                 <span
-                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${style.dot}`}
-                />
-                <span
-                  className={`text-[10px] font-medium uppercase tracking-wider ${style.text}`}
+                  className={`text-[12px] font-bold uppercase ${style.text}`}
                 >
-                  {style.label}
+                  ✓
                 </span>
               </div>
               <p className="mt-1 text-[13px] font-medium leading-5 text-white">
