@@ -1,8 +1,8 @@
-# BantayPH
+# DisasterPH
 
 **Real-time disaster monitoring and family safety tool for the Philippines.**
 
-BantayPH pulls live hazard data from PAGASA, PHIVOLCS, and NASA EONET, plots it on an interactive map, and helps users answer four questions during a disaster:
+DisasterPH pulls live hazard data from PAGASA, PHIVOLCS, and NASA EONET, plots it on an interactive map, and helps users answer four questions during a disaster:
 
 1. Is my family's area affected?
 2. How serious is it?
