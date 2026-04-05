@@ -168,6 +168,7 @@ export default function MapLibreMapComponent({
   useEffect(() => {
     markersRef.current.forEach((marker, id) => {
       const el = marker.getElement();
+      const inner = el.querySelector<HTMLElement>(".marker-inner");
       const isSelected = id === selectedIncidentId;
       const isHovered = id === hoveredIncidentId;
 
@@ -176,13 +177,15 @@ export default function MapLibreMapComponent({
 
       if (isSelected) {
         el.style.zIndex = "30";
-        el.style.filter = "drop-shadow(0 0 8px rgba(34,211,238,0.5))";
+        if (inner)
+          inner.style.filter = "drop-shadow(0 0 8px rgba(34,211,238,0.5))";
       } else if (isHovered) {
         el.style.zIndex = "20";
-        el.style.filter = "drop-shadow(0 0 6px rgba(255,255,255,0.3))";
+        if (inner)
+          inner.style.filter = "drop-shadow(0 0 6px rgba(255,255,255,0.3))";
       } else {
         el.style.zIndex = "10";
-        el.style.filter = "";
+        if (inner) inner.style.filter = "";
       }
     });
   }, [selectedIncidentId, hoveredIncidentId]);
@@ -265,12 +268,11 @@ function createMarkerElement(incident: Incident): HTMLDivElement {
   el.style.width = `${size}px`;
   el.style.height = `${size}px`;
   el.style.cursor = "pointer";
-  el.style.transition = "transform 0.2s ease, filter 0.2s ease";
   el.style.position = "relative";
 
   el.innerHTML = `
-    <div style="position:absolute;inset:-6px;border-radius:50%;border:2px solid ${ringColor};opacity:0.5;animation:marker-ping 2s cubic-bezier(0,0,0.2,1) infinite;"></div>
-    <div style="width:${size}px;height:${size}px;border-radius:50%;background:radial-gradient(circle at 35% 35%,${color}dd,${color}88);border:2px solid ${color};box-shadow:0 0 12px ${color}66,0 0 24px ${color}33;display:flex;align-items:center;justify-content:center;">
+    <div style="position:absolute;inset:-6px;border-radius:50%;border:2px solid ${ringColor};opacity:0.5;animation:marker-ping 2s cubic-bezier(0,0,0.2,1) infinite;pointer-events:none;"></div>
+    <div class="marker-inner" style="width:${size}px;height:${size}px;border-radius:50%;background:radial-gradient(circle at 35% 35%,${color}dd,${color}88);border:2px solid ${color};box-shadow:0 0 12px ${color}66,0 0 24px ${color}33;display:flex;align-items:center;justify-content:center;transition:transform 0.2s ease,filter 0.2s ease;">
       <span style="font-size:11px;font-weight:700;color:#000;text-shadow:0 0 2px rgba(255,255,255,0.3);">${getMarkerLabel(incident)}</span>
     </div>`;
 

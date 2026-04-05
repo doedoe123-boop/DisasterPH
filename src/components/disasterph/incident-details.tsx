@@ -12,12 +12,18 @@ const severityStyle: Record<string, string> = {
   critical: "text-red-200 border-red-300/20 bg-red-300/10",
 };
 
+const severityAccent: Record<string, string> = {
+  advisory: "border-l-cyan-400/40",
+  watch: "border-l-amber-400/40",
+  warning: "border-l-orange-400/40",
+  critical: "border-l-red-400/40",
+};
+
 export function IncidentDetails({ incident }: IncidentDetailsProps) {
   return (
-    <section className="shrink-0 rounded-xl border border-white/8 bg-[var(--bg-panel)] p-3 backdrop-blur">
-      <p className="mb-2 text-[9px] uppercase tracking-[0.26em] text-[var(--text-dim)]">
-        Selected Incident
-      </p>
+    <section
+      className={`shrink-0 rounded-xl border border-white/10 border-l-2 bg-[var(--bg-panel-strong)] p-3 backdrop-blur ${severityAccent[incident.severity]}`}
+    >
       <div className="flex items-center gap-1.5">
         <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
           {eventTypeLabel[incident.event_type]}
@@ -37,12 +43,29 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
       </h3>
 
       <div className="mt-1.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
+        <svg
+          className="h-3 w-3 shrink-0 text-[var(--text-dim)]"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeWidth="1.5"
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeWidth="1.5"
+            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
         <span>{incident.region}</span>
         <span className="text-[var(--text-dim)]">·</span>
         <span>{formatShortTime(incident.updated_at)}</span>
       </div>
 
-      <details className="group mt-2 border-t border-white/6 pt-2">
+      <details className="group mt-2.5 border-t border-white/6 pt-2">
         <summary className="flex cursor-pointer items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-[var(--text-dim)] hover:text-[var(--text-muted)]">
           <svg
             className="h-3 w-3 transition group-open:rotate-90"
@@ -57,16 +80,18 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
         <p className="mt-2 text-[12px] leading-[1.5] text-[var(--text-muted)]">
           {incident.description}
         </p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {Object.entries(incident.metadata).map(([key, value]) => (
-            <span
-              key={key}
-              className="rounded-full border border-white/8 bg-white/[0.03] px-2 py-1 text-[11px] text-[var(--text-muted)]"
-            >
-              {key}: {String(value)}
-            </span>
-          ))}
-        </div>
+        {Object.keys(incident.metadata).length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {Object.entries(incident.metadata).map(([key, value]) => (
+              <span
+                key={key}
+                className="rounded-full border border-white/8 bg-white/[0.03] px-2 py-1 text-[11px] text-[var(--text-muted)]"
+              >
+                {key}: {String(value)}
+              </span>
+            ))}
+          </div>
+        )}
       </details>
     </section>
   );

@@ -67,6 +67,9 @@ export interface HelpAction {
   id: string;
   label: string;
   description: string;
-  icon: "phone" | "share" | "checklist" | "locate" | "alert";
+  icon: "phone" | "share" | "checklist" | "locate" | "alert" | "link" | "copy";
+  actionType: "call" | "link" | "share" | "copy" | "internal";
   href?: string;
+  /** For copy actions, the text to copy */
+  copyText?: string;
 }

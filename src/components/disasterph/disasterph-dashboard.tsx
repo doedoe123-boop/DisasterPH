@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { mockHelpActions } from "@/data/mock-incidents";
+import { useEffect, useMemo, useState } from "react";
 import { eventTypeLabel } from "@/lib/incidents";
+import { getHelpActions } from "@/lib/help-actions";
 import type { Incident, IncidentEventType } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
 import { useAdvisories } from "@/hooks/use-advisories";
@@ -45,6 +45,11 @@ export function BantayPHDashboard() {
 
   const selectedIncident: Incident | undefined =
     incidents.find((i) => i.id === selectedIncidentId) ?? incidents[0];
+
+  const helpActions = useMemo(
+    () => getHelpActions(selectedIncident),
+    [selectedIncident],
+  );
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setIsBooting(false), 900);
@@ -164,7 +169,10 @@ export function BantayPHDashboard() {
             )}
 
             {effectiveSidebar !== "expanded" && selectedIncident && (
-              <FloatingIncidentCard incident={selectedIncident} />
+              <FloatingIncidentCard
+                incident={selectedIncident}
+                helpActions={helpActions}
+              />
             )}
           </section>
 
@@ -178,7 +186,7 @@ export function BantayPHDashboard() {
                 </div>
               ) : null}
 
-              <HelpActions actions={mockHelpActions} />
+              <HelpActions actions={helpActions} />
 
               <OfficialAdvisoryPanel advisories={advisories} />
 
@@ -300,7 +308,7 @@ export function BantayPHDashboard() {
           open={sheetOpen}
           onOpenChange={setSheetOpen}
           advisories={advisories}
-          helpActions={mockHelpActions}
+          helpActions={helpActions}
         />
       )}
     </main>
