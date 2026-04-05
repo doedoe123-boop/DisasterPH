@@ -17,7 +17,7 @@ export function PrepGuidance({ tips }: PrepGuidanceProps) {
   if (tips.length === 0) return null;
 
   return (
-    <section className="rounded-xl border border-white/8 bg-[var(--bg-panel)] backdrop-blur">
+    <section className="rounded-lg border border-white/8 bg-[var(--bg-panel)]">
       <div className="border-b border-white/8 px-3 py-2">
         <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
           What To Do

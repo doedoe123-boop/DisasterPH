@@ -1,5 +1,6 @@
 "use client";
 
+import { MapPin, ChevronRight } from "lucide-react";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
 import type { HelpAction, Incident } from "@/types/incident";
 import type { PrepTip } from "@/lib/prep-guidance";
@@ -42,7 +43,7 @@ export function SituationCard({
 
   return (
     <section
-      className={`shrink-0 rounded-xl border border-white/10 border-l-2 bg-gradient-to-r backdrop-blur ${severityBg[incident.severity]}`}
+      className={`shrink-0 rounded-lg border border-white/10 border-l-2 bg-gradient-to-r ${severityBg[incident.severity]}`}
     >
       {/* ── Status Block ── */}
       <div className="p-3 pb-2">
@@ -70,23 +71,7 @@ export function SituationCard({
         </h3>
 
         <div className="mt-1.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
-          <svg
-            className="h-3 w-3 shrink-0 text-[var(--text-dim)]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeWidth="1.5"
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeWidth="1.5"
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
+          <MapPin className="h-3 w-3 shrink-0 text-[var(--text-dim)]" />
           <span>{incident.region}</span>
         </div>
 
@@ -135,14 +120,7 @@ export function SituationCard({
       {Object.keys(incident.metadata).length > 0 && (
         <details className="group border-t border-white/6 px-3 py-2">
           <summary className="flex cursor-pointer items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--text-dim)] hover:text-[var(--text-muted)]">
-            <svg
-              className="h-3 w-3 transition group-open:rotate-90"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRight className="h-3 w-3 transition group-open:rotate-90" />
             Details
           </summary>
           <div className="mt-1.5 flex flex-wrap gap-1.5 overflow-hidden">

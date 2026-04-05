@@ -2,22 +2,22 @@
 
 :root {
   --bg-base: #06111b;
-  --bg-panel: rgba(7, 20, 31, 0.84);
-  --bg-panel-strong: rgba(6, 16, 27, 0.96);
-  --bg-overlay: rgba(3, 10, 18, 0.72);
+  --bg-panel: rgba(8, 20, 32, 0.95);
+  --bg-panel-strong: rgba(6, 16, 27, 0.98);
+  --bg-overlay: rgba(3, 10, 18, 0.88);
   --bg-chip: rgba(16, 34, 49, 0.9);
-  --line-soft: rgba(106, 145, 176, 0.22);
-  --line-strong: rgba(124, 183, 235, 0.3);
-  --text-primary: #eff7fd;
-  --text-muted: #9eb6ca;
-  --text-dim: #7290a8;
+  --line-soft: rgba(80, 120, 150, 0.18);
+  --line-strong: rgba(100, 150, 195, 0.24);
+  --text-primary: #e8f0f6;
+  --text-muted: #94aec2;
+  --text-dim: #637d94;
   --accent-cyan: #39d0ff;
   --accent-blue: #2d7cff;
   --accent-amber: #ffbf47;
   --accent-red: #ff5d5d;
   --accent-emerald: #39d98a;
-  --shadow-panel: 0 18px 60px rgba(0, 0, 0, 0.35);
-  --font-sans: "Aptos", "Segoe UI", "Helvetica Neue", sans-serif;
+  --shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "SFMono-Regular", "Consolas", monospace;
 }
 
@@ -40,9 +40,7 @@
 }
 
 html {
-  background:
-    radial-gradient(circle at top, rgba(57, 208, 255, 0.12), transparent 30%),
-    linear-gradient(180deg, #08131f 0%, #050c14 100%);
+  background: #050c14;
 }
 
 body {
@@ -69,38 +67,24 @@ select {
 }
 
 .dashboard-grid {
-  background-image:
-    linear-gradient(rgba(57, 208, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(57, 208, 255, 0.04) 1px, transparent 1px);
-  background-size: 40px 40px;
+  /* Grid removed for utilitarian look */
 }
 
 .panel-surface {
   background: var(--bg-panel);
   border: 1px solid var(--line-soft);
   box-shadow: var(--shadow-panel);
-  backdrop-filter: blur(18px);
 }
 
 .panel-surface-strong {
   background: var(--bg-panel-strong);
   border: 1px solid var(--line-strong);
   box-shadow: var(--shadow-panel);
-  backdrop-filter: blur(24px);
 }
 
 .map-glow::before {
-  content: "";
-  position: absolute;
-  inset: 8% 12%;
-  border-radius: 999px;
-  background: radial-gradient(
-    circle,
-    rgba(57, 208, 255, 0.08),
-    transparent 68%
-  );
-  filter: blur(40px);
-  pointer-events: none;
+  /* Map glow removed for cleaner look */
+  display: none;
 }
 
 .pulse-dot {
@@ -158,7 +142,7 @@ select {
     transform: scale(1);
   }
   50% {
-    transform: scale(1.08);
+    transform: scale(1.03);
   }
 }
 
@@ -275,42 +259,40 @@ select {
 
 /* Dark popup styling */
 .bantay-popup .maplibregl-popup-content {
-  background: rgba(4, 11, 19, 0.92);
+  background: rgba(6, 16, 26, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 10px 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   color: #fff;
 }
 
 .bantay-popup .maplibregl-popup-tip {
-  border-top-color: rgba(4, 11, 19, 0.92);
+  border-top-color: rgba(6, 16, 26, 0.96);
 }
 
 .bantay-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
-  border-top-color: rgba(4, 11, 19, 0.92);
+  border-top-color: rgba(6, 16, 26, 0.96);
 }
 
 .bantay-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip {
-  border-bottom-color: rgba(4, 11, 19, 0.92);
+  border-bottom-color: rgba(6, 16, 26, 0.96);
 }
 
 .bantay-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip {
-  border-right-color: rgba(4, 11, 19, 0.92);
+  border-right-color: rgba(6, 16, 26, 0.96);
 }
 
 .bantay-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip {
-  border-left-color: rgba(4, 11, 19, 0.92);
+  border-left-color: rgba(6, 16, 26, 0.96);
 }
 
 /* Navigation controls dark theme */
 .maplibregl-ctrl-group {
-  background: rgba(4, 11, 19, 0.85) !important;
+  background: rgba(6, 16, 26, 0.95) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 8px !important;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 .maplibregl-ctrl-group button {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, ChevronsLeft } from "lucide-react";
 import { eventTypeLabel, nearestPlaceName } from "@/lib/incidents";
 import { getHelpActions } from "@/lib/help-actions";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
@@ -137,7 +138,7 @@ export function BantayPHDashboard() {
   if (isLoading && incidents.length === 0) {
     return (
       <main className="flex h-screen items-center justify-center bg-[var(--bg-base)] text-[var(--text-primary)]">
-        <div className="rounded-2xl border border-white/10 bg-[var(--bg-panel)] p-6 text-center backdrop-blur">
+        <div className="rounded-lg border border-white/10 bg-[var(--bg-panel)] p-6 text-center">
           <div className="loading-shimmer mx-auto h-3 w-28 rounded-full" />
           <div className="loading-shimmer mt-3 h-6 w-36 rounded-xl mx-auto" />
           <p className="mt-4 text-xs text-[var(--text-dim)]">
@@ -154,7 +155,7 @@ export function BantayPHDashboard() {
   return (
     <main className="h-screen overflow-hidden bg-[var(--bg-base)] p-2 text-[var(--text-primary)]">
       <div
-        className={`mx-auto flex h-full flex-col gap-2 rounded-2xl border bg-[rgba(4,11,19,0.82)] shadow-[0_28px_80px_rgba(0,0,0,0.4)] transition-all duration-300 ${
+        className={`mx-auto flex h-full flex-col gap-2 rounded-lg border bg-[rgba(6,14,22,0.95)] shadow-[0_4px_24px_rgba(0,0,0,0.35)] transition-all duration-300 ${
           focusMode
             ? "max-w-none gap-0 rounded-none border-transparent p-0"
             : "max-w-[1600px] border-white/8 p-2"
@@ -163,7 +164,7 @@ export function BantayPHDashboard() {
         <div
           className={`transition-all duration-300 overflow-hidden ${focusMode ? "h-0 opacity-0" : "opacity-100"}`}
         >
-          <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] overflow-hidden backdrop-blur-lg">
+          <div className="rounded-lg border border-white/8 bg-[var(--bg-panel)] overflow-hidden">
             <ThreatHeadlineBar
               threat={threat}
               onClickIncident={(id) => {
@@ -195,7 +196,7 @@ export function BantayPHDashboard() {
         <div className={`grid min-h-0 flex-1 gap-2 ${gridCols}`}>
           <section
             className={`relative min-h-0 overflow-hidden ${
-              focusMode ? "rounded-none" : "rounded-2xl border border-white/8"
+              focusMode ? "rounded-none" : "rounded-lg border border-white/8"
             }`}
           >
             <CommandMap
@@ -214,10 +215,10 @@ export function BantayPHDashboard() {
             />
 
             {isBooting && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[rgba(3,8,14,0.5)]">
-                <div className="rounded-2xl border border-white/10 bg-[var(--bg-panel)] p-4 backdrop-blur">
+              <div className="absolute inset-0 flex items-center justify-center bg-[rgba(3,8,14,0.7)]">
+                <div className="rounded-lg border border-white/10 bg-[var(--bg-panel)] p-4">
                   <div className="loading-shimmer mx-auto h-3 w-24 rounded-full" />
-                  <div className="loading-shimmer mt-3 h-6 w-32 rounded-xl" />
+                  <div className="loading-shimmer mt-3 h-6 w-32 rounded-lg" />
                 </div>
               </div>
             )}
@@ -278,7 +279,7 @@ export function BantayPHDashboard() {
               {/* ── Priority Feed (always visible, collapsible) ── */}
               <div className="shrink-0">
                 <button
-                  className="flex w-full items-center justify-between rounded-xl border border-white/8 bg-[var(--bg-panel)] px-3 py-2 text-left backdrop-blur"
+                  className="flex w-full items-center justify-between rounded-lg border border-white/8 bg-[var(--bg-panel)] px-3 py-2 text-left"
                   onClick={() => setFeedOpen(!feedOpen)}
                   type="button"
                 >
@@ -289,22 +290,13 @@ export function BantayPHDashboard() {
                     <span className="text-[11px] text-[var(--text-dim)]">
                       {incidents.length} active
                     </span>
-                    <svg
+                    <ChevronDown
                       className={`h-3 w-3 text-[var(--text-dim)] transition ${feedOpen ? "rotate-180" : ""}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                    />
                   </div>
                 </button>
                 {feedOpen && (
-                  <div className="mt-1 max-h-60 overflow-y-auto rounded-xl border border-white/8 bg-[var(--bg-panel)]">
+                  <div className="mt-1 max-h-60 overflow-y-auto rounded-lg border border-white/8 bg-[var(--bg-panel)]">
                     <AlertFeed
                       incidents={incidents}
                       places={places}
@@ -321,7 +313,7 @@ export function BantayPHDashboard() {
 
               {/* Compact system status */}
               <div className="mt-auto flex shrink-0 items-center gap-2 rounded-lg border border-white/8 bg-[var(--bg-panel)] px-2.5 py-1.5 text-[10px] text-[var(--text-dim)]">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(57,217,138,0.6)]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 <span>{stats.sourcesOnline} sources</span>
                 <span className="text-white/10">·</span>
                 <span>{stats.activeAlerts} active</span>
@@ -332,25 +324,14 @@ export function BantayPHDashboard() {
           )}
 
           {effectiveSidebar === "collapsed" && (
-            <aside className="hidden flex-col items-center gap-3 rounded-xl border border-white/8 bg-[var(--bg-panel)] py-2 backdrop-blur lg:flex">
+            <aside className="hidden flex-col items-center gap-3 rounded-lg border border-white/8 bg-[var(--bg-panel)] py-2 lg:flex">
               <button
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-dim)] transition hover:bg-white/5 hover:text-white"
                 onClick={() => setSidebarExpanded(true)}
                 title="Expand sidebar"
                 type="button"
               >
-                <svg
-                  className="h-3.5 w-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeWidth="2"
-                    d="M11 7l-5 5 5 5M18 7l-5 5 5 5"
-                  />
-                </svg>
+                <ChevronsLeft className="h-3.5 w-3.5" />
               </button>
 
               <div className="mx-auto h-px w-6 bg-white/8" />
@@ -361,7 +342,7 @@ export function BantayPHDashboard() {
                     key={incident.id}
                     className={`h-2.5 w-2.5 cursor-pointer rounded-full transition-all ${
                       incident.id === selectedIncident?.id
-                        ? "scale-150 shadow-[0_0_4px_rgba(34,211,238,0.6)]"
+                        ? "scale-150 ring-1 ring-cyan-400/50"
                         : "opacity-60 hover:scale-125 hover:opacity-100"
                     } ${
                       incident.severity === "critical"

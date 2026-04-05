@@ -321,12 +321,10 @@ export function IncidentMarker({
         strokeWidth={sw}
         style={{
           filter: isSelected
-            ? `drop-shadow(0 0 8px ${color})`
+            ? `drop-shadow(0 0 4px ${color})`
             : isHovered
-              ? `drop-shadow(0 0 6px ${color})`
-              : isHighPriority
-                ? `drop-shadow(0 0 3px ${color})`
-                : undefined,
+              ? `drop-shadow(0 0 3px ${color})`
+              : undefined,
           transition: "r 0.15s, stroke-width 0.15s, filter 0.15s",
         }}
       />

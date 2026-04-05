@@ -30,7 +30,7 @@ export function AlertFeed({
   const hiddenCount = ranked.length - visible.length;
 
   return (
-    <section className="flex h-full flex-col overflow-hidden rounded-xl border border-white/8 bg-[var(--bg-panel)] backdrop-blur">
+    <section className="flex h-full flex-col overflow-hidden rounded-lg border border-white/8 bg-[var(--bg-panel)]">
       <div className="flex items-center justify-between border-b border-white/8 px-3 py-2">
         <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
           Priority Feed

@@ -1,3 +1,4 @@
+import { MapPin } from "lucide-react";
 import type { PlaceRiskSummary } from "@/types/incident";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
 
@@ -41,7 +42,7 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
 
   return (
     <section
-      className={`shrink-0 rounded-xl border border-white/10 border-l-2 bg-gradient-to-r p-3 backdrop-blur ${riskGradient[riskLevel]}`}
+      className={`shrink-0 rounded-lg border border-white/10 border-l-2 bg-gradient-to-r p-3 ${riskGradient[riskLevel]}`}
     >
       {/* Header */}
       <div className="flex items-center gap-1.5">
@@ -64,23 +65,7 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
       {/* Distance indicator */}
       {nearestDistanceKm !== null && (
         <div className="mt-2 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
-          <svg
-            className="h-3 w-3 shrink-0 text-[var(--text-dim)]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeWidth="1.5"
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeWidth="1.5"
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
+          <MapPin className="h-3 w-3 shrink-0 text-[var(--text-dim)]" />
           <span>Nearest hazard: ~{Math.round(nearestDistanceKm)} km away</span>
         </div>
       )}

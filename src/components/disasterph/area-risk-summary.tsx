@@ -35,7 +35,7 @@ export function AreaRiskSummary({ region, incidents }: AreaRiskSummaryProps) {
 
   if (nearby.length === 0) {
     return (
-      <section className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-3 backdrop-blur">
+      <section className="rounded-lg border border-white/8 bg-[var(--bg-panel)] p-3">
         <p className="mb-1.5 text-[9px] uppercase tracking-[0.26em] text-[var(--text-dim)]">
           Area Risk
         </p>
@@ -48,7 +48,7 @@ export function AreaRiskSummary({ region, incidents }: AreaRiskSummaryProps) {
   }
 
   return (
-    <section className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-3 backdrop-blur">
+    <section className="rounded-lg border border-white/8 bg-[var(--bg-panel)] p-3">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-[9px] uppercase tracking-[0.26em] text-[var(--text-dim)]">
           Area Risk — {region}
