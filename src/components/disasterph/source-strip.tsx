@@ -1,18 +1,7 @@
 "use client";
 
 import type { SourceStatus } from "@/types/incident";
-
-const statusDot: Record<string, string> = {
-  healthy: "bg-emerald-400",
-  delayed: "bg-amber-400",
-  degraded: "bg-red-400",
-};
-
-const statusLabel: Record<string, string> = {
-  healthy: "Live",
-  delayed: "Delayed",
-  degraded: "Down",
-};
+import { sourceStatusVisual } from "@/lib/severity";
 
 interface SourceStripProps {
   sources: SourceStatus[];
@@ -41,11 +30,11 @@ export function SourceStrip({ sources }: SourceStripProps) {
             className="flex items-center gap-1.5 shrink-0"
           >
             <span
-              className={`h-1.5 w-1.5 rounded-full ${statusDot[source.status]}`}
+              className={`h-1.5 w-1.5 rounded-full ${sourceStatusVisual[source.status].dot}`}
             />
             <span className="text-[var(--text-muted)]">{source.source}</span>
             <span className="text-[var(--text-dim)]">
-              {statusLabel[source.status]}
+              {sourceStatusVisual[source.status].label}
               {source.status !== "healthy" && source.latency_ms > 0
                 ? ` (${source.latency_ms}ms)`
                 : ""}

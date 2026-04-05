@@ -15,7 +15,9 @@ const MapboxMap = dynamic(() => import("./mapbox-map"), {
     <div className="flex h-full w-full items-center justify-center bg-[#061420]">
       <div className="text-center">
         <div className="loading-shimmer mx-auto h-3 w-24 rounded-full" />
-        <p className="mt-3 text-xs text-[var(--text-dim)]">Loading map…</p>
+        <p className="mt-3 text-xs text-[var(--text-dim)]">
+          Initializing map view…
+        </p>
       </div>
     </div>
   ),

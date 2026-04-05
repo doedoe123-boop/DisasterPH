@@ -10,8 +10,9 @@ import { computeThreatHeadline } from "@/lib/threat-headline";
 import type { Incident, IncidentEventType } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
 import { useAdvisories } from "@/hooks/use-advisories";
+import { useAlertCenter } from "@/hooks/use-alert-center";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
-import { useSourceStatus } from "@/hooks/use-source-status";
+import { AlertCenterPanel } from "./alert-center-panel";
 import { AppHeader } from "./header";
 import { CommandMap } from "./command-map";
 import { AlertFeed } from "./alert-feed";
@@ -22,6 +23,9 @@ import { SavedPlaces } from "./saved-places";
 import { RiskSummary } from "./risk-summary";
 import ThreatHeadlineBar from "./threat-headline";
 import { SourceStrip } from "./source-strip";
+import { SourceHealth } from "./source-health";
+import { StateBanner } from "./state-banner";
+import { StateCard } from "./state-card";
 import { SituationCard } from "./situation-card";
 
 const filters: Array<{ label: string; value: IncidentEventType | "all" }> = [
@@ -33,7 +37,7 @@ const filters: Array<{ label: string; value: IncidentEventType | "all" }> = [
   { label: eventTypeLabel.landslide, value: "landslide" },
 ];
 
-export function BantayPHDashboard() {
+export function DisasterPHDashboard() {
   const [activeFilter, setActiveFilter] = useState<IncidentEventType | "all">(
     "all",
   );
@@ -49,11 +53,10 @@ export function BantayPHDashboard() {
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
 
   // ── Live data hooks ──
-  const { incidents, stats, isLoading, error, staleAt } =
+  const { incidents, stats, sourceStatuses, isLoading, error, staleAt } =
     useIncidents(activeFilter);
-  const { advisories } = useAdvisories();
+  const { advisories, error: advisoryError } = useAdvisories();
   const { places, addPlace, removePlace } = useSavedPlaces();
-  const { sourceStatuses } = useSourceStatus();
 
   const selectedIncident: Incident | undefined =
     incidents.find((i) => i.id === selectedIncidentId) ?? incidents[0];
@@ -73,6 +76,7 @@ export function BantayPHDashboard() {
     () => placeRisks.find((r) => r.place.id === selectedPlaceId) ?? null,
     [placeRisks, selectedPlaceId],
   );
+  const { recentEvents } = useAlertCenter(incidents, placeRisks);
 
   // ── Prep tips based on selected incident ──
   const prepTips = useMemo(
@@ -151,6 +155,13 @@ export function BantayPHDashboard() {
 
   // When incidents have loaded but none match the filter
   const noData = incidents.length === 0;
+  const degradedSourceCount = sourceStatuses.filter(
+    (source) => source.status === "degraded" || source.status === "unavailable",
+  ).length;
+  const delayedSourceCount = sourceStatuses.filter(
+    (source) => source.status === "delayed",
+  ).length;
+  const hasSourceProblems = degradedSourceCount > 0 || delayedSourceCount > 0;
 
   return (
     <main className="h-screen overflow-hidden bg-[var(--bg-base)] p-2 text-[var(--text-primary)]">
@@ -183,14 +194,29 @@ export function BantayPHDashboard() {
 
         {/* ── Error / stale-data banners ── */}
         {error && (
-          <div className="mx-2 rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-1.5 text-xs text-red-200">
-            Data fetch error: {error}
-          </div>
+          <StateBanner
+            message={error}
+            title="Live data fetch failed"
+            tone="danger"
+          />
         )}
         {staleAt && !error && (
-          <div className="mx-2 rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-1.5 text-xs text-amber-200">
-            Showing cached data — live feeds may be delayed.
-          </div>
+          <StateBanner
+            message="Showing last-known incident data while live feeds recover."
+            title="Cached data active"
+            tone="warning"
+          />
+        )}
+        {hasSourceProblems && !error && (
+          <StateBanner
+            message={
+              degradedSourceCount > 0
+                ? `${degradedSourceCount} source${degradedSourceCount > 1 ? "s are" : " is"} degraded or unavailable.`
+                : `${delayedSourceCount} source${delayedSourceCount > 1 ? "s are" : " is"} delayed.`
+            }
+            title="Source health is degraded"
+            tone="info"
+          />
         )}
 
         <div className={`grid min-h-0 flex-1 gap-2 ${gridCols}`}>
@@ -234,6 +260,24 @@ export function BantayPHDashboard() {
                 focusMode={focusMode}
               />
             )}
+
+            {noData && (
+              <div className="pointer-events-none absolute inset-x-4 top-4 z-20 max-w-sm">
+                <StateCard
+                  message={
+                    hasSourceProblems
+                      ? "One or more sources are delayed or degraded. Incidents may appear once feeds recover."
+                      : "No incidents match the current filter. The map remains available while you switch hazards or wait for new updates."
+                  }
+                  title={
+                    hasSourceProblems
+                      ? "Sources are having issues"
+                      : "No matching incidents"
+                  }
+                  tone={hasSourceProblems ? "warning" : "neutral"}
+                />
+              </div>
+            )}
           </section>
 
           {effectiveSidebar === "expanded" && (
@@ -260,6 +304,14 @@ export function BantayPHDashboard() {
                 />
               )}
 
+              <AlertCenterPanel
+                alerts={recentEvents}
+                onSelectIncident={(incidentId) => {
+                  setSelectedIncidentId(incidentId);
+                  setSelectedPlaceId(null);
+                }}
+              />
+
               {/* ── Situation Card (action-oriented incident details) ── */}
               {!selectedPlaceRisk && selectedIncident ? (
                 <SituationCard
@@ -269,12 +321,35 @@ export function BantayPHDashboard() {
                   nearPlaceName={selectedNearPlace}
                 />
               ) : !selectedPlaceRisk && noData ? (
-                <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-4 text-center text-sm text-[var(--text-dim)]">
-                  No incidents match this filter.
-                </div>
+                <StateCard
+                  message={
+                    hasSourceProblems
+                      ? "One or more sources are experiencing issues. Data should recover on the next refresh cycle."
+                      : "Switch filters or wait for the next refresh cycle. Source status above will show if feeds are delayed."
+                  }
+                  title={
+                    hasSourceProblems
+                      ? "Waiting for sources"
+                      : "No incidents match this filter"
+                  }
+                  tone={hasSourceProblems ? "info" : undefined}
+                />
               ) : null}
 
-              <OfficialAdvisoryPanel advisories={advisories} />
+              <OfficialAdvisoryPanel
+                advisories={advisories}
+                emptyTone={advisoryError ? "warning" : undefined}
+                emptyTitle={advisoryError ? "Advisory fetch failed" : undefined}
+                emptyMessage={
+                  advisoryError
+                    ? "Could not reach advisory sources. Cached advisories will appear when available."
+                    : hasSourceProblems
+                      ? "Official advisories are temporarily unavailable because one or more upstream sources are delayed or degraded."
+                      : undefined
+                }
+              />
+
+              <SourceHealth sourceStatuses={sourceStatuses} />
 
               {/* ── Priority Feed (always visible, collapsible) ── */}
               <div className="shrink-0">
@@ -302,6 +377,12 @@ export function BantayPHDashboard() {
                       places={places}
                       selectedIncidentId={selectedIncident?.id ?? ""}
                       hoveredIncidentId={hoveredIncidentId}
+                      emptyTone={hasSourceProblems ? "info" : undefined}
+                      emptyMessage={
+                        hasSourceProblems
+                          ? "No incidents are available for this filter right now. Check source health and try again shortly."
+                          : undefined
+                      }
                       onHoverIncident={setHoveredIncidentId}
                       onSelectIncident={(incident) =>
                         setSelectedIncidentId(incident.id)
@@ -313,7 +394,11 @@ export function BantayPHDashboard() {
 
               {/* Compact system status */}
               <div className="mt-auto flex shrink-0 items-center gap-2 rounded-lg border border-white/8 bg-[var(--bg-panel)] px-2.5 py-1.5 text-[10px] text-[var(--text-dim)]">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    hasSourceProblems ? "bg-amber-400" : "bg-emerald-400"
+                  }`}
+                />
                 <span>{stats.sourcesOnline} sources</span>
                 <span className="text-white/10">·</span>
                 <span>{stats.activeAlerts} active</span>

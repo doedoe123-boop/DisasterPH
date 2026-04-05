@@ -10,8 +10,11 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import { formatShortTime } from "@/lib/incidents";
+import { visualFromRiskLevel } from "@/lib/severity";
 import type { PlaceRiskSummary, SavedPlace } from "@/types/incident";
 import type { LucideIcon } from "lucide-react";
+import { StateCard } from "./state-card";
 
 interface SavedPlacesProps {
   risks: PlaceRiskSummary[];
@@ -27,20 +30,6 @@ const tagIcons: Record<SavedPlace["tag"], LucideIcon> = {
   family: Users,
   school: GraduationCap,
   other: MapPin,
-};
-
-const riskColor: Record<PlaceRiskSummary["riskLevel"], string> = {
-  safe: "bg-emerald-400",
-  monitor: "bg-amber-300",
-  "at-risk": "bg-orange-400",
-  danger: "bg-red-400",
-};
-
-const riskBorder: Record<PlaceRiskSummary["riskLevel"], string> = {
-  safe: "border-l-emerald-400/40",
-  monitor: "border-l-amber-400/40",
-  "at-risk": "border-l-orange-400/40",
-  danger: "border-l-red-400/40",
 };
 
 const riskLabel: Record<PlaceRiskSummary["riskLevel"], string> = {
@@ -141,13 +130,12 @@ export function SavedPlaces({
       )}
 
       {risks.length === 0 ? (
-        <div className="p-4 text-center">
-          <p className="text-[12px] text-[var(--text-muted)]">
-            No saved places yet.
-          </p>
-          <p className="mt-1 text-[11px] text-[var(--text-dim)]">
-            Add places where your family lives to monitor nearby hazards.
-          </p>
+        <div className="p-2">
+          <StateCard
+            compact
+            message="Add places where your family lives to monitor nearby hazards."
+            title="No saved places yet"
+          />
         </div>
       ) : (
         <div className="space-y-0.5 p-1.5">
@@ -159,7 +147,7 @@ export function SavedPlaces({
               className={`group flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-l-2 p-2 text-left transition hover:bg-white/[0.04] ${
                 selectedPlaceId === risk.place.id
                   ? "bg-cyan-400/8 border-l-cyan-400/70"
-                  : riskBorder[risk.riskLevel]
+                  : visualFromRiskLevel(risk.riskLevel).accent
               }`}
               onClick={() => onSelectPlace(risk.place.id)}
               onKeyDown={(e) => {
@@ -181,10 +169,9 @@ export function SavedPlaces({
                     {risk.place.label}
                   </span>
                   <span
-                    className={`ml-auto h-1.5 w-1.5 shrink-0 rounded-full ${riskColor[risk.riskLevel]}`}
+                    className={`ml-auto h-1.5 w-1.5 shrink-0 rounded-full ${visualFromRiskLevel(risk.riskLevel).dot}`}
                   />
                 </div>
-                {/* Status sentence */}
                 <p
                   className={`mt-0.5 truncate text-[11px] leading-tight ${
                     risk.riskLevel === "danger"
@@ -220,6 +207,19 @@ export function SavedPlaces({
                     </>
                   )}
                 </div>
+                {risk.strongestIncident && (
+                  <p className="mt-1 truncate text-[10px] text-[var(--text-dim)]">
+                    Strongest nearby: {risk.strongestIncident.title}
+                  </p>
+                )}
+                <p className="mt-0.5 truncate text-[10px] text-[var(--text-dim)]">
+                  {risk.placeRegion}
+                </p>
+                {risk.freshestUpdateAt && (
+                  <p className="mt-0.5 text-[10px] text-[var(--text-dim)]">
+                    Updated {formatShortTime(risk.freshestUpdateAt)}
+                  </p>
+                )}
               </div>
               <button
                 className="shrink-0 rounded p-0.5 text-[var(--text-dim)] opacity-0 transition hover:text-red-300 group-hover:opacity-100"

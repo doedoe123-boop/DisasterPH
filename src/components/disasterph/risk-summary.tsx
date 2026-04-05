@@ -1,18 +1,16 @@
 import { MapPin } from "lucide-react";
 import type { PlaceRiskSummary } from "@/types/incident";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
+import {
+  severityLabel,
+  visualFromRiskLevel,
+  visualFromSeverity,
+} from "@/lib/severity";
 
 interface RiskSummaryProps {
   risk: PlaceRiskSummary;
   onSelectIncident: (id: string) => void;
 }
-
-const riskGradient: Record<PlaceRiskSummary["riskLevel"], string> = {
-  safe: "from-emerald-500/10 to-transparent border-l-emerald-400/40",
-  monitor: "from-amber-500/10 to-transparent border-l-amber-400/40",
-  "at-risk": "from-orange-500/10 to-transparent border-l-orange-400/40",
-  danger: "from-red-500/10 to-transparent border-l-red-400/40",
-};
 
 const riskHeadline: Record<PlaceRiskSummary["riskLevel"], string> = {
   safe: "Area looks clear",
@@ -30,19 +28,22 @@ const riskDescription: Record<PlaceRiskSummary["riskLevel"], string> = {
     "A critical-level event is very close. Check if evacuation is needed.",
 };
 
-const severityDot: Record<string, string> = {
-  advisory: "bg-cyan-300",
-  watch: "bg-amber-300",
-  warning: "bg-orange-400",
-  critical: "bg-red-400",
-};
-
 export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
-  const { place, nearbyIncidents, riskLevel, nearestDistanceKm } = risk;
+  const {
+    place,
+    nearbyIncidents,
+    riskLevel,
+    nearestDistanceKm,
+    strongestIncident,
+    freshestUpdateAt,
+    placeRegion,
+    matchingSummary,
+  } = risk;
+  const riskVisual = visualFromRiskLevel(riskLevel);
 
   return (
     <section
-      className={`shrink-0 rounded-lg border border-white/10 border-l-2 bg-gradient-to-r p-3 ${riskGradient[riskLevel]}`}
+      className={`shrink-0 rounded-lg border border-white/10 border-l-2 bg-gradient-to-r p-3 ${riskVisual.panel}`}
     >
       {/* Header */}
       <div className="flex items-center gap-1.5">
@@ -53,6 +54,9 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
           {place.label}
         </span>
       </div>
+      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-[var(--text-dim)]">
+        {placeRegion}
+      </p>
 
       {/* Headline */}
       <h3 className="mt-2 text-[15px] font-semibold leading-6 text-white">
@@ -62,6 +66,18 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
         {riskDescription[riskLevel]}
       </p>
 
+      {strongestIncident && (
+        <div className="mt-2 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${visualFromSeverity(strongestIncident.severity).dot}`}
+          />
+          <span className="truncate">
+            Strongest nearby: {eventTypeLabel[strongestIncident.event_type]}{" "}
+            {severityLabel[strongestIncident.severity]}
+          </span>
+        </div>
+      )}
+
       {/* Distance indicator */}
       {nearestDistanceKm !== null && (
         <div className="mt-2 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
@@ -69,6 +85,14 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
           <span>Nearest hazard: ~{Math.round(nearestDistanceKm)} km away</span>
         </div>
       )}
+      {freshestUpdateAt && (
+        <div className="mt-1 text-[11px] text-[var(--text-dim)]">
+          Last nearby update {formatShortTime(freshestUpdateAt)}
+        </div>
+      )}
+      <div className="mt-2 rounded-lg border border-white/6 bg-white/[0.02] px-2.5 py-2 text-[11px] leading-5 text-[var(--text-muted)]">
+        {matchingSummary}
+      </div>
 
       {/* Nearby incidents list */}
       {nearbyIncidents.length > 0 && (
@@ -85,14 +109,15 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
                 type="button"
               >
                 <span
-                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${severityDot[inc.severity]}`}
+                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${visualFromSeverity(inc.severity).dot}`}
                 />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[12px] font-medium text-white">
                     {inc.title}
                   </p>
                   <p className="text-[10px] text-[var(--text-dim)]">
-                    {eventTypeLabel[inc.event_type]} · {inc.severity} ·{" "}
+                    {eventTypeLabel[inc.event_type]} ·{" "}
+                    {severityLabel[inc.severity]} ·{" "}
                     {formatShortTime(inc.updated_at)}
                   </p>
                 </div>

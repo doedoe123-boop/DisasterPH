@@ -2,6 +2,7 @@ import type { Incident, SavedPlace } from "@/types/incident";
 import { nearestPlaceName, sortByPriority } from "@/lib/incidents";
 import { useMemo } from "react";
 import { IncidentFeedCard } from "./incident-feed-card";
+import { StateCard } from "./state-card";
 
 interface AlertFeedProps {
   incidents: Incident[];
@@ -11,6 +12,9 @@ interface AlertFeedProps {
   onHoverIncident: (id: string | null) => void;
   onSelectIncident: (incident: Incident) => void;
   maxVisible?: number;
+  emptyTitle?: string;
+  emptyMessage?: string;
+  emptyTone?: "neutral" | "warning" | "danger" | "info";
 }
 
 export function AlertFeed({
@@ -21,6 +25,9 @@ export function AlertFeed({
   onHoverIncident,
   onSelectIncident,
   maxVisible = 20,
+  emptyTitle = "No incidents for this filter",
+  emptyMessage = "Try another hazard filter or check source freshness.",
+  emptyTone,
 }: AlertFeedProps) {
   const ranked = useMemo(
     () => sortByPriority(incidents, places),
@@ -62,9 +69,12 @@ export function AlertFeed({
             )}
           </>
         ) : (
-          <div className="p-4 text-center text-xs text-[var(--text-muted)]">
-            No incidents for this filter.
-          </div>
+          <StateCard
+            compact
+            message={emptyMessage}
+            title={emptyTitle}
+            tone={emptyTone}
+          />
         )}
       </div>
     </section>

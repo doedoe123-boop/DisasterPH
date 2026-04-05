@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import type { SavedPlace } from "@/types/incident";
 
-const STORAGE_KEY = "bantayph-saved-places";
+const STORAGE_KEY = "disasterph-saved-places";
 
 function loadPlaces(): SavedPlace[] {
   if (typeof window === "undefined") return [];
@@ -24,12 +24,7 @@ function persistPlaces(places: SavedPlace[]) {
 }
 
 export function useSavedPlaces() {
-  const [places, setPlaces] = useState<SavedPlace[]>([]);
-
-  // Hydrate from localStorage on mount
-  useEffect(() => {
-    setPlaces(loadPlaces());
-  }, []);
+  const [places, setPlaces] = useState<SavedPlace[]>(() => loadPlaces());
 
   const addPlace = useCallback(
     (place: Omit<SavedPlace, "id" | "createdAt">) => {
