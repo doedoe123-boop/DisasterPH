@@ -105,35 +105,37 @@ export function SavedPlaces({
       </div>
 
       {showAdd && (
-        <div className="border-b border-white/8 p-2">
-          <p className="mb-1.5 px-1 text-[10px] text-[var(--text-dim)]">
-            Quick add a location:
-          </p>
-          <div className="flex flex-wrap gap-1">
-            {PRESET_PLACES.map((preset) => (
-              <button
-                key={preset.label}
-                className="flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/[0.02] px-2 py-1 text-[11px] text-[var(--text-muted)] transition hover:bg-white/[0.06] hover:text-white"
-                onClick={() => {
-                  onAddPlace({
-                    label: preset.label,
-                    tag: preset.tag,
-                    latitude: preset.latitude,
-                    longitude: preset.longitude,
-                  });
-                  setShowAdd(false);
-                }}
-                type="button"
-              >
-                {(() => {
-                  const Icon = tagIcons[preset.tag];
-                  return (
-                    <Icon className="h-3.5 w-3.5 shrink-0 text-[var(--text-dim)]" />
-                  );
-                })()}
-                {preset.label}
-              </button>
-            ))}
+        <div className="border-b border-white/8 p-3 bg-black/20">
+          <div className="text-left">
+            <p className="mb-1.5 px-1 text-[10px] text-[var(--text-dim)] tracking-wide uppercase">
+              Quick Add Location:
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {PRESET_PLACES.map((preset) => (
+                <button
+                  key={preset.label}
+                  className="flex items-center gap-1.5 rounded border border-white/8 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-white transition hover:bg-white/[0.08]"
+                  onClick={() => {
+                    onAddPlace({
+                      label: preset.label,
+                      tag: preset.tag,
+                      latitude: preset.latitude,
+                      longitude: preset.longitude,
+                    });
+                    setShowAdd(false);
+                  }}
+                  type="button"
+                >
+                  {(() => {
+                    const Icon = tagIcons[preset.tag];
+                    return (
+                      <Icon className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
+                    );
+                  })()}
+                  {preset.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}

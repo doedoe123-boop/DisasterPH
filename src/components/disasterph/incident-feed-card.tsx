@@ -45,7 +45,7 @@ export function IncidentFeedCard({
           : hovered
             ? "border-l-cyan-400/30 bg-cyan-400/[0.04]"
             : `${severityBorder[incident.severity]} hover:bg-white/[0.04]`
-      } ${isCritical ? "p-3 border-b border-white/[0.06]" : "px-2.5 py-2 border-b border-white/[0.04]"}`}
+      } ${isCritical ? "p-4 border-b border-white/[0.06]" : "px-3.5 py-3 border-b border-white/[0.04]"}`}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -71,7 +71,7 @@ export function IncidentFeedCard({
         </span>
       </div>
       <p
-        className={`mt-1 truncate font-medium leading-5 text-white ${isCritical ? "text-[14px]" : "text-[13px]"}`}
+        className={`mt-2 truncate font-semibold leading-relaxed text-white ${isCritical ? "text-[15px]" : "text-[14px]"}`}
       >
         {incident.title}
       </p>
