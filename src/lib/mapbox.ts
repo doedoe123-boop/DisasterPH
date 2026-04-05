@@ -3,11 +3,17 @@ import type { IncidentEventType } from "@/types/incident";
 /** Philippines center coordinates */
 export const PH_CENTER: [number, number] = [122.0, 12.5];
 
-/** Default camera settings */
+/** Philippines bounding box [SW, NE] */
+export const PH_BOUNDS: [[number, number], [number, number]] = [
+  [116.5, 4.5],
+  [127.5, 21.2],
+];
+
+/** Default camera settings (used as initial hint before fitBounds) */
 export const DEFAULT_CAMERA = {
   center: PH_CENTER,
-  zoom: 5.4,
-  pitch: 45,
+  zoom: 5.2,
+  pitch: 25,
   bearing: 0,
 } as const;
 

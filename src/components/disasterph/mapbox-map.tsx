@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Incident } from "@/types/incident";
 import {
-  PH_CENTER,
+  PH_BOUNDS,
   DEFAULT_CAMERA,
   INCIDENT_ZOOM,
   MAP_STYLE,
@@ -24,6 +24,8 @@ interface Props {
   hoveredIncidentId: string | null;
   onHoverIncident: (id: string | null) => void;
   onSelectIncident: (incident: Incident) => void;
+  /** Width of the sidebar in pixels, used to offset the map center */
+  sidebarWidth: number;
 }
 
 export default function MapLibreMapComponent({
@@ -32,6 +34,7 @@ export default function MapLibreMapComponent({
   hoveredIncidentId,
   onHoverIncident,
   onSelectIncident,
+  sidebarWidth,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -94,6 +97,14 @@ export default function MapLibreMapComponent({
           "sky-horizon-blend": 0.3,
         });
 
+        // Fit to Philippines bounds with padding that accounts for sidebar
+        map.fitBounds(PH_BOUNDS, {
+          padding: { top: 40, bottom: 40, left: 40, right: 40 + sidebarWidth },
+          pitch: DEFAULT_CAMERA.pitch,
+          bearing: DEFAULT_CAMERA.bearing,
+          duration: 0,
+        });
+
         setMapReady(true);
       });
 
@@ -124,6 +135,24 @@ export default function MapLibreMapComponent({
     observer.observe(container);
     return () => observer.disconnect();
   }, [mapReady]);
+
+  // ── Re-fit bounds when sidebar width changes ──
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    // Small delay so the container has resized before we re-fit
+    const timeout = setTimeout(() => {
+      map.resize();
+      map.fitBounds(PH_BOUNDS, {
+        padding: { top: 40, bottom: 40, left: 40, right: 40 + sidebarWidth },
+        pitch: DEFAULT_CAMERA.pitch,
+        bearing: DEFAULT_CAMERA.bearing,
+        duration: 600,
+      });
+    }, 50);
+    return () => clearTimeout(timeout);
+  }, [sidebarWidth, mapReady]);
 
   // ── Sync markers ──
   useEffect(() => {

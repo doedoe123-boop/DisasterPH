@@ -38,6 +38,9 @@ export function CommandMap({
   sidebarExpanded,
   onToggleSidebar,
 }: CommandMapProps) {
+  // Compute effective sidebar width for map padding offset
+  const sidebarWidth = focusMode ? 0 : sidebarExpanded ? 320 : 48;
+
   return (
     <div className="relative h-full overflow-hidden bg-[#040d16]">
       <MapboxMap
@@ -46,6 +49,7 @@ export function CommandMap({
         hoveredIncidentId={hoveredIncidentId}
         onHoverIncident={onHoverIncident}
         onSelectIncident={onSelectIncident}
+        sidebarWidth={sidebarWidth}
       />
 
       {/* Map controls */}
