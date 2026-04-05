@@ -1,25 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { eventTypeLabel } from "@/lib/incidents";
+import { eventTypeLabel, nearestPlaceName } from "@/lib/incidents";
 import { getHelpActions } from "@/lib/help-actions";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
 import { getPrepTips } from "@/lib/prep-guidance";
+import { computeThreatHeadline } from "@/lib/threat-headline";
 import type { Incident, IncidentEventType } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
 import { useAdvisories } from "@/hooks/use-advisories";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
+import { useSourceStatus } from "@/hooks/use-source-status";
 import { AppHeader } from "./header";
 import { CommandMap } from "./command-map";
 import { AlertFeed } from "./alert-feed";
-import { IncidentDetails } from "./incident-details";
 import { OfficialAdvisoryPanel } from "./official-advisory-panel";
-import { HelpActions } from "./help-actions";
 import { MobileBottomSheet } from "./mobile-bottom-sheet";
 import { FloatingIncidentCard } from "./floating-incident-card";
 import { SavedPlaces } from "./saved-places";
 import { RiskSummary } from "./risk-summary";
-import { PrepGuidance } from "./prep-guidance";
+import ThreatHeadlineBar from "./threat-headline";
+import { SourceStrip } from "./source-strip";
+import { SituationCard } from "./situation-card";
 
 const filters: Array<{ label: string; value: IncidentEventType | "all" }> = [
   { label: "All", value: "all" },
@@ -50,6 +52,7 @@ export function BantayPHDashboard() {
     useIncidents(activeFilter);
   const { advisories } = useAdvisories();
   const { places, addPlace, removePlace } = useSavedPlaces();
+  const { sourceStatuses } = useSourceStatus();
 
   const selectedIncident: Incident | undefined =
     incidents.find((i) => i.id === selectedIncidentId) ?? incidents[0];
@@ -77,6 +80,19 @@ export function BantayPHDashboard() {
         ? getPrepTips(selectedIncident.event_type, selectedIncident.severity)
         : [],
     [selectedIncident],
+  );
+
+  // ── Threat headline ──
+  const threat = useMemo(
+    () => computeThreatHeadline(incidents, places, placeRisks),
+    [incidents, places, placeRisks],
+  );
+
+  // ── Nearest place name for selected incident ──
+  const selectedNearPlace = useMemo(
+    () =>
+      selectedIncident ? nearestPlaceName(selectedIncident, places) : null,
+    [selectedIncident, places],
   );
 
   useEffect(() => {
@@ -147,11 +163,21 @@ export function BantayPHDashboard() {
         <div
           className={`transition-all duration-300 overflow-hidden ${focusMode ? "h-0 opacity-0" : "opacity-100"}`}
         >
-          <AppHeader
-            activeFilter={activeFilter}
-            filters={filters}
-            onFilterChange={setActiveFilter}
-          />
+          <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] overflow-hidden backdrop-blur-lg">
+            <ThreatHeadlineBar
+              threat={threat}
+              onClickIncident={(id) => {
+                setSelectedIncidentId(id);
+                setSheetOpen(true);
+              }}
+            />
+            <SourceStrip sources={sourceStatuses} />
+            <AppHeader
+              activeFilter={activeFilter}
+              filters={filters}
+              onFilterChange={setActiveFilter}
+            />
+          </div>
         </div>
 
         {/* ── Error / stale-data banners ── */}
@@ -206,7 +232,7 @@ export function BantayPHDashboard() {
 
           {effectiveSidebar === "expanded" && (
             <aside className="hidden min-h-0 flex-col gap-2 overflow-y-auto lg:flex">
-              {/* ── Saved Places (family monitoring) ── */}
+              {/* ── Saved Places (family monitoring — primary panel) ── */}
               <SavedPlaces
                 risks={placeRisks}
                 selectedPlaceId={selectedPlaceId}
@@ -228,22 +254,23 @@ export function BantayPHDashboard() {
                 />
               )}
 
-              {/* ── Incident Details (when no place selected or after clicking an incident) ── */}
+              {/* ── Situation Card (action-oriented incident details) ── */}
               {!selectedPlaceRisk && selectedIncident ? (
-                <IncidentDetails incident={selectedIncident} />
+                <SituationCard
+                  incident={selectedIncident}
+                  helpActions={helpActions}
+                  prepTips={prepTips}
+                  nearPlaceName={selectedNearPlace}
+                />
               ) : !selectedPlaceRisk && noData ? (
                 <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-4 text-center text-sm text-[var(--text-dim)]">
                   No incidents match this filter.
                 </div>
               ) : null}
 
-              {/* ── Preparation Guidance ── */}
-              <PrepGuidance tips={prepTips} />
-
-              <HelpActions actions={helpActions} />
-
               <OfficialAdvisoryPanel advisories={advisories} />
 
+              {/* ── Priority Feed (always visible, collapsible) ── */}
               <div className="shrink-0">
                 <button
                   className="flex w-full items-center justify-between rounded-xl border border-white/8 bg-[var(--bg-panel)] px-3 py-2 text-left backdrop-blur"
@@ -251,7 +278,7 @@ export function BantayPHDashboard() {
                   type="button"
                 >
                   <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
-                    Live Feed
+                    Priority Feed
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] text-[var(--text-dim)]">
@@ -275,6 +302,7 @@ export function BantayPHDashboard() {
                   <div className="mt-1 max-h-60 overflow-y-auto rounded-xl border border-white/8 bg-[var(--bg-panel)]">
                     <AlertFeed
                       incidents={incidents}
+                      places={places}
                       selectedIncidentId={selectedIncident?.id ?? ""}
                       hoveredIncidentId={hoveredIncidentId}
                       onHoverIncident={setHoveredIncidentId}
@@ -364,6 +392,7 @@ export function BantayPHDashboard() {
           advisories={advisories}
           helpActions={helpActions}
           prepTips={prepTips}
+          nearPlaceName={selectedNearPlace}
         />
       )}
     </main>

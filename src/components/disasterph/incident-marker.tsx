@@ -5,6 +5,8 @@ interface IncidentMarkerProps {
   incident: Incident;
   isSelected: boolean;
   isHovered: boolean;
+  isNearSavedPlace?: boolean;
+  dimmed?: boolean;
   onSelect: () => void;
   onHover: (id: string | null) => void;
   x: number;
@@ -250,6 +252,8 @@ export function IncidentMarker({
   incident,
   isSelected,
   isHovered,
+  isNearSavedPlace = false,
+  dimmed = false,
   onSelect,
   onHover,
   x,
@@ -259,13 +263,52 @@ export function IncidentMarker({
   const isHighPriority =
     incident.severity === "warning" || incident.severity === "critical";
 
+  // Severity-scaled base radius
+  const baseR =
+    incident.severity === "critical"
+      ? 22
+      : incident.severity === "warning"
+        ? 20
+        : incident.severity === "watch"
+          ? 17
+          : 14;
+
+  const r = isSelected ? baseR + 4 : isHovered ? baseR + 2 : baseR;
+  const sw = isSelected
+    ? 3
+    : isHovered
+      ? 3
+      : incident.severity === "critical"
+        ? 2.5
+        : 2;
+  const opacity = dimmed ? 0.35 : 1;
+
   return (
-    <g className="group" transform={`translate(${x} ${y})`}>
+    <g
+      className="group"
+      transform={`translate(${x} ${y})`}
+      opacity={opacity}
+      style={{ transition: "opacity 0.3s" }}
+    >
       <MarkerEffects
         type={incident.event_type}
         isSelected={isSelected}
         color={color}
       />
+
+      {/* Near-saved-place glow ring */}
+      {isNearSavedPlace && !isSelected && (
+        <circle
+          cx="0"
+          cy="0"
+          r={r + 6}
+          fill="none"
+          stroke="rgba(34, 211, 238, 0.4)"
+          strokeWidth="1.5"
+          strokeDasharray="4 3"
+          className="marker-pulse"
+        />
+      )}
 
       {/* Core marker */}
       <circle
@@ -273,9 +316,9 @@ export function IncidentMarker({
         cx="0"
         cy="0"
         fill="rgba(5, 12, 20, 0.94)"
-        r={isSelected ? 22 : isHovered ? 20 : 18}
+        r={r}
         stroke={color}
-        strokeWidth={isSelected ? 3 : isHovered ? 3 : 2.5}
+        strokeWidth={sw}
         style={{
           filter: isSelected
             ? `drop-shadow(0 0 8px ${color})`

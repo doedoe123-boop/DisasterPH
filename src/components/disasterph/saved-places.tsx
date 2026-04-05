@@ -145,15 +145,22 @@ export function SavedPlaces({
       ) : (
         <div className="space-y-0.5 p-1.5">
           {risks.map((risk) => (
-            <button
+            <div
               key={risk.place.id}
-              className={`group flex w-full items-center gap-2.5 rounded-lg border-l-2 p-2 text-left transition hover:bg-white/[0.04] ${
+              role="button"
+              tabIndex={0}
+              className={`group flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-l-2 p-2 text-left transition hover:bg-white/[0.04] ${
                 selectedPlaceId === risk.place.id
                   ? "bg-cyan-400/8 border-l-cyan-400/70"
                   : riskBorder[risk.riskLevel]
               }`}
               onClick={() => onSelectPlace(risk.place.id)}
-              type="button"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelectPlace(risk.place.id);
+                }
+              }}
             >
               <span className="text-base leading-none">
                 {tagIcon[risk.place.tag]}
@@ -167,30 +174,39 @@ export function SavedPlaces({
                     className={`ml-auto h-1.5 w-1.5 shrink-0 rounded-full ${riskColor[risk.riskLevel]}`}
                   />
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-dim)]">
-                  <span
-                    className={
-                      risk.riskLevel === "danger"
-                        ? "text-red-300"
-                        : risk.riskLevel === "at-risk"
-                          ? "text-orange-300"
-                          : risk.riskLevel === "monitor"
-                            ? "text-amber-300"
-                            : "text-emerald-300"
-                    }
-                  >
-                    {riskLabel[risk.riskLevel]}
-                  </span>
-                  {risk.nearbyIncidents.length > 0 && (
-                    <>
-                      <span className="text-white/10">·</span>
-                      <span>{risk.nearbyIncidents.length} nearby</span>
-                    </>
-                  )}
+                {/* Status sentence */}
+                <p
+                  className={`mt-0.5 truncate text-[11px] leading-tight ${
+                    risk.riskLevel === "danger"
+                      ? "font-medium text-red-300"
+                      : risk.riskLevel === "at-risk"
+                        ? "text-orange-300"
+                        : risk.riskLevel === "monitor"
+                          ? "text-amber-300"
+                          : "text-emerald-300/70"
+                  }`}
+                >
+                  {risk.riskLevel === "safe"
+                    ? "No active threats nearby"
+                    : risk.nearbyIncidents.length > 0
+                      ? `${risk.nearbyIncidents[0].title}${risk.nearbyIncidents.length > 1 ? ` +${risk.nearbyIncidents.length - 1} more` : ""}`
+                      : riskLabel[risk.riskLevel]}
+                </p>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-[var(--text-dim)]">
+                  <span>{riskLabel[risk.riskLevel]}</span>
                   {risk.nearestDistanceKm !== null && (
                     <>
                       <span className="text-white/10">·</span>
-                      <span>{Math.round(risk.nearestDistanceKm)} km</span>
+                      <span>{Math.round(risk.nearestDistanceKm)} km away</span>
+                    </>
+                  )}
+                  {risk.nearbyIncidents.length > 0 && (
+                    <>
+                      <span className="text-white/10">·</span>
+                      <span>
+                        {risk.nearbyIncidents.length} event
+                        {risk.nearbyIncidents.length > 1 ? "s" : ""}
+                      </span>
                     </>
                   )}
                 </div>
@@ -217,7 +233,7 @@ export function SavedPlaces({
                   />
                 </svg>
               </button>
-            </button>
+            </div>
           ))}
         </div>
       )}

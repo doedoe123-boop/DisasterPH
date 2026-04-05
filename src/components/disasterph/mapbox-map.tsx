@@ -290,7 +290,16 @@ export default function MapLibreMapComponent({
 function createMarkerElement(incident: Incident): HTMLDivElement {
   const color = HAZARD_COLORS[incident.event_type];
   const ringColor = SEVERITY_RING[incident.severity];
-  const size = 28;
+
+  // Severity-scaled sizing
+  const size =
+    incident.severity === "critical"
+      ? 34
+      : incident.severity === "warning"
+        ? 30
+        : incident.severity === "watch"
+          ? 26
+          : 22;
 
   const el = document.createElement("div");
   el.className = "mapbox-marker";

@@ -5,6 +5,7 @@ import type { HelpAction } from "@/types/incident";
 
 interface HelpActionsProps {
   actions: HelpAction[];
+  compact?: boolean;
 }
 
 const iconPaths: Record<HelpAction["icon"], string> = {
@@ -50,7 +51,7 @@ const actionTypeLabel: Record<HelpAction["actionType"], string> = {
   internal: "",
 };
 
-export function HelpActions({ actions }: HelpActionsProps) {
+export function HelpActions({ actions, compact = false }: HelpActionsProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   async function handleAction(action: HelpAction) {
@@ -99,8 +100,40 @@ export function HelpActions({ actions }: HelpActionsProps) {
   }
 
   // Split into primary (first 4) and secondary
-  const primary = actions.slice(0, 4);
-  const secondary = actions.slice(4);
+  const primary = actions.slice(0, compact ? 3 : 4);
+  const secondary = compact ? [] : actions.slice(4);
+
+  if (compact) {
+    return (
+      <div className="flex gap-1.5">
+        {primary.map((action) => (
+          <button
+            key={action.id}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/8 bg-white/[0.02] px-2 py-1.5 text-center transition hover:bg-white/[0.05] ${buttonBorder[action.icon]}`}
+            onClick={() => handleAction(action)}
+            type="button"
+          >
+            <svg
+              className={`h-3.5 w-3.5 ${iconColor[action.icon]}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.5"
+                d={iconPaths[action.icon]}
+              />
+            </svg>
+            <span className="text-[10px] font-medium text-white">
+              {action.label}
+            </span>
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <section className="rounded-xl border border-white/8 bg-[var(--bg-panel)] backdrop-blur">

@@ -2,10 +2,8 @@
 
 import type { HelpAction, Incident, OfficialAdvisory } from "@/types/incident";
 import type { PrepTip } from "@/lib/prep-guidance";
-import { IncidentDetails } from "./incident-details";
 import { OfficialAdvisoryPanel } from "./official-advisory-panel";
-import { HelpActions } from "./help-actions";
-import { PrepGuidance } from "./prep-guidance";
+import { SituationCard } from "./situation-card";
 
 interface MobileBottomSheetProps {
   incident: Incident;
@@ -14,6 +12,7 @@ interface MobileBottomSheetProps {
   advisories: OfficialAdvisory[];
   helpActions: HelpAction[];
   prepTips: PrepTip[];
+  nearPlaceName?: string | null;
 }
 
 export function MobileBottomSheet({
@@ -23,6 +22,7 @@ export function MobileBottomSheet({
   advisories,
   helpActions,
   prepTips,
+  nearPlaceName,
 }: MobileBottomSheetProps) {
   return (
     <>
@@ -77,9 +77,12 @@ export function MobileBottomSheet({
           </div>
 
           <div className="grid min-h-0 gap-3 overflow-y-auto pr-1">
-            <IncidentDetails incident={incident} />
-            <PrepGuidance tips={prepTips} />
-            <HelpActions actions={helpActions} />
+            <SituationCard
+              incident={incident}
+              helpActions={helpActions}
+              prepTips={prepTips}
+              nearPlaceName={nearPlaceName}
+            />
             <OfficialAdvisoryPanel advisories={advisories} />
           </div>
         </div>

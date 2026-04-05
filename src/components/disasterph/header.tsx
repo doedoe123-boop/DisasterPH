@@ -12,7 +12,7 @@ export function AppHeader({
   onFilterChange,
 }: HeaderProps) {
   return (
-    <header className="flex items-center gap-3 rounded-xl border border-white/8 bg-[var(--bg-panel)] px-3 py-1.5 backdrop-blur-lg">
+    <header className="flex items-center gap-3 px-3 py-1.5">
       <div className="flex shrink-0 items-center gap-2">
         <div className="flex h-6 w-6 items-center justify-center rounded-md border border-cyan-400/25 bg-cyan-400/10">
           <svg
