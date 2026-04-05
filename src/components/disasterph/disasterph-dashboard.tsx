@@ -226,6 +226,11 @@ export function BantayPHDashboard() {
               <FloatingIncidentCard
                 incident={selectedIncident}
                 helpActions={helpActions}
+                prepTips={prepTips}
+                advisories={advisories}
+                nearPlaceName={selectedNearPlace}
+                placeRisks={placeRisks}
+                focusMode={focusMode}
               />
             )}
           </section>

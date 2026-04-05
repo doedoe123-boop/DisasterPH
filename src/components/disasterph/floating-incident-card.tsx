@@ -1,11 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
-import type { HelpAction, Incident } from "@/types/incident";
+import type {
+  HelpAction,
+  Incident,
+  OfficialAdvisory,
+  PlaceRiskSummary,
+} from "@/types/incident";
+import type { PrepTip } from "@/lib/prep-guidance";
 
 interface FloatingIncidentCardProps {
   incident: Incident;
   helpActions: HelpAction[];
+  prepTips: PrepTip[];
+  advisories: OfficialAdvisory[];
+  nearPlaceName?: string | null;
+  placeRisks: PlaceRiskSummary[];
+  focusMode: boolean;
 }
 
 const severityBadge: Record<string, string> = {
@@ -15,63 +27,148 @@ const severityBadge: Record<string, string> = {
   critical: "text-red-200 border-red-300/20 bg-red-300/10",
 };
 
+const severityAccent: Record<string, string> = {
+  advisory: "border-l-cyan-400/40",
+  watch: "border-l-amber-400/50",
+  warning: "border-l-orange-400/60",
+  critical: "border-l-red-400/70",
+};
+
+const urgencyColor: Record<string, string> = {
+  now: "text-red-300",
+  soon: "text-amber-300",
+  general: "text-cyan-300/70",
+};
+
 const iconPaths: Record<string, string> = {
   phone:
     "M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z",
   share:
     "M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z",
+  checklist:
+    "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
+  locate:
+    "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z",
+  alert:
+    "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
   link: "M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1",
+  copy: "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z",
+};
+
+const iconColor: Record<string, string> = {
+  phone: "text-emerald-300",
+  share: "text-cyan-300",
+  checklist: "text-amber-300",
+  locate: "text-blue-300",
+  alert: "text-orange-300",
+  link: "text-blue-300",
+  copy: "text-violet-300",
 };
 
 export function FloatingIncidentCard({
   incident,
   helpActions,
+  prepTips,
+  advisories,
+  nearPlaceName,
+  placeRisks,
+  focusMode,
 }: FloatingIncidentCardProps) {
-  // Show at most 3 quick action buttons
+  const [expanded, setExpanded] = useState(false);
+
+  // Auto-expand in focus mode
+  const isExpanded = expanded || focusMode;
+
   const quickActions = helpActions
     .filter((a) => a.actionType === "call" || a.actionType === "link")
     .slice(0, 3);
 
-  function handleQuickAction(action: HelpAction) {
+  // Affected places for this incident
+  const affectedPlaces = placeRisks.filter((r) =>
+    r.nearbyIncidents.some((i) => i.id === incident.id),
+  );
+
+  // Matching advisory
+  const relatedAdvisory = advisories.find(
+    (a) =>
+      a.source === incident.source ||
+      a.title.toLowerCase().includes(incident.event_type),
+  );
+
+  function handleAction(action: HelpAction) {
     if (action.actionType === "call" && action.href)
       window.open(action.href, "_self");
     if (action.actionType === "link" && action.href)
       window.open(action.href, "_blank", "noopener,noreferrer");
+    if (action.actionType === "share" && action.copyText) {
+      if (navigator.share) {
+        navigator.share({ text: action.copyText }).catch(() => {
+          navigator.clipboard.writeText(action.copyText!).catch(() => {});
+        });
+      } else {
+        navigator.clipboard.writeText(action.copyText).catch(() => {});
+      }
+    }
+    if (action.actionType === "copy" && action.copyText) {
+      navigator.clipboard.writeText(action.copyText).catch(() => {});
+    }
   }
 
-  return (
-    <div className="absolute bottom-4 left-4 z-20 hidden w-72 rounded-xl border border-white/10 bg-[rgba(4,11,19,0.92)] shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-lg lg:block">
-      <div className="p-3">
-        <div className="flex items-center gap-1.5">
-          <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
-            {eventTypeLabel[incident.event_type]}
-          </span>
-          <span
-            className={`rounded-full border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${severityBadge[incident.severity]}`}
-          >
-            {incident.severity}
-          </span>
-          <span className="ml-auto text-[10px] text-[var(--text-dim)]">
-            {incident.source}
-          </span>
+  /* ── Compact card ── */
+  if (!isExpanded) {
+    return (
+      <div className="absolute bottom-4 left-4 z-20 hidden w-72 rounded-xl border border-white/10 bg-[rgba(4,11,19,0.92)] shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-lg lg:block">
+        <div className="p-3">
+          <div className="flex items-center gap-1.5">
+            <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+              {eventTypeLabel[incident.event_type]}
+            </span>
+            <span
+              className={`rounded-full border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${severityBadge[incident.severity]}`}
+            >
+              {incident.severity}
+            </span>
+            <span className="ml-auto text-[10px] text-[var(--text-dim)]">
+              {incident.source}
+            </span>
+          </div>
+          <h3 className="mt-1.5 text-sm font-semibold leading-5 text-white">
+            {incident.title}
+          </h3>
+          <div className="mt-1 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
+            <span>{incident.region}</span>
+            <span className="text-[var(--text-dim)]">·</span>
+            <span>{formatShortTime(incident.updated_at)}</span>
+          </div>
         </div>
-        <h3 className="mt-1.5 text-sm font-semibold leading-5 text-white">
-          {incident.title}
-        </h3>
-        <div className="mt-1 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
-          <span>{incident.region}</span>
-          <span className="text-[var(--text-dim)]">·</span>
-          <span>{formatShortTime(incident.updated_at)}</span>
-        </div>
-      </div>
 
-      {quickActions.length > 0 && (
-        <div className="flex gap-1 border-t border-white/8 px-2 py-1.5">
+        {/* Expand + quick actions */}
+        <div className="flex items-center gap-1 border-t border-white/8 px-2 py-1.5">
+          <button
+            className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] text-cyan-300/80 transition hover:bg-cyan-400/10 hover:text-cyan-200"
+            onClick={() => setExpanded(true)}
+            type="button"
+          >
+            <svg
+              className="h-3 w-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeWidth="2"
+                d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+              />
+            </svg>
+            Expand
+          </button>
+          <div className="mx-1 h-3 w-px bg-white/8" />
           {quickActions.map((action) => (
             <button
               key={action.id}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1 text-[10px] text-[var(--text-muted)] transition hover:bg-white/[0.06] hover:text-white"
-              onClick={() => handleQuickAction(action)}
+              className="flex flex-1 items-center justify-center gap-1 rounded-lg py-1 text-[10px] text-[var(--text-muted)] transition hover:bg-white/[0.06] hover:text-white"
+              onClick={() => handleAction(action)}
               title={action.label}
               type="button"
             >
@@ -92,7 +189,281 @@ export function FloatingIncidentCard({
             </button>
           ))}
         </div>
-      )}
+      </div>
+    );
+  }
+
+  /* ── Expanded card ── */
+  return (
+    <div
+      className={`absolute bottom-4 left-4 z-20 hidden w-[380px] max-h-[calc(100%-5rem)] rounded-xl border border-white/12 border-l-2 ${severityAccent[incident.severity]} bg-[rgba(4,11,19,0.94)] shadow-[0_12px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl lg:flex lg:flex-col`}
+    >
+      {/* ── Header bar ── */}
+      <div className="flex items-center justify-between border-b border-white/8 px-3 py-2 shrink-0">
+        <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--text-dim)]">
+          Incident Detail
+        </span>
+        <button
+          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-[var(--text-dim)] transition hover:bg-white/[0.06] hover:text-white"
+          onClick={() => setExpanded(false)}
+          type="button"
+        >
+          <svg
+            className="h-3 w-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeWidth="2"
+              d="M14 4l-4 4 4 4M10 20l4-4-4-4"
+            />
+          </svg>
+          Collapse
+        </button>
+      </div>
+
+      {/* ── Scrollable content ── */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {/* ── Section: Situation ── */}
+        <div className="p-3 pb-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+              {eventTypeLabel[incident.event_type]}
+            </span>
+            <span
+              className={`rounded-full border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${severityBadge[incident.severity]}`}
+            >
+              {incident.severity}
+            </span>
+            {nearPlaceName && (
+              <span className="rounded-full bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-0.5 text-[9px] text-cyan-300">
+                Near {nearPlaceName}
+              </span>
+            )}
+            <span className="ml-auto text-[10px] text-[var(--text-dim)]">
+              {incident.source}
+            </span>
+          </div>
+
+          <h3 className="mt-2 text-[15px] font-semibold leading-6 text-white">
+            {incident.title}
+          </h3>
+
+          <div className="mt-1.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
+            <svg
+              className="h-3 w-3 shrink-0 text-[var(--text-dim)]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeWidth="1.5"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeWidth="1.5"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <span>{incident.region}</span>
+            <span className="text-[var(--text-dim)]">·</span>
+            <span>{formatShortTime(incident.updated_at)}</span>
+          </div>
+
+          {incident.description && (
+            <p className="mt-2 text-[12px] leading-[1.5] text-[var(--text-muted)] line-clamp-4">
+              {incident.description}
+            </p>
+          )}
+        </div>
+
+        {/* ── Section: Risk to My Places ── */}
+        {affectedPlaces.length > 0 && (
+          <div className="border-t border-white/6 px-3 py-2">
+            <p className="text-[9px] uppercase tracking-[0.22em] text-[var(--text-dim)] mb-1.5">
+              Risk to My Places
+            </p>
+            <div className="space-y-1">
+              {affectedPlaces.map((r) => {
+                const dist = r.nearestDistanceKm;
+                return (
+                  <div
+                    key={r.place.id}
+                    className="flex items-center gap-2 rounded-lg bg-white/[0.02] px-2 py-1.5"
+                  >
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${
+                        r.riskLevel === "danger"
+                          ? "bg-red-400"
+                          : r.riskLevel === "at-risk"
+                            ? "bg-orange-400"
+                            : r.riskLevel === "monitor"
+                              ? "bg-amber-300"
+                              : "bg-emerald-400"
+                      }`}
+                    />
+                    <span className="text-[12px] font-medium text-white truncate">
+                      {r.place.label}
+                    </span>
+                    <span className="ml-auto text-[10px] text-[var(--text-dim)] shrink-0">
+                      {dist !== null ? `${Math.round(dist)} km` : "—"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Section: What To Do ── */}
+        {prepTips.length > 0 && (
+          <div className="border-t border-white/6 px-3 py-2">
+            <p className="text-[9px] uppercase tracking-[0.22em] text-[var(--text-dim)] mb-1.5">
+              What to Do
+            </p>
+            <div className="space-y-1.5">
+              {prepTips.slice(0, 4).map((tip) => (
+                <div key={tip.id} className="flex items-start gap-2">
+                  <span
+                    className={`mt-0.5 text-[10px] font-bold uppercase shrink-0 ${urgencyColor[tip.urgency]}`}
+                  >
+                    {tip.urgency === "now"
+                      ? "▸"
+                      : tip.urgency === "soon"
+                        ? "▹"
+                        : "·"}
+                  </span>
+                  <div className="min-w-0">
+                    <span className="text-[11px] font-medium leading-tight text-white">
+                      {tip.title}
+                    </span>
+                    <p className="text-[10px] leading-tight text-[var(--text-dim)] mt-0.5">
+                      {tip.body}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Section: Help Actions ── */}
+        {helpActions.length > 0 && (
+          <div className="border-t border-white/6 px-3 py-2">
+            <p className="text-[9px] uppercase tracking-[0.22em] text-[var(--text-dim)] mb-1.5">
+              Help & Safety
+            </p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {helpActions.slice(0, 6).map((action) => (
+                <button
+                  key={action.id}
+                  className="flex flex-col items-center gap-1 rounded-lg border border-white/8 bg-white/[0.02] px-2 py-2 text-center transition hover:bg-white/[0.05]"
+                  onClick={() => handleAction(action)}
+                  type="button"
+                >
+                  <svg
+                    className={`h-4 w-4 ${iconColor[action.icon] ?? "text-cyan-300"}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.5"
+                      d={iconPaths[action.icon] ?? iconPaths.link}
+                    />
+                  </svg>
+                  <span className="text-[10px] font-medium text-white leading-tight">
+                    {action.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Section: Official Source ── */}
+        {relatedAdvisory && (
+          <div className="border-t border-white/6 px-3 py-2">
+            <p className="text-[9px] uppercase tracking-[0.22em] text-[var(--text-dim)] mb-1.5">
+              Official Source
+            </p>
+            <div className="rounded-lg border border-white/8 bg-white/[0.02] p-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+                  {relatedAdvisory.source}
+                </span>
+                <span className="ml-auto text-[10px] text-[var(--text-dim)]">
+                  {formatShortTime(relatedAdvisory.issued_at)}
+                </span>
+              </div>
+              <p className="mt-1 text-[12px] font-medium text-white leading-tight">
+                {relatedAdvisory.title}
+              </p>
+              {relatedAdvisory.summary && (
+                <p className="mt-1 text-[11px] text-[var(--text-muted)] line-clamp-2">
+                  {relatedAdvisory.summary}
+                </p>
+              )}
+              {relatedAdvisory.url && (
+                <a
+                  href={relatedAdvisory.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-cyan-300/80 hover:text-cyan-200 transition"
+                >
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.5"
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                  View full bulletin
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Section: Details (metadata) ── */}
+        {Object.keys(incident.metadata).length > 0 && (
+          <details className="group border-t border-white/6 px-3 py-2">
+            <summary className="flex cursor-pointer items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--text-dim)] hover:text-[var(--text-muted)]">
+              <svg
+                className="h-3 w-3 transition group-open:rotate-90"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+              Details
+            </summary>
+            <div className="mt-1.5 flex flex-wrap gap-1.5 overflow-hidden">
+              {Object.entries(incident.metadata).map(([key, value]) => (
+                <span
+                  key={key}
+                  className="max-w-full truncate rounded-full border border-white/8 bg-white/[0.03] px-2 py-1 text-[11px] text-[var(--text-muted)]"
+                >
+                  {key}: {String(value)}
+                </span>
+              ))}
+            </div>
+          </details>
+        )}
+      </div>
     </div>
   );
 }
