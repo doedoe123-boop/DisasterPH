@@ -1,7 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Home,
+  Briefcase,
+  Users,
+  GraduationCap,
+  MapPin,
+  Plus,
+  X,
+} from "lucide-react";
 import type { PlaceRiskSummary, SavedPlace } from "@/types/incident";
+import type { LucideIcon } from "lucide-react";
 
 interface SavedPlacesProps {
   risks: PlaceRiskSummary[];
@@ -11,12 +21,12 @@ interface SavedPlacesProps {
   onRemovePlace: (id: string) => void;
 }
 
-const tagIcon: Record<SavedPlace["tag"], string> = {
-  home: "🏠",
-  work: "💼",
-  family: "👨‍👩‍👧‍👦",
-  school: "🏫",
-  other: "📍",
+const tagIcons: Record<SavedPlace["tag"], LucideIcon> = {
+  home: Home,
+  work: Briefcase,
+  family: Users,
+  school: GraduationCap,
+  other: MapPin,
 };
 
 const riskColor: Record<PlaceRiskSummary["riskLevel"], string> = {
@@ -79,7 +89,7 @@ export function SavedPlaces({
   const [showAdd, setShowAdd] = useState(false);
 
   return (
-    <section className="rounded-xl border border-white/8 bg-[var(--bg-panel)] backdrop-blur">
+    <section className="rounded-lg border border-white/8 bg-[var(--bg-panel)]">
       <div className="flex items-center justify-between border-b border-white/8 px-3 py-2">
         <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
           My Places
@@ -89,18 +99,7 @@ export function SavedPlaces({
           onClick={() => setShowAdd(!showAdd)}
           type="button"
         >
-          <svg
-            className="h-3 w-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeWidth="2"
-              d={showAdd ? "M6 18L18 6M6 6l12 12" : "M12 4v16m8-8H4"}
-            />
-          </svg>
+          {showAdd ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
           {showAdd ? "Cancel" : "Add"}
         </button>
       </div>
@@ -114,7 +113,7 @@ export function SavedPlaces({
             {PRESET_PLACES.map((preset) => (
               <button
                 key={preset.label}
-                className="rounded-lg border border-white/8 bg-white/[0.02] px-2 py-1 text-[11px] text-[var(--text-muted)] transition hover:bg-white/[0.06] hover:text-white"
+                className="flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/[0.02] px-2 py-1 text-[11px] text-[var(--text-muted)] transition hover:bg-white/[0.06] hover:text-white"
                 onClick={() => {
                   onAddPlace({
                     label: preset.label,
@@ -126,7 +125,13 @@ export function SavedPlaces({
                 }}
                 type="button"
               >
-                {tagIcon[preset.tag]} {preset.label}
+                {(() => {
+                  const Icon = tagIcons[preset.tag];
+                  return (
+                    <Icon className="h-3.5 w-3.5 shrink-0 text-[var(--text-dim)]" />
+                  );
+                })()}
+                {preset.label}
               </button>
             ))}
           </div>
@@ -162,9 +167,12 @@ export function SavedPlaces({
                 }
               }}
             >
-              <span className="text-base leading-none">
-                {tagIcon[risk.place.tag]}
-              </span>
+              {(() => {
+                const Icon = tagIcons[risk.place.tag];
+                return (
+                  <Icon className="h-4 w-4 shrink-0 text-[var(--text-dim)]" />
+                );
+              })()}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="truncate text-[13px] font-medium text-white">
@@ -220,18 +228,7 @@ export function SavedPlaces({
                 title="Remove place"
                 type="button"
               >
-                <svg
-                  className="h-3 w-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <X className="h-3 w-3" />
               </button>
             </div>
           ))}

@@ -1,3 +1,4 @@
+import { MapPin } from "lucide-react";
 import type { WatchedPlace } from "@/types/incident";
 
 interface WatchlistPanelProps {
@@ -14,7 +15,7 @@ const severityIndicator: Record<string, string> = {
 
 export function WatchlistPanel({ places, onSelectPlace }: WatchlistPanelProps) {
   return (
-    <section className="rounded-xl border border-white/8 bg-[var(--bg-panel)] backdrop-blur">
+    <section className="rounded-lg border border-white/8 bg-[var(--bg-panel)]">
       <div className="flex items-center justify-between border-b border-white/8 px-3 py-2">
         <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
           My Places
@@ -36,25 +37,7 @@ export function WatchlistPanel({ places, onSelectPlace }: WatchlistPanelProps) {
             type="button"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-white/[0.03]">
-              <svg
-                className="h-3.5 w-3.5 text-[var(--text-muted)]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
+              <MapPin className="h-3.5 w-3.5 text-[var(--text-muted)]" />
             </div>
 
             <div className="min-w-0 flex-1">

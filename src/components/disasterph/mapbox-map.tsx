@@ -207,11 +207,11 @@ export default function MapLibreMapComponent({
       if (isSelected) {
         el.style.zIndex = "30";
         if (inner)
-          inner.style.filter = "drop-shadow(0 0 8px rgba(34,211,238,0.5))";
+          inner.style.filter = "drop-shadow(0 0 4px rgba(34,211,238,0.4))";
       } else if (isHovered) {
         el.style.zIndex = "20";
         if (inner)
-          inner.style.filter = "drop-shadow(0 0 6px rgba(255,255,255,0.3))";
+          inner.style.filter = "drop-shadow(0 0 3px rgba(255,255,255,0.25))";
       } else {
         el.style.zIndex = "10";
         if (inner) inner.style.filter = "";
@@ -309,8 +309,8 @@ function createMarkerElement(incident: Incident): HTMLDivElement {
   el.style.position = "relative";
 
   el.innerHTML = `
-    <div style="position:absolute;inset:-6px;border-radius:50%;border:2px solid ${ringColor};opacity:0.5;animation:marker-ping 2s cubic-bezier(0,0,0.2,1) infinite;pointer-events:none;"></div>
-    <div class="marker-inner" style="width:${size}px;height:${size}px;border-radius:50%;background:radial-gradient(circle at 35% 35%,${color}dd,${color}88);border:2px solid ${color};box-shadow:0 0 12px ${color}66,0 0 24px ${color}33;display:flex;align-items:center;justify-content:center;transition:transform 0.2s ease,filter 0.2s ease;">
+    <div style="position:absolute;inset:-4px;border-radius:50%;border:1.5px solid ${ringColor};opacity:0.4;animation:marker-ping 2.5s cubic-bezier(0,0,0.2,1) infinite;pointer-events:none;"></div>
+    <div class="marker-inner" style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid ${color};box-shadow:0 0 6px ${color}44;display:flex;align-items:center;justify-content:center;transition:transform 0.2s ease,filter 0.2s ease;">
       <span style="font-size:11px;font-weight:700;color:#000;text-shadow:0 0 2px rgba(255,255,255,0.3);">${getMarkerLabel(incident)}</span>
     </div>`;
 

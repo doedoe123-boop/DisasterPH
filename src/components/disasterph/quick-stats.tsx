@@ -2,7 +2,7 @@ import type { DashboardStats } from "@/types/incident";
 
 export function QuickStats({ stats }: { stats: DashboardStats }) {
   return (
-    <div className="flex gap-1 rounded-xl border border-white/8 bg-[var(--bg-panel)] p-2 backdrop-blur">
+    <div className="flex gap-1 rounded-lg border border-white/8 bg-[var(--bg-panel)] p-2">
       <Stat label="Active" value={stats.activeAlerts} />
       <Stat label="Priority" value={stats.criticalAlerts} />
       <Stat label="Sources" value={stats.sourcesOnline} />

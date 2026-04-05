@@ -39,7 +39,7 @@ export default function ThreatHeadlineBar({
       {/* Pulsing severity dot */}
       <span className="relative flex h-2.5 w-2.5 shrink-0">
         <span
-          className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${levelDot[threat.level]} ${threat.level === "danger" ? "animate-ping" : ""}`}
+          className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${levelDot[threat.level]} ${threat.level === "danger" ? "pulse-dot" : ""}`}
         />
         <span
           className={`relative inline-flex h-2.5 w-2.5 rounded-full ${levelDot[threat.level]}`}

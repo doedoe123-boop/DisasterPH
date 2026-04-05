@@ -2,6 +2,18 @@
 
 import { useState } from "react";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
+import {
+  Phone,
+  Share2,
+  ClipboardCheck,
+  MapPin,
+  AlertTriangle,
+  ExternalLink,
+  Copy,
+  Maximize2,
+  Minimize2,
+  ChevronRight,
+} from "lucide-react";
 import type {
   HelpAction,
   Incident,
@@ -9,6 +21,7 @@ import type {
   PlaceRiskSummary,
 } from "@/types/incident";
 import type { PrepTip } from "@/lib/prep-guidance";
+import type { LucideIcon } from "lucide-react";
 
 interface FloatingIncidentCardProps {
   incident: Incident;
@@ -40,19 +53,14 @@ const urgencyColor: Record<string, string> = {
   general: "text-cyan-300/70",
 };
 
-const iconPaths: Record<string, string> = {
-  phone:
-    "M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z",
-  share:
-    "M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z",
-  checklist:
-    "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
-  locate:
-    "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z",
-  alert:
-    "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
-  link: "M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1",
-  copy: "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z",
+const iconComponent: Record<string, LucideIcon> = {
+  phone: Phone,
+  share: Share2,
+  checklist: ClipboardCheck,
+  locate: MapPin,
+  alert: AlertTriangle,
+  link: ExternalLink,
+  copy: Copy,
 };
 
 const iconColor: Record<string, string> = {
@@ -117,7 +125,7 @@ export function FloatingIncidentCard({
   /* ── Compact card ── */
   if (!isExpanded) {
     return (
-      <div className="absolute bottom-4 left-4 z-20 hidden w-72 rounded-xl border border-white/10 bg-[rgba(4,11,19,0.92)] shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-lg lg:block">
+      <div className="absolute bottom-4 left-4 z-20 hidden w-72 rounded-lg border border-white/10 bg-[rgba(6,14,22,0.96)] shadow-[0_4px_16px_rgba(0,0,0,0.4)] lg:block">
         <div className="p-3">
           <div className="flex items-center gap-1.5">
             <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
@@ -149,18 +157,7 @@ export function FloatingIncidentCard({
             onClick={() => setExpanded(true)}
             type="button"
           >
-            <svg
-              className="h-3 w-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeWidth="2"
-                d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-              />
-            </svg>
+            <Maximize2 className="h-3 w-3" />
             Expand
           </button>
           <div className="mx-1 h-3 w-px bg-white/8" />
@@ -172,19 +169,10 @@ export function FloatingIncidentCard({
               title={action.label}
               type="button"
             >
-              <svg
-                className="h-3 w-3 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="1.5"
-                  d={iconPaths[action.icon] ?? iconPaths.link}
-                />
-              </svg>
+              {(() => {
+                const Icon = iconComponent[action.icon] ?? ExternalLink;
+                return <Icon className="h-3 w-3 shrink-0" />;
+              })()}
               <span className="truncate">{action.label}</span>
             </button>
           ))}
@@ -196,7 +184,7 @@ export function FloatingIncidentCard({
   /* ── Expanded card ── */
   return (
     <div
-      className={`absolute bottom-4 left-4 z-20 hidden w-[380px] max-h-[calc(100%-5rem)] rounded-xl border border-white/12 border-l-2 ${severityAccent[incident.severity]} bg-[rgba(4,11,19,0.94)] shadow-[0_12px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl lg:flex lg:flex-col`}
+      className={`absolute bottom-4 left-4 z-20 hidden w-[380px] max-h-[calc(100%-5rem)] rounded-lg border border-white/12 border-l-2 ${severityAccent[incident.severity]} bg-[rgba(6,14,22,0.97)] shadow-[0_4px_20px_rgba(0,0,0,0.45)] lg:flex lg:flex-col`}
     >
       {/* ── Header bar ── */}
       <div className="flex items-center justify-between border-b border-white/8 px-3 py-2 shrink-0">
@@ -208,18 +196,7 @@ export function FloatingIncidentCard({
           onClick={() => setExpanded(false)}
           type="button"
         >
-          <svg
-            className="h-3 w-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeWidth="2"
-              d="M14 4l-4 4 4 4M10 20l4-4-4-4"
-            />
-          </svg>
+          <Minimize2 className="h-3 w-3" />
           Collapse
         </button>
       </div>
@@ -252,23 +229,7 @@ export function FloatingIncidentCard({
           </h3>
 
           <div className="mt-1.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
-            <svg
-              className="h-3 w-3 shrink-0 text-[var(--text-dim)]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeWidth="1.5"
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeWidth="1.5"
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
+            <MapPin className="h-3 w-3 shrink-0 text-[var(--text-dim)]" />
             <span>{incident.region}</span>
             <span className="text-[var(--text-dim)]">·</span>
             <span>{formatShortTime(incident.updated_at)}</span>
@@ -365,19 +326,14 @@ export function FloatingIncidentCard({
                   onClick={() => handleAction(action)}
                   type="button"
                 >
-                  <svg
-                    className={`h-4 w-4 ${iconColor[action.icon] ?? "text-cyan-300"}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.5"
-                      d={iconPaths[action.icon] ?? iconPaths.link}
-                    />
-                  </svg>
+                  {(() => {
+                    const Icon = iconComponent[action.icon] ?? ExternalLink;
+                    return (
+                      <Icon
+                        className={`h-4 w-4 ${iconColor[action.icon] ?? "text-cyan-300"}`}
+                      />
+                    );
+                  })()}
                   <span className="text-[10px] font-medium text-white leading-tight">
                     {action.label}
                   </span>
@@ -417,19 +373,7 @@ export function FloatingIncidentCard({
                   rel="noopener noreferrer"
                   className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-cyan-300/80 hover:text-cyan-200 transition"
                 >
-                  <svg
-                    className="h-3 w-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.5"
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
+                  <ExternalLink className="h-3 w-3" />
                   View full bulletin
                 </a>
               )}
@@ -441,14 +385,7 @@ export function FloatingIncidentCard({
         {Object.keys(incident.metadata).length > 0 && (
           <details className="group border-t border-white/6 px-3 py-2">
             <summary className="flex cursor-pointer items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--text-dim)] hover:text-[var(--text-muted)]">
-              <svg
-                className="h-3 w-3 transition group-open:rotate-90"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight className="h-3 w-3 transition group-open:rotate-90" />
               Details
             </summary>
             <div className="mt-1.5 flex flex-wrap gap-1.5 overflow-hidden">

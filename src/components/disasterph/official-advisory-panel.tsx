@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import type { OfficialAdvisory } from "@/types/incident";
 import { formatShortTime } from "@/lib/incidents";
 
@@ -25,7 +26,7 @@ export function OfficialAdvisoryPanel({
   if (advisories.length === 0) return null;
 
   return (
-    <section className="rounded-xl border border-white/8 bg-[var(--bg-panel)] backdrop-blur">
+    <section className="rounded-lg border border-white/8 bg-[var(--bg-panel)]">
       <button
         className="flex w-full items-center justify-between border-b border-white/8 px-3 py-2 text-left"
         onClick={() => setExpanded(!expanded)}
@@ -38,14 +39,9 @@ export function OfficialAdvisoryPanel({
           <span className="text-[11px] text-[var(--text-dim)]">
             {advisories.length} active
           </span>
-          <svg
+          <ChevronDown
             className={`h-3 w-3 text-[var(--text-dim)] transition ${expanded ? "rotate-180" : ""}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-          </svg>
+          />
         </div>
       </button>
 

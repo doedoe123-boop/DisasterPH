@@ -12,7 +12,7 @@ export function SourceHealth({
   sourceStatuses: SourceStatus[];
 }) {
   return (
-    <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-2.5 backdrop-blur">
+    <div className="rounded-lg border border-white/8 bg-[var(--bg-panel)] p-2.5">
       <p className="mb-2 text-[10px] uppercase tracking-[0.22em] text-[var(--text-dim)]">
         Source Health
       </p>

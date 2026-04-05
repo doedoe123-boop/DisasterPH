@@ -5,7 +5,6 @@ import type {
   SavedPlace,
 } from "@/types/incident";
 import { haversineKm } from "@/lib/risk-summary";
-import { eventTypeLabel } from "@/lib/incidents";
 
 export type ThreatLevel = "safe" | "watch" | "warning" | "danger";
 
@@ -67,8 +66,8 @@ export function computeThreatHeadline(
     return {
       level: "danger",
       headline: topIncident
-        ? `${severityEmoji(topIncident.severity)} ${topIncident.title}`
-        : `⚠️ Threat detected near ${worst.place.label}`,
+        ? topIncident.title
+        : `Threat detected near ${worst.place.label}`,
       subtext: `Affects ${placeNames}${moreCount > 0 ? ` +${moreCount} more` : ""}`,
       affectedPlaceCount: dangerPlaces.length,
       topIncident,
@@ -85,7 +84,7 @@ export function computeThreatHeadline(
     return {
       level: "watch",
       headline: topIncident
-        ? `${severityEmoji(topIncident.severity)} ${topIncident.title}`
+        ? topIncident.title
         : `Activity detected near ${affectedPlaces[0].place.label}`,
       subtext: `Monitoring ${placeNames}${affectedPlaces.length > 2 ? ` +${affectedPlaces.length - 2} more` : ""}`,
       affectedPlaceCount: affectedPlaces.length,
@@ -102,7 +101,7 @@ export function computeThreatHeadline(
     if (highSeverity.length > 0) {
       return {
         level: "warning",
-        headline: `${severityEmoji(highSeverity[0].severity)} ${highSeverity[0].title}`,
+        headline: highSeverity[0].title,
         subtext: `${highSeverity.length} high-severity event${highSeverity.length > 1 ? "s" : ""} active — your saved places are not affected`,
         affectedPlaceCount: 0,
         topIncident: highSeverity[0],
@@ -111,7 +110,7 @@ export function computeThreatHeadline(
 
     return {
       level: "safe",
-      headline: "✓ No active threats near your saved places",
+      headline: "No active threats near your saved places",
       subtext: `${incidents.length} event${incidents.length > 1 ? "s" : ""} being tracked nationwide`,
       affectedPlaceCount: 0,
       topIncident: incidents[0] ?? null,
@@ -125,7 +124,7 @@ export function computeThreatHeadline(
         ? "warning"
         : "watch",
     headline: topIncident
-      ? `${severityEmoji(topIncident.severity)} ${topIncident.title}`
+      ? topIncident.title
       : `${incidents.length} active events in the Philippines`,
     subtext: "Add saved places to get personalized safety alerts",
     affectedPlaceCount: 0,
@@ -169,17 +168,4 @@ function incidentScore(incident: Incident, places: SavedPlace[]): number {
   // Closer = higher score. Weight severity heavily.
   const proxScore = Math.max(0, 200 - minDist) / 200;
   return severityWeight[incident.severity] * 10 + proxScore * 5;
-}
-
-function severityEmoji(severity: IncidentSeverity): string {
-  switch (severity) {
-    case "critical":
-      return "🔴";
-    case "warning":
-      return "⚠️";
-    case "watch":
-      return "🟡";
-    case "advisory":
-      return "🔵";
-  }
 }
