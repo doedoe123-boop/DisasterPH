@@ -2,6 +2,11 @@
 
 import { useEffect, useReducer } from "react";
 import { evaluateAlertEngine } from "@/lib/alerts";
+import {
+  alertPassesPrefs,
+  getNotificationPrefs,
+  showAlertNotification,
+} from "@/lib/notifications";
 import type {
   AlertEvent,
   AlertSnapshot,
@@ -14,12 +19,11 @@ interface AlertCenterState {
   snapshots: Record<string, AlertSnapshot>;
 }
 
-type AlertCenterAction =
-  | {
-      type: "reconcile";
-      incidents: Incident[];
-      placeRisks: PlaceRiskSummary[];
-    };
+type AlertCenterAction = {
+  type: "reconcile";
+  incidents: Incident[];
+  placeRisks: PlaceRiskSummary[];
+};
 
 const STORAGE_KEY = "disasterph-alert-center";
 
@@ -56,9 +60,18 @@ function reducer(
     };
   }
 
+  // Fire browser notifications for new events that pass prefs
+  const prefs = getNotificationPrefs();
+  for (const event of result.events) {
+    if (alertPassesPrefs(event, prefs)) {
+      showAlertNotification(event);
+    }
+  }
+
   const merged = [...result.events, ...state.recentEvents].filter(
     (event, index, all) =>
-      index === all.findIndex((candidate) => candidate.dedupeKey === event.dedupeKey),
+      index ===
+      all.findIndex((candidate) => candidate.dedupeKey === event.dedupeKey),
   );
 
   return {

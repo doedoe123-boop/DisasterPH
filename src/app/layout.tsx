@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { ServiceWorkerRegistrar } from "@/components/disasterph/sw-registrar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -34,6 +35,11 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  manifest: "/manifest.json",
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -43,9 +49,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
+      <head>
+        <meta name="theme-color" content="#040d16" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+      </head>
       <body className="min-h-full bg-[var(--bg-base)] text-[var(--text-primary)]">
         {children}
         <Analytics />
+        <ServiceWorkerRegistrar />
       </body>
     </html>
   );

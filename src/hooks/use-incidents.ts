@@ -21,6 +21,8 @@ export interface UseIncidentsResult {
   error: string | null;
   /** ISO timestamp when data was generated, or null if fresh. */
   staleAt: string | null;
+  /** ISO timestamp when data was last generated (always set once data loads). */
+  generatedAt: string | null;
   refresh: () => void;
 }
 
@@ -124,6 +126,7 @@ export function useIncidents(filter?: string): UseIncidentsResult {
     isLoading,
     error,
     staleAt,
+    generatedAt,
     refresh: fetchData,
   };
 }

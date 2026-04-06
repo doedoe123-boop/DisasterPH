@@ -37,16 +37,7 @@ export function AlertFeed({
   const hiddenCount = ranked.length - visible.length;
 
   return (
-    <section className="flex h-full flex-col overflow-hidden rounded-lg border border-white/8 bg-[var(--bg-panel)]">
-      <div className="flex items-center justify-between border-b border-white/8 px-3 py-2">
-        <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
-          Priority Feed
-        </span>
-        <span className="text-[11px] text-[var(--text-dim)]">
-          {incidents.length} active
-        </span>
-      </div>
-
+    <section className="flex h-full flex-col overflow-hidden">
       <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-1.5">
         {visible.length > 0 ? (
           <>

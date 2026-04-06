@@ -193,6 +193,247 @@ export default function MapLibreMapComponent({
     });
   }, [incidents, mapReady, onSelectIncident, onHoverIncident]);
 
+  // ── Hazard zone overlays (earthquake impact / volcano exclusion) ──
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    const ZONE_SOURCE = "hazard-zones";
+    const ZONE_FILL = "hazard-zones-fill";
+    const ZONE_STROKE = "hazard-zones-stroke";
+
+    const features = incidents
+      .filter(
+        (i) => i.event_type === "earthquake" || i.event_type === "volcano",
+      )
+      .map((i) => {
+        const radiusKm =
+          i.event_type === "earthquake"
+            ? earthquakeImpactRadiusKm(i)
+            : volcanoExclusionRadiusKm(i);
+        if (radiusKm <= 0) return null;
+
+        const color =
+          i.event_type === "earthquake"
+            ? HAZARD_COLORS.earthquake
+            : HAZARD_COLORS.volcano;
+
+        return {
+          type: "Feature" as const,
+          properties: {
+            color,
+            id: i.id,
+          },
+          geometry: {
+            type: "Polygon" as const,
+            coordinates: [circlePolygon(i.longitude, i.latitude, radiusKm)],
+          },
+        };
+      })
+      .filter(Boolean);
+
+    const geojson = {
+      type: "FeatureCollection" as const,
+      features,
+    };
+
+    if (map.getSource(ZONE_SOURCE)) {
+      (
+        map.getSource(ZONE_SOURCE) as import("maplibre-gl").GeoJSONSource
+      ).setData(geojson as GeoJSON.FeatureCollection);
+    } else {
+      map.addSource(ZONE_SOURCE, {
+        type: "geojson",
+        data: geojson as GeoJSON.FeatureCollection,
+      });
+      map.addLayer({
+        id: ZONE_FILL,
+        type: "fill",
+        source: ZONE_SOURCE,
+        paint: {
+          "fill-color": ["get", "color"],
+          "fill-opacity": 0.08,
+        },
+      });
+      map.addLayer({
+        id: ZONE_STROKE,
+        type: "line",
+        source: ZONE_SOURCE,
+        paint: {
+          "line-color": ["get", "color"],
+          "line-opacity": 0.3,
+          "line-width": 1.5,
+          "line-dasharray": [4, 3],
+        },
+      });
+    }
+  }, [incidents, mapReady]);
+
+  // ── Typhoon track lines + wind radius circles ──
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    const TRACK_SOURCE = "typhoon-tracks";
+    const TRACK_LINE_OBSERVED = "typhoon-track-observed";
+    const TRACK_LINE_FORECAST = "typhoon-track-forecast";
+    const WIND_SOURCE = "typhoon-wind";
+    const WIND_FILL = "typhoon-wind-fill";
+    const WIND_STROKE = "typhoon-wind-stroke";
+
+    const trackFeatures: GeoJSON.Feature[] = [];
+    const windFeatures: GeoJSON.Feature[] = [];
+
+    for (const incident of incidents) {
+      if (incident.event_type !== "typhoon") continue;
+
+      const trackJson = incident.metadata?.track_points;
+      if (typeof trackJson !== "string") continue;
+
+      let points: Array<{
+        lat: number;
+        lon: number;
+        time: string;
+        forecast: boolean;
+        windSpeedKph?: number;
+      }>;
+      try {
+        points = JSON.parse(trackJson);
+      } catch {
+        continue;
+      }
+      if (!Array.isArray(points) || points.length < 2) continue;
+
+      const observed = points.filter((p) => !p.forecast);
+      const forecast = points.filter((p) => p.forecast);
+
+      // Observed track line
+      if (observed.length >= 2) {
+        trackFeatures.push({
+          type: "Feature",
+          properties: { type: "observed" },
+          geometry: {
+            type: "LineString",
+            coordinates: observed.map((p) => [p.lon, p.lat]),
+          },
+        });
+      }
+
+      // Forecast track line (dashed)
+      if (forecast.length >= 2) {
+        trackFeatures.push({
+          type: "Feature",
+          properties: { type: "forecast" },
+          geometry: {
+            type: "LineString",
+            coordinates: forecast.map((p) => [p.lon, p.lat]),
+          },
+        });
+      }
+
+      // Connect observed tail to forecast head
+      if (observed.length > 0 && forecast.length > 0) {
+        const tail = observed[observed.length - 1];
+        const head = forecast[0];
+        trackFeatures.push({
+          type: "Feature",
+          properties: { type: "forecast" },
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [tail.lon, tail.lat],
+              [head.lon, head.lat],
+            ],
+          },
+        });
+      }
+
+      // Wind radius circle at current position
+      const windKph = Number(incident.metadata?.wind_speed_kph ?? 0);
+      if (windKph > 30) {
+        const radiusKm = windKph * 0.8; // rough approximation
+        windFeatures.push({
+          type: "Feature",
+          properties: {},
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              circlePolygon(incident.longitude, incident.latitude, radiusKm),
+            ],
+          },
+        });
+      }
+    }
+
+    const trackGeoJson: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: trackFeatures,
+    };
+    const windGeoJson: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: windFeatures,
+    };
+
+    // Track lines
+    if (map.getSource(TRACK_SOURCE)) {
+      (
+        map.getSource(TRACK_SOURCE) as import("maplibre-gl").GeoJSONSource
+      ).setData(trackGeoJson);
+    } else {
+      map.addSource(TRACK_SOURCE, { type: "geojson", data: trackGeoJson });
+      map.addLayer({
+        id: TRACK_LINE_OBSERVED,
+        type: "line",
+        source: TRACK_SOURCE,
+        filter: ["==", ["get", "type"], "observed"],
+        paint: {
+          "line-color": "#39d0ff",
+          "line-width": 2.5,
+          "line-opacity": 0.7,
+        },
+        layout: { "line-cap": "round", "line-join": "round" },
+      });
+      map.addLayer({
+        id: TRACK_LINE_FORECAST,
+        type: "line",
+        source: TRACK_SOURCE,
+        filter: ["==", ["get", "type"], "forecast"],
+        paint: {
+          "line-color": "#39d0ff",
+          "line-width": 2,
+          "line-opacity": 0.4,
+          "line-dasharray": [4, 4],
+        },
+        layout: { "line-cap": "round", "line-join": "round" },
+      });
+    }
+
+    // Wind radius
+    if (map.getSource(WIND_SOURCE)) {
+      (
+        map.getSource(WIND_SOURCE) as import("maplibre-gl").GeoJSONSource
+      ).setData(windGeoJson);
+    } else {
+      map.addSource(WIND_SOURCE, { type: "geojson", data: windGeoJson });
+      map.addLayer({
+        id: WIND_FILL,
+        type: "fill",
+        source: WIND_SOURCE,
+        paint: { "fill-color": "#39d0ff", "fill-opacity": 0.06 },
+      });
+      map.addLayer({
+        id: WIND_STROKE,
+        type: "line",
+        source: WIND_SOURCE,
+        paint: {
+          "line-color": "#39d0ff",
+          "line-opacity": 0.25,
+          "line-width": 1.5,
+        },
+      });
+    }
+  }, [incidents, mapReady]);
+
   // ── Update visual states ──
   useEffect(() => {
     markersRef.current.forEach((marker, id) => {
@@ -229,12 +470,13 @@ export default function MapLibreMapComponent({
       const incident = incidents.find((i) => i.id === hoveredIncidentId);
       if (!incident) return;
 
+      const metaLine = buildPopupMeta(incident);
       const html = `<div style="font-family:system-ui,sans-serif;min-width:180px;">
         <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">
           <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#8899aa;">${eventTypeLabel[incident.event_type]}</span>
           <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:${SEVERITY_RING[incident.severity]};margin-left:auto;">${incident.severity}</span>
         </div>
-        <div style="font-size:13px;font-weight:600;color:#fff;line-height:1.3;">${incident.title}</div>
+        <div style="font-size:13px;font-weight:600;color:#fff;line-height:1.3;">${incident.title}</div>${metaLine}
         <div style="font-size:11px;color:#8899aa;margin-top:3px;">${incident.region} · ${formatShortTime(incident.updated_at)}</div>
       </div>`;
 
@@ -330,4 +572,77 @@ function getMarkerLabel(incident: Incident): string {
     wildfire: "WF",
   };
   return labels[incident.event_type] ?? "??";
+}
+
+function buildPopupMeta(incident: Incident): string {
+  const m = incident.metadata;
+  const parts: string[] = [];
+
+  if (incident.event_type === "earthquake") {
+    if (m.magnitude != null) parts.push(`M${Number(m.magnitude).toFixed(1)}`);
+    if (m.depth_km != null)
+      parts.push(`${Number(m.depth_km).toFixed(0)} km deep`);
+    if (m.tsunami_warning) parts.push("Tsunami warning");
+  } else if (incident.event_type === "typhoon") {
+    if (m.signal_number != null) parts.push(`Signal #${m.signal_number}`);
+    if (m.wind_speed_kph != null) parts.push(`${m.wind_speed_kph} kph`);
+  } else if (incident.event_type === "volcano") {
+    if (m.alert_level) parts.push(`Alert: ${String(m.alert_level)}`);
+  }
+
+  if (parts.length === 0) return "";
+  return `\n        <div style="font-size:11px;color:#ffbf47;margin-top:2px;font-weight:500;">${parts.join(" · ")}</div>`;
+}
+
+/** Earthquake felt-impact radius based on magnitude (approx) */
+function earthquakeImpactRadiusKm(incident: Incident): number {
+  const mag = Number(incident.metadata?.magnitude ?? 0);
+  if (mag < 4) return 0;
+  // Rough felt-area approximation: grows exponentially with magnitude
+  if (mag >= 7) return 200;
+  if (mag >= 6) return 120;
+  if (mag >= 5) return 60;
+  return 25;
+}
+
+/** Volcano danger/exclusion zone radius based on alert level */
+function volcanoExclusionRadiusKm(incident: Incident): number {
+  const alert = String(incident.metadata?.alert_level ?? "");
+  switch (alert) {
+    case "red":
+    case "warning":
+      return 14;
+    case "orange":
+    case "watch":
+      return 8;
+    case "yellow":
+    case "advisory":
+      return 4;
+    default:
+      return incident.severity === "critical"
+        ? 14
+        : incident.severity === "warning"
+          ? 8
+          : 4;
+  }
+}
+
+/** Generate a polygon approximating a circle on the globe */
+function circlePolygon(
+  centerLon: number,
+  centerLat: number,
+  radiusKm: number,
+  steps = 48,
+): [number, number][] {
+  const coords: [number, number][] = [];
+  const km2deg = 1 / 111.32;
+  for (let i = 0; i <= steps; i++) {
+    const angle = (i / steps) * 2 * Math.PI;
+    const dx = radiusKm * Math.cos(angle) * km2deg;
+    const dy =
+      (radiusKm * Math.sin(angle) * km2deg) /
+      Math.cos((centerLat * Math.PI) / 180);
+    coords.push([centerLon + dy, centerLat + dx]);
+  }
+  return coords;
 }
