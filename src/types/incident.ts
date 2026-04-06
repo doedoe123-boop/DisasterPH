@@ -144,3 +144,33 @@ export interface AlertSnapshot {
   placeIds: string[];
   updatedAt: string;
 }
+
+// ── Community Reports (C2 internal prototype) ──
+
+export type ReportCategory =
+  | "blocked_road"
+  | "flooding"
+  | "landslide"
+  | "power_outage"
+  | "evacuation"
+  | "damage"
+  | "other";
+
+export type ReportStatus = "pending" | "approved" | "rejected";
+
+export interface CommunityReport {
+  id: string;
+  category: ReportCategory;
+  title: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  locationLabel: string;
+  status: ReportStatus;
+  reporterName: string;
+  createdAt: string;
+  updatedAt: string;
+  moderatedAt?: string;
+  moderatedBy?: string;
+  moderationReason?: string;
+}

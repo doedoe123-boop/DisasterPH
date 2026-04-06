@@ -34,6 +34,8 @@ import { StateCard } from "./state-card";
 import { SituationCard } from "./situation-card";
 import { NotificationSettings } from "./notification-settings";
 import { EmergencyContacts } from "./emergency-contacts";
+import { CommunityReportsPanel } from "./community-reports-panel";
+import { useCommunityReports } from "@/hooks/use-community-reports";
 
 const filters: Array<{ label: string; value: IncidentEventType | "all" }> = [
   { label: "All", value: "all" },
@@ -72,6 +74,7 @@ export function DisasterPHDashboard() {
   const { advisories, error: advisoryError } = useAdvisories();
   const { places, addPlace, removePlace } = useSavedPlaces();
   const { isOnline } = useNetworkStatus();
+  const { reports, addReport, moderate, removeReport } = useCommunityReports();
 
   const selectedIncident: Incident | undefined =
     incidents.find((i) => i.id === selectedIncidentId) ?? incidents[0];
@@ -275,6 +278,7 @@ export function DisasterPHDashboard() {
           >
             <CommandMap
               incidents={incidents}
+              communityReports={reports}
               selectedIncidentId={selectedIncident?.id ?? ""}
               hoveredIncidentId={hoveredIncidentId}
               onHoverIncident={setHoveredIncidentId}
@@ -402,6 +406,13 @@ export function DisasterPHDashboard() {
               <NotificationSettings />
 
               <EmergencyContacts />
+
+              <CommunityReportsPanel
+                reports={reports}
+                onAddReport={addReport}
+                onModerate={moderate}
+                onRemove={removeReport}
+              />
 
               {/* ── Priority Feed (always visible, collapsible) ── */}
               <div className="shrink-0">

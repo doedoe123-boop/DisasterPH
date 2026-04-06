@@ -7,7 +7,7 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import type { Incident } from "@/types/incident";
+import type { CommunityReport, Incident } from "@/types/incident";
 
 const MapboxMap = dynamic(() => import("./mapbox-map"), {
   ssr: false,
@@ -25,6 +25,7 @@ const MapboxMap = dynamic(() => import("./mapbox-map"), {
 
 interface CommandMapProps {
   incidents: Incident[];
+  communityReports: CommunityReport[];
   selectedIncidentId: string;
   hoveredIncidentId: string | null;
   onHoverIncident: (id: string | null) => void;
@@ -37,6 +38,7 @@ interface CommandMapProps {
 
 export function CommandMap({
   incidents,
+  communityReports,
   selectedIncidentId,
   hoveredIncidentId,
   onHoverIncident,
@@ -53,6 +55,7 @@ export function CommandMap({
     <div className="relative h-full overflow-hidden bg-[#040d16]">
       <MapboxMap
         incidents={incidents}
+        communityReports={communityReports}
         selectedIncidentId={selectedIncidentId}
         hoveredIncidentId={hoveredIncidentId}
         onHoverIncident={onHoverIncident}
