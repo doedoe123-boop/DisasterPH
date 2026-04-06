@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Incident } from "@/types/incident";
+import type { CommunityReport, Incident } from "@/types/incident";
 import {
   PH_BOUNDS,
   DEFAULT_CAMERA,
@@ -20,6 +20,7 @@ type MlPopup = import("maplibre-gl").Popup;
 
 interface Props {
   incidents: Incident[];
+  communityReports: CommunityReport[];
   selectedIncidentId: string;
   hoveredIncidentId: string | null;
   onHoverIncident: (id: string | null) => void;
@@ -30,6 +31,7 @@ interface Props {
 
 export default function MapLibreMapComponent({
   incidents,
+  communityReports,
   selectedIncidentId,
   hoveredIncidentId,
   onHoverIncident,
@@ -40,6 +42,7 @@ export default function MapLibreMapComponent({
   const mapRef = useRef<MlMap | null>(null);
   const mlRef = useRef<MapLibreModule | null>(null);
   const markersRef = useRef<Map<string, MlMarker>>(new Map());
+  const communityMarkersRef = useRef<Map<string, MlMarker>>(new Map());
   const popupRef = useRef<MlPopup | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
@@ -117,6 +120,8 @@ export default function MapLibreMapComponent({
       cancelled = true;
       markersRef.current.forEach((m) => m.remove());
       markersRef.current.clear();
+      communityMarkersRef.current.forEach((m) => m.remove());
+      communityMarkersRef.current.clear();
       popupRef.current?.remove();
       mapRef.current?.remove();
       mapRef.current = null;
@@ -497,6 +502,37 @@ export default function MapLibreMapComponent({
     }
   }, [hoveredIncidentId, incidents, mapReady]);
 
+  // ── Community report markers (visually distinct from official data) ──
+  useEffect(() => {
+    const map = mapRef.current;
+    const ml = mlRef.current;
+    if (!map || !ml || !mapReady) return;
+
+    const approvedReports = communityReports.filter(
+      (r) => r.status === "approved",
+    );
+    const existingIds = new Set(communityMarkersRef.current.keys());
+    const newIds = new Set(approvedReports.map((r) => r.id));
+
+    existingIds.forEach((id) => {
+      if (!newIds.has(id)) {
+        communityMarkersRef.current.get(id)?.remove();
+        communityMarkersRef.current.delete(id);
+      }
+    });
+
+    approvedReports.forEach((report) => {
+      if (communityMarkersRef.current.has(report.id)) return;
+
+      const el = createCommunityMarkerElement(report);
+      const marker = new ml.Marker({ element: el, anchor: "center" })
+        .setLngLat([report.longitude, report.latitude])
+        .addTo(map);
+
+      communityMarkersRef.current.set(report.id, marker);
+    });
+  }, [communityReports, mapReady]);
+
   // ── Fly to selected incident ──
   useEffect(() => {
     const map = mapRef.current;
@@ -645,4 +681,34 @@ function circlePolygon(
     coords.push([centerLon + dy, centerLat + dx]);
   }
   return coords;
+}
+
+const COMMUNITY_CATEGORY_LABELS: Record<string, string> = {
+  blocked_road: "RD",
+  flooding: "FL",
+  landslide: "LS",
+  power_outage: "PW",
+  evacuation: "EV",
+  damage: "DM",
+  other: "CR",
+};
+
+function createCommunityMarkerElement(report: CommunityReport): HTMLDivElement {
+  const size = 22;
+  const label = COMMUNITY_CATEGORY_LABELS[report.category] ?? "CR";
+
+  const el = document.createElement("div");
+  el.className = "community-marker";
+  el.style.width = `${size}px`;
+  el.style.height = `${size}px`;
+  el.style.cursor = "default";
+  el.style.position = "relative";
+  el.title = `Community: ${report.title}`;
+
+  el.innerHTML = `
+    <div style="width:${size}px;height:${size}px;border-radius:4px;background:rgba(255,255,255,0.12);border:1.5px dashed rgba(255,255,255,0.35);display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:9px;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:0.02em;">${label}</span>
+    </div>`;
+
+  return el;
 }
