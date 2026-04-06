@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronsLeft } from "lucide-react";
-import { eventTypeLabel, nearestPlaceName } from "@/lib/incidents";
+import { ChevronDown, ChevronsLeft, WifiOff } from "lucide-react";
+import {
+  eventTypeLabel,
+  nearestPlaceName,
+  formatShortTime,
+} from "@/lib/incidents";
 import { getHelpActions } from "@/lib/help-actions";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
 import { getPrepTips } from "@/lib/prep-guidance";
@@ -12,6 +16,7 @@ import { useIncidents } from "@/hooks/use-incidents";
 import { useAdvisories } from "@/hooks/use-advisories";
 import { useAlertCenter } from "@/hooks/use-alert-center";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
+import { useNetworkStatus } from "@/hooks/use-network-status";
 import { AlertCenterPanel } from "./alert-center-panel";
 import { AppHeader } from "./header";
 import { CommandMap } from "./command-map";
@@ -27,6 +32,8 @@ import { SourceHealth } from "./source-health";
 import { StateBanner } from "./state-banner";
 import { StateCard } from "./state-card";
 import { SituationCard } from "./situation-card";
+import { NotificationSettings } from "./notification-settings";
+import { EmergencyContacts } from "./emergency-contacts";
 
 const filters: Array<{ label: string; value: IncidentEventType | "all" }> = [
   { label: "All", value: "all" },
@@ -53,10 +60,18 @@ export function DisasterPHDashboard() {
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
 
   // ── Live data hooks ──
-  const { incidents, stats, sourceStatuses, isLoading, error, staleAt } =
-    useIncidents(activeFilter);
+  const {
+    incidents,
+    stats,
+    sourceStatuses,
+    isLoading,
+    error,
+    staleAt,
+    generatedAt,
+  } = useIncidents(activeFilter);
   const { advisories, error: advisoryError } = useAdvisories();
   const { places, addPlace, removePlace } = useSavedPlaces();
+  const { isOnline } = useNetworkStatus();
 
   const selectedIncident: Incident | undefined =
     incidents.find((i) => i.id === selectedIncidentId) ?? incidents[0];
@@ -125,6 +140,28 @@ export function DisasterPHDashboard() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // ── Service worker notification click → focus incident ──
+  useEffect(() => {
+    function handleSWMessage(event: MessageEvent) {
+      if (event.data?.type === "notification-click" && event.data.url) {
+        // URL format: /?incident=<id>
+        try {
+          const url = new URL(event.data.url, window.location.origin);
+          const incidentId = url.searchParams.get("incident");
+          if (incidentId) {
+            setSelectedIncidentId(incidentId);
+            setSheetOpen(true);
+          }
+        } catch {
+          /* ignore malformed URLs */
+        }
+      }
+    }
+    navigator.serviceWorker?.addEventListener("message", handleSWMessage);
+    return () =>
+      navigator.serviceWorker?.removeEventListener("message", handleSWMessage);
+  }, []);
+
   const effectiveSidebar = focusMode
     ? "hidden"
     : sidebarExpanded
@@ -164,12 +201,10 @@ export function DisasterPHDashboard() {
   const hasSourceProblems = degradedSourceCount > 0 || delayedSourceCount > 0;
 
   return (
-    <main className="h-screen overflow-hidden bg-[var(--bg-base)] p-2 text-[var(--text-primary)]">
+    <main className="h-screen overflow-hidden bg-[var(--bg-base)] text-[var(--text-primary)]">
       <div
-        className={`mx-auto flex h-full flex-col gap-2 rounded-lg border bg-[rgba(6,14,22,0.95)] shadow-[0_4px_24px_rgba(0,0,0,0.35)] transition-all duration-300 ${
-          focusMode
-            ? "max-w-none gap-0 rounded-none border-transparent p-0"
-            : "max-w-[1600px] border-white/8 p-2"
+        className={`flex h-full flex-col bg-[rgba(6,14,22,0.95)] transition-all duration-300 ${
+          focusMode ? "gap-0" : "gap-0"
         }`}
       >
         <div
@@ -192,8 +227,21 @@ export function DisasterPHDashboard() {
           </div>
         </div>
 
-        {/* ── Error / stale-data banners ── */}
-        {error && (
+        {/* ── Error / offline / stale-data banners ── */}
+        {!isOnline && (
+          <div className="mx-2 flex items-center gap-2 rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+            <WifiOff className="h-3.5 w-3.5 shrink-0" />
+            <div>
+              <p className="font-medium">You are offline</p>
+              <p className="mt-0.5 opacity-90">
+                {generatedAt
+                  ? `Showing cached data from ${formatShortTime(generatedAt)}.`
+                  : "Showing cached data. Live updates will resume when you reconnect."}
+              </p>
+            </div>
+          </div>
+        )}
+        {error && isOnline && (
           <StateBanner
             message={error}
             title="Live data fetch failed"
@@ -350,6 +398,10 @@ export function DisasterPHDashboard() {
               />
 
               <SourceHealth sourceStatuses={sourceStatuses} />
+
+              <NotificationSettings />
+
+              <EmergencyContacts />
 
               {/* ── Priority Feed (always visible, collapsible) ── */}
               <div className="shrink-0">

@@ -70,6 +70,29 @@ export async function fetchEonetEvents(): Promise<Incident[]> {
     const firstGeo = geometry[0];
     const firstCoords = firstGeo?.coordinates as number[] | undefined;
 
+    // Build track points from multi-geometry events (storms)
+    const trackPoints =
+      eventType === "typhoon" && geometry.length > 1
+        ? JSON.stringify(
+            geometry.map((g) => {
+              const c = (g.coordinates ?? [0, 0]) as number[];
+              return {
+                lon: c[0],
+                lat: c[1],
+                time:
+                  typeof g.date === "string"
+                    ? g.date
+                    : new Date().toISOString(),
+                forecast: false,
+                windSpeedKph:
+                  typeof g.magnitudeValue === "number"
+                    ? Math.round(g.magnitudeValue * 1.852) // knots → kph
+                    : undefined,
+              };
+            }),
+          )
+        : null;
+
     incidents.push({
       id: String(event.id),
       source: "EONET",
@@ -99,6 +122,14 @@ export async function fetchEonetEvents(): Promise<Incident[]> {
         magnitude_unit: (latest.magnitudeUnit as string) ?? null,
         confidence: "reference-only",
         note: "EONET data is supplementary. Refer to PAGASA/PHIVOLCS for official advisories.",
+        ...(trackPoints ? { track_points: trackPoints } : {}),
+        ...(eventType === "typhoon" && latest.magnitudeValue != null
+          ? {
+              wind_speed_kph: Math.round(
+                (latest.magnitudeValue as number) * 1.852,
+              ),
+            }
+          : {}),
       },
     });
   }

@@ -95,6 +95,18 @@ export interface OfficialAdvisory {
   url?: string;
 }
 
+/** A single point along a typhoon's observed or forecast track */
+export interface TyphoonTrackPoint {
+  lat: number;
+  lon: number;
+  /** ISO timestamp */
+  time: string;
+  /** Whether this is a forecast (true) or observed (false) point */
+  forecast: boolean;
+  /** Sustained wind speed in kph at this point, if known */
+  windSpeedKph?: number;
+}
+
 export interface HelpAction {
   id: string;
   label: string;
