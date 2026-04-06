@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { isValidAdminToken } from "@/lib/report-validation";
 
 // PATCH /api/reports/[id] — moderate (approve/reject) or update a report
@@ -35,7 +35,7 @@ export async function PATCH(
     );
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("community_reports")
     .update(updates)
     .eq("id", id)
@@ -61,7 +61,7 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from("community_reports")
     .delete()
     .eq("id", id);

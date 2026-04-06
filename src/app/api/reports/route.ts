@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { rateLimit } from "@/lib/rate-limit";
 import {
   validateCategory,
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 // GET /api/reports — list all reports (newest first)
 export async function GET() {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("community_reports")
     .select("*")
     .order("created_at", { ascending: false })
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: coordCheck.reason }, { status: 400 });
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("community_reports")
     .insert({
       category,
