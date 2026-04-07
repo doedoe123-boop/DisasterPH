@@ -1,5 +1,5 @@
-import { DisasterPHDashboard } from "@/components/disasterph/disasterph-dashboard";
+import { SentinelDashboard } from "@/components/disasterph/sentinel-dashboard";
 
 export default function Home() {
-  return <DisasterPHDashboard />;
+  return <SentinelDashboard />;
 }

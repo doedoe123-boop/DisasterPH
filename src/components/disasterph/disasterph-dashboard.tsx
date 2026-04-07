@@ -222,11 +222,7 @@ export function DisasterPHDashboard() {
               }}
             />
             <SourceStrip sources={sourceStatuses} />
-            <AppHeader
-              activeFilter={activeFilter}
-              filters={filters}
-              onFilterChange={setActiveFilter}
-            />
+            <AppHeader />
           </div>
         </div>
 

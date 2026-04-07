@@ -1,58 +1,75 @@
-import { Eye } from "lucide-react";
-import type { IncidentEventType } from "@/types/incident";
+"use client";
 
-interface HeaderProps {
-  activeFilter: IncidentEventType | "all";
-  filters: Array<{ label: string; value: IncidentEventType | "all" }>;
-  onFilterChange: (value: IncidentEventType | "all") => void;
-}
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Shield, Radio, Rss, Building2 } from "lucide-react";
 
-export function AppHeader({
-  activeFilter,
-  filters,
-  onFilterChange,
-}: HeaderProps) {
+const NAV_ITEMS = [
+  { label: "Sentinel", sub: "Live Monitoring", href: "/", icon: Shield },
+  { label: "Pulse", sub: "Alert Feed", href: "/pulse", icon: Rss },
+  { label: "Sanctuary", sub: "Shelters", href: "/shelters", icon: Building2 },
+] as const;
+
+export function AppHeader() {
+  const pathname = usePathname();
+
   return (
-    <header className="flex items-center gap-3 px-3 py-1.5 border-t border-white/5 bg-black/20">
-      <div className="flex shrink-0 items-center gap-2">
-        <div className="flex h-6 w-6 items-center justify-center rounded border border-cyan-400/20 bg-cyan-400/8">
-          <Eye className="h-3.5 w-3.5 text-cyan-200" />
+    <header className="flex items-center justify-between border-b border-white/8 bg-[var(--bg-panel-strong)] px-4 py-2">
+      {/* ── Left: Logo / branding ── */}
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-orange-500/30 bg-orange-500/15">
+          <Shield className="h-4 w-4 text-orange-400" />
         </div>
-        <span className="text-sm font-semibold tracking-tight text-white">
-          DisasterPH
-        </span>
+        <div className="leading-none">
+          <span className="text-sm font-bold tracking-tight text-white uppercase">
+            Sentinel
+          </span>
+          <p className="text-[10px] tracking-wider text-[var(--text-dim)] uppercase">
+            Disaster Watch PH
+          </p>
+        </div>
       </div>
 
-      <div className="h-4 w-px shrink-0 bg-white/10" />
-
-      <div className="flex min-w-0 gap-1 overflow-x-auto scrollbar-none">
-        {filters.map((filter) => {
-          const active = activeFilter === filter.value;
+      {/* ── Center: Navigation ── */}
+      <nav className="flex items-center gap-1">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const active = pathname === item.href;
 
           return (
-            <button
-              key={filter.value}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs transition ${
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition ${
                 active
-                  ? "border-transparent bg-cyan-400/20 text-cyan-200"
-                  : "border border-transparent text-[var(--text-muted)] hover:bg-white/5 hover:text-white"
+                  ? "border border-orange-500/30 bg-orange-500/10 text-orange-400"
+                  : "text-[var(--text-muted)] hover:bg-white/5 hover:text-white"
               }`}
-              onClick={() => onFilterChange(filter.value)}
-              type="button"
             >
-              {filter.label}
-            </button>
+              <Icon className="h-4 w-4" />
+              <div className="leading-tight">
+                <span
+                  className={`font-medium ${active ? "text-orange-400" : ""}`}
+                >
+                  {item.label}
+                </span>
+                <p className="text-[10px] text-[var(--text-dim)]">{item.sub}</p>
+              </div>
+            </Link>
           );
         })}
-      </div>
+      </nav>
 
-      <div className="ml-auto flex shrink-0 items-center gap-2.5">
-        <span className="hidden text-[11px] text-[var(--text-dim)] sm:inline">
-          Updated 5m ago
-        </span>
-        <div className="flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[11px] text-emerald-200">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          Live
+      {/* ── Right: LIVE indicator ── */}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/8 px-3 py-1">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          </span>
+          <span className="text-xs font-semibold tracking-wider text-emerald-300 uppercase">
+            Live
+          </span>
         </div>
       </div>
     </header>
