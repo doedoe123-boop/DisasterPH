@@ -32,7 +32,7 @@ import { useCommunityReports } from "@/hooks/use-community-reports";
 import { AppHeader } from "./header";
 import { CommandMap } from "./command-map";
 import { EmergencyContacts } from "./emergency-contacts";
-import { MobileBottomSheet } from "./mobile-bottom-sheet";
+
 import { getHelpActions } from "@/lib/help-actions";
 import { getPrepTips } from "@/lib/prep-guidance";
 import { nearestPlaceName } from "@/lib/incidents";
@@ -205,7 +205,7 @@ export function DisasterPHCommand() {
   }
 
   return (
-    <main className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
+    <main className="flex h-screen flex-col overflow-hidden bg-background text-foreground pb-[env(safe-area-inset-bottom)] md:pb-0">
       {/* ── Global Header ── */}
       <AppHeader />
 
@@ -219,7 +219,7 @@ export function DisasterPHCommand() {
             className="flex items-center gap-2.5 border-b border-amber-400/25 bg-amber-400/10 px-5 py-2 text-sm text-amber-200 overflow-hidden"
           >
             <WifiOff className="h-4 w-4 shrink-0" />
-            <span>
+            <span suppressHydrationWarning>
               Offline — showing cached data
               {generatedAt ? ` from ${formatShortTime(generatedAt)}` : ""}.
             </span>
@@ -228,7 +228,7 @@ export function DisasterPHCommand() {
       </AnimatePresence>
 
       {/* ── Body: Sidebar + Main ── */}
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row overflow-hidden">
         {/* ── Left Sidebar: Recent Signals ── */}
         <AnimatePresence>
           {sidebarOpen && !focusMode && (
@@ -341,7 +341,10 @@ export function DisasterPHCommand() {
                                 {severityLabel[incident.severity]}
                               </span>
                               <span className="text-white/15">·</span>
-                              <span className="text-[12px] text-[var(--text-dim)]">
+                              <span
+                                className="text-[12px] text-[var(--text-dim)]"
+                                suppressHydrationWarning
+                              >
                                 {relativeTime(incident.updated_at)}
                               </span>
                             </div>
@@ -366,13 +369,13 @@ export function DisasterPHCommand() {
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
-              className="border-b border-white/10 bg-[var(--bg-panel)] px-5 py-3"
+              className="border-b border-white/10 bg-[var(--bg-panel)] px-4 md:px-5 py-2.5 md:py-3"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 text-[var(--text-dim)]">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="hidden md:flex items-center gap-1.5 text-[var(--text-dim)]">
                   <Activity className="h-[18px] w-[18px]" />
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-1 px-1 md:flex-wrap md:overflow-visible">
                   {filterChips.map((chip) => {
                     const count = chipCount(chip.value);
                     const active = activeFilter === chip.value;
@@ -383,7 +386,7 @@ export function DisasterPHCommand() {
                         type="button"
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-[13px] font-semibold transition-all whitespace-nowrap ${
+                        className={`flex items-center justify-center gap-1.5 md:gap-2 rounded-lg border px-3 md:px-4 py-2 md:py-2.5 text-[12px] md:text-[13px] font-semibold transition-all whitespace-nowrap shrink-0 ${
                           active
                             ? chip.value === "critical"
                               ? "border-red-500/50 bg-red-500/15 text-red-400 shadow-[0_0_12px_rgba(255,93,93,0.1)]"
@@ -422,7 +425,7 @@ export function DisasterPHCommand() {
 
           {/* ── Map section ── */}
           <section
-            className={`relative min-h-0 flex-1 ${focusMode ? "absolute inset-0 z-30" : ""}`}
+            className={`relative ${focusMode ? "absolute inset-0 z-30" : "h-[45vh] md:h-auto md:min-h-0 md:flex-1 shrink-0"}`}
           >
             <CommandMap
               incidents={filteredIncidents}
@@ -537,7 +540,7 @@ export function DisasterPHCommand() {
                         <div className="mt-1.5 flex items-center gap-3 text-[12px] text-[var(--text-muted)]">
                           <span>{selectedIncident.region}</span>
                           <span className="text-white/15">·</span>
-                          <span>
+                          <span suppressHydrationWarning>
                             {relativeTime(selectedIncident.updated_at)}
                           </span>
                         </div>
@@ -593,9 +596,9 @@ export function DisasterPHCommand() {
 
           {/* ── Detail Feed (below map) ── */}
           {!focusMode && (
-            <section className="shrink-0 border-t border-white/10 bg-[var(--bg-panel)]">
+            <section className="flex-1 md:flex-none md:shrink-0 border-t border-white/10 bg-[var(--bg-panel)] overflow-y-auto">
               {/* Section heading */}
-              <div className="flex items-center gap-3 border-b border-white/8 px-5 py-3">
+              <div className="sticky top-0 z-10 flex items-center gap-2 md:gap-3 border-b border-white/8 px-4 md:px-5 py-2.5 md:py-3 bg-[var(--bg-panel)]">
                 <div className="flex items-center gap-1.5 text-[var(--text-dim)]">
                   <Activity className="h-4 w-4" />
                   <span className="text-[12px] font-bold uppercase tracking-[0.15em]">
@@ -638,7 +641,7 @@ export function DisasterPHCommand() {
               </div>
 
               {/* Incident cards */}
-              <div className="max-h-72 overflow-y-auto">
+              <div className="md:max-h-72 md:overflow-y-auto pb-16 md:pb-0">
                 {filteredIncidents.length === 0 ? (
                   <p className="py-8 text-center text-[15px] text-[var(--text-dim)]">
                     No incidents match the current filter.
@@ -662,7 +665,7 @@ export function DisasterPHCommand() {
                         >
                           <Link
                             href={`/pulse/${encodeURIComponent(incident.id)}`}
-                            className={`group flex items-start gap-4 border-b border-white/5 px-5 py-4 transition-all hover:bg-white/[0.04] border-l-3 ${sv.accent} ${
+                            className={`group flex items-start gap-3 md:gap-4 border-b border-white/5 px-4 md:px-5 py-3.5 md:py-4 transition-all active:bg-white/[0.06] hover:bg-white/[0.04] border-l-3 ${sv.accent} ${
                               incident.severity === "critical"
                                 ? "card-glow-critical"
                                 : ""
@@ -696,7 +699,9 @@ export function DisasterPHCommand() {
                               <div className="mt-1.5 flex items-center gap-3 text-[13px] text-[var(--text-muted)]">
                                 <span>{incident.region}</span>
                                 <span className="text-white/15">·</span>
-                                <span>{relativeTime(incident.updated_at)}</span>
+                                <span suppressHydrationWarning>
+                                  {relativeTime(incident.updated_at)}
+                                </span>
                               </div>
                             </div>
                             <ArrowUpRight className="mt-3 h-5 w-5 shrink-0 text-[var(--text-dim)] transition group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -714,19 +719,6 @@ export function DisasterPHCommand() {
 
       {/* ── Fixed Overlay: Emergency Hotlines ── */}
       {!focusMode && <EmergencyContacts />}
-
-      {/* ── Mobile Bottom Sheet ── */}
-      {selectedIncident && (
-        <MobileBottomSheet
-          incident={selectedIncident}
-          open={sheetOpen}
-          onOpenChange={setSheetOpen}
-          advisories={advisories}
-          helpActions={helpActions}
-          prepTips={prepTips}
-          nearPlaceName={selectedNearPlace}
-        />
-      )}
     </main>
   );
 }

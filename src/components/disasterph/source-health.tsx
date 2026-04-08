@@ -36,7 +36,9 @@ export function SourceHealth({
                 </span>
               </div>
               <div className="mt-1 flex items-center justify-between text-[10px] text-[var(--text-dim)]">
-                <span>Updated {formatShortTime(source.last_fetch_at)}</span>
+                <span suppressHydrationWarning>
+                  Updated {formatShortTime(source.last_fetch_at)}
+                </span>
                 <span>
                   {source.latency_ms > 0
                     ? `${source.latency_ms}ms`

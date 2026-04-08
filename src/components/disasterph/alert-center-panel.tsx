@@ -63,7 +63,10 @@ export function AlertCenterPanel({
                   <span className="text-[10px] text-[var(--text-dim)]">
                     {severityLabel[alert.incidentSeverity]}
                   </span>
-                  <span className="ml-auto text-[10px] text-[var(--text-dim)]">
+                  <span
+                    className="ml-auto text-[10px] text-[var(--text-dim)]"
+                    suppressHydrationWarning
+                  >
                     {formatShortTime(alert.updatedAt)}
                   </span>
                 </div>

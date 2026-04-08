@@ -182,7 +182,7 @@ export default function PulseDetailPage() {
         </Link>
       </div>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 pb-24 md:pb-8 sm:px-6 lg:px-8">
         {/* ── Hero Section ── */}
         <motion.div
           className="mb-8"

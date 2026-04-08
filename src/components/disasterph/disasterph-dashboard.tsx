@@ -232,7 +232,7 @@ export function DisasterPHDashboard() {
             <WifiOff className="h-3.5 w-3.5 shrink-0" />
             <div>
               <p className="font-medium">You are offline</p>
-              <p className="mt-0.5 opacity-90">
+              <p className="mt-0.5 opacity-90" suppressHydrationWarning>
                 {generatedAt
                   ? `Showing cached data from ${formatShortTime(generatedAt)}.`
                   : "Showing cached data. Live updates will resume when you reconnect."}

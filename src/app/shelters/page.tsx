@@ -188,6 +188,7 @@ export default function SheltersPage() {
   );
   const [selectedId, setSelectedId] = useState<string>(SHELTERS[0].id);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
 
   const filtered = useMemo(() => {
     let result = SHELTERS;
@@ -215,11 +216,11 @@ export default function SheltersPage() {
     <div className="flex h-screen flex-col bg-[var(--bg-base)] text-[var(--text-primary)]">
       <AppHeader />
 
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* ══════════════════════════════════════════
             LEFT PANEL: Shelter List
         ══════════════════════════════════════════ */}
-        <aside className="flex w-full max-w-sm flex-col border-r border-white/10 bg-[var(--bg-panel-strong)]">
+        <aside className="flex flex-1 lg:flex-none w-full lg:max-w-sm flex-col border-r border-white/10 bg-[var(--bg-panel-strong)] overflow-y-auto">
           {/* Title */}
           <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
             <div className="flex items-center gap-3">
@@ -253,14 +254,14 @@ export default function SheltersPage() {
           </div>
 
           {/* Status filters */}
-          <div className="flex flex-wrap items-center gap-2 px-5 py-3">
+          <div className="flex items-center gap-2 px-4 md:px-5 py-3 overflow-x-auto scrollbar-none">
             <Filter className="h-4 w-4 shrink-0 text-[var(--text-dim)]" />
             {STATUS_FILTERS.map((f) => (
               <button
                 key={f.value}
                 type="button"
                 onClick={() => setStatusFilter(f.value)}
-                className={`rounded-lg border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition ${
+                className={`shrink-0 rounded-lg border px-3 py-2 md:py-1.5 text-[11px] font-semibold uppercase tracking-wider transition ${
                   statusFilter === f.value
                     ? "bg-orange-500/15 text-orange-400 border-orange-500/30"
                     : "text-[var(--text-dim)] border-transparent hover:bg-white/6 hover:text-white"
@@ -272,7 +273,7 @@ export default function SheltersPage() {
           </div>
 
           {/* Shelter cards */}
-          <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <div className="flex-1 overflow-y-auto px-4 pb-20 md:pb-4">
             {filtered.length === 0 ? (
               <p className="mt-10 text-center text-[14px] text-[var(--text-dim)]">
                 No shelters match your filters.
@@ -292,6 +293,7 @@ export default function SheltersPage() {
                     onSelect={() => {
                       setSelectedId(shelter.id);
                       setDetailTab("overview");
+                      setMobileDetailOpen(true);
                     }}
                   />
                 ))}
@@ -678,12 +680,254 @@ export default function SheltersPage() {
           </AnimatePresence>
         </div>
 
-        {/* ── Mobile: no shelter selected fallback ── */}
-        <div className="flex flex-1 items-center justify-center lg:hidden">
-          <p className="text-[14px] text-[var(--text-dim)]">
-            Select a shelter to view details
-          </p>
-        </div>
+        {/* ── Mobile: Slide-over Detail Panel ── */}
+        <AnimatePresence>
+          {mobileDetailOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-50 bg-black/50 lg:hidden"
+                onClick={() => setMobileDetailOpen(false)}
+              />
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                className="fixed inset-y-0 right-0 z-50 w-full max-w-md flex-col overflow-y-auto bg-[var(--bg-base)] lg:hidden flex"
+              >
+                {/* Mobile detail header */}
+                <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-white/10 bg-[var(--bg-panel)] px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => setMobileDetailOpen(false)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white"
+                  >
+                    <ChevronRight className="h-5 w-5 rotate-180" />
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-[15px] font-bold text-white truncate">
+                      {selected.name}
+                    </h2>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span
+                        className={`flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider ${STATUS_STYLE[selected.status].text}`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${STATUS_STYLE[selected.status].bg}`}
+                        />
+                        {selected.status}
+                      </span>
+                      <span className="text-[12px] text-[var(--text-dim)]">
+                        {selectedPct}% capacity
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Capacity bar */}
+                <div className="px-4 py-4 border-b border-white/8 bg-[var(--bg-panel)]">
+                  <div className="flex items-center justify-between text-[13px] mb-2">
+                    <span className="text-[var(--text-muted)]">
+                      {selected.occupancy.toLocaleString()} /{" "}
+                      {selected.capacity.toLocaleString()} evacuees
+                    </span>
+                    <span className="font-bold text-white">{selectedPct}%</span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+                    <motion.div
+                      className={`h-full rounded-full ${occupancyBarColor(selectedPct)}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(selectedPct, 100)}%` }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Info grid */}
+                <div className="px-4 py-3 border-b border-white/8 bg-[var(--bg-panel)] space-y-3">
+                  <div className="flex items-start gap-2.5">
+                    <MapPin className="h-4 w-4 shrink-0 text-[var(--text-dim)] mt-0.5" />
+                    <span className="text-[13px] text-[var(--text-muted)]">
+                      {selected.address}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <Phone className="h-4 w-4 shrink-0 text-[var(--text-dim)]" />
+                    <a
+                      href={`tel:${selected.phone.replace(/[^0-9+]/g, "")}`}
+                      className="text-[13px] font-semibold text-cyan-400"
+                    >
+                      {selected.phone}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <Building2 className="h-4 w-4 shrink-0 text-[var(--text-dim)]" />
+                    <span className="text-[13px] text-[var(--text-muted)]">
+                      {selected.operator}
+                    </span>
+                  </div>
+                  {selected.amenities.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {selected.amenities.map((amenity) => {
+                        const AIcon = AMENITY_ICONS[amenity];
+                        return (
+                          <span
+                            key={amenity}
+                            className="flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[11px] text-[var(--text-muted)]"
+                          >
+                            {AIcon && <AIcon className="h-3 w-3" />}
+                            {AMENITY_LABELS[amenity] ?? amenity}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Tabs */}
+                <div className="border-b border-white/8 bg-[var(--bg-panel)]">
+                  <div className="flex px-4">
+                    {(
+                      [
+                        {
+                          key: "overview" as const,
+                          label: "Overview",
+                          icon: Info,
+                        },
+                        {
+                          key: "guests" as const,
+                          label: "Guests",
+                          icon: ClipboardList,
+                        },
+                        {
+                          key: "notices" as const,
+                          label: "Notices",
+                          icon: MessageSquare,
+                        },
+                      ] as const
+                    ).map((tab) => {
+                      const active = detailTab === tab.key;
+                      return (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setDetailTab(tab.key)}
+                          className={`relative flex items-center gap-1.5 px-4 py-3 text-[12px] font-semibold transition ${
+                            active
+                              ? "text-orange-400"
+                              : "text-[var(--text-dim)]"
+                          }`}
+                        >
+                          <tab.icon className="h-3.5 w-3.5" />
+                          {tab.label}
+                          {active && (
+                            <motion.div
+                              layoutId="mShelterTab"
+                              className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-400 rounded-full"
+                              transition={{
+                                type: "spring",
+                                bounce: 0.2,
+                                duration: 0.4,
+                              }}
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Tab content */}
+                <div className="flex-1 pb-20">
+                  <AnimatePresence mode="wait">
+                    {detailTab === "overview" && (
+                      <motion.div
+                        key="m-overview"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="p-4"
+                      >
+                        <div className="rounded-xl border border-white/10 bg-[var(--bg-panel)] p-4">
+                          <h3 className="text-[15px] font-bold text-white">
+                            Facility Overview
+                          </h3>
+                          <p className="mt-2 text-[13px] leading-relaxed text-[var(--text-muted)]">
+                            This center is currently{" "}
+                            <span
+                              className={`font-semibold ${STATUS_STYLE[selected.status].text}`}
+                            >
+                              {selected.status}
+                            </span>{" "}
+                            and managed by {selected.operator}. Capacity is{" "}
+                            {selected.capacity.toLocaleString()} with{" "}
+                            {selected.occupancy.toLocaleString()} currently
+                            sheltered.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                    {detailTab === "guests" && (
+                      <motion.div
+                        key="m-guests"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="p-4"
+                      >
+                        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mb-4">
+                          <div className="flex items-start gap-3">
+                            <ShieldAlert className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" />
+                            <div>
+                              <h4 className="text-[13px] font-bold text-amber-300">
+                                Restricted Access
+                              </h4>
+                              <p className="mt-1 text-[12px] text-amber-200/70">
+                                Admin authentication required.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-white/10 bg-[var(--bg-panel)] p-4 opacity-50 pointer-events-none">
+                          <div className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)]">
+                            <Lock className="h-3 w-3" /> Admin Only
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                    {detailTab === "notices" && (
+                      <motion.div
+                        key="m-notices"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="p-4"
+                      >
+                        <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 mb-4">
+                          <div className="flex items-start gap-3">
+                            <MessageSquare className="h-5 w-5 shrink-0 text-cyan-400 mt-0.5" />
+                            <div>
+                              <h4 className="text-[13px] font-bold text-cyan-300">
+                                Coming Soon
+                              </h4>
+                              <p className="mt-1 text-[12px] text-cyan-200/70">
+                                Notice board under development.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

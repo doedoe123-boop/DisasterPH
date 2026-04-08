@@ -71,7 +71,10 @@ export function OfficialAdvisoryPanel({
               <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-dim)]">
                 {advisory.source}
               </span>
-              <span className="ml-auto text-[10px] text-[var(--text-dim)]">
+              <span
+                className="ml-auto text-[10px] text-[var(--text-dim)]"
+                suppressHydrationWarning
+              >
                 {formatShortTime(advisory.issued_at)}
               </span>
             </div>

@@ -32,15 +32,16 @@ function ContactCard({ contact }: { contact: EmergencyContact }) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02, y: -1 }}
-      className="block rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 transition-colors hover:border-cyan-400/25 hover:bg-white/[0.06]"
+      whileTap={{ scale: 0.98 }}
+      className="block rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 md:px-4 md:py-3.5 transition-colors hover:border-cyan-400/25 hover:bg-white/[0.06] active:bg-white/[0.06]"
     >
       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-dim)]">
         National
       </p>
-      <p className="mt-1.5 text-[16px] font-bold leading-snug text-white">
+      <p className="mt-1 md:mt-1.5 text-[14px] md:text-[16px] font-bold leading-snug text-white">
         {contact.name}
       </p>
-      <p className="mt-1 flex items-center gap-1.5 text-[15px] font-semibold text-cyan-400">
+      <p className="mt-1 flex items-center gap-1.5 text-[13px] md:text-[15px] font-semibold text-cyan-400">
         <Phone className="h-3.5 w-3.5" />
         {contact.number}
       </p>
@@ -53,8 +54,8 @@ export function EmergencyContacts() {
 
   return (
     <>
-      {/* Fixed bottom overlay */}
-      <div className="fixed bottom-0 left-0 right-0 z-[999] flex flex-col">
+      {/* Fixed bottom overlay — sits above mobile bottom tab bar */}
+      <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 z-[999] flex flex-col">
         <AnimatePresence>
           {open && (
             <motion.div
@@ -62,10 +63,10 @@ export function EmergencyContacts() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-white/8 bg-slate-900/98 backdrop-blur-md"
+              className="overflow-hidden border-t border-white/8 bg-slate-900/98 backdrop-blur-md max-h-[60vh] overflow-y-auto"
             >
-              <div className="px-5 py-5">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="px-4 py-4 md:px-5 md:py-5">
+                <div className="grid grid-cols-2 gap-2.5 md:gap-3 sm:grid-cols-3 lg:grid-cols-4">
                   {CONTACTS.map((contact) => (
                     <ContactCard key={contact.number} contact={contact} />
                   ))}
@@ -76,13 +77,13 @@ export function EmergencyContacts() {
         </AnimatePresence>
 
         <button
-          className="flex w-full items-center justify-between border-t border-white/10 bg-slate-900/95 backdrop-blur-sm px-5 py-3 text-left transition hover:bg-slate-800/95"
+          className="flex w-full items-center justify-between border-t border-white/10 bg-slate-900/95 backdrop-blur-sm px-4 py-3 md:px-5 text-left transition hover:bg-slate-800/95 active:bg-slate-800/95"
           onClick={() => setOpen(!open)}
           type="button"
         >
           <div className="flex items-center gap-2.5">
             <Phone className="h-[18px] w-[18px] text-amber-400" />
-            <span className="text-[13px] font-bold uppercase tracking-[0.18em] text-white">
+            <span className="text-[12px] md:text-[13px] font-bold uppercase tracking-[0.18em] text-white">
               Emergency Hotlines
             </span>
           </div>
