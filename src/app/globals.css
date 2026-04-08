@@ -1,24 +1,53 @@
 @import "tailwindcss";
 
 :root {
-  --bg-base: #06111b;
-  --bg-panel: rgba(8, 20, 32, 0.95);
-  --bg-panel-strong: rgba(6, 16, 27, 0.98);
+  /* ── Surfaces ── */
+  --bg-base: #060e18;
+  --bg-panel: rgba(10, 22, 36, 0.96);
+  --bg-panel-strong: rgba(6, 14, 24, 0.98);
+  --bg-panel-elevated: rgba(14, 28, 44, 0.95);
   --bg-overlay: rgba(3, 10, 18, 0.88);
-  --bg-chip: rgba(16, 34, 49, 0.9);
-  --line-soft: rgba(80, 120, 150, 0.18);
-  --line-strong: rgba(100, 150, 195, 0.24);
-  --text-primary: #e8f0f6;
-  --text-muted: #94aec2;
-  --text-dim: #637d94;
+  --bg-chip: rgba(18, 38, 56, 0.92);
+  --bg-card-hover: rgba(20, 40, 60, 0.5);
+
+  /* ── Borders ── */
+  --line-soft: rgba(80, 120, 150, 0.15);
+  --line-strong: rgba(100, 155, 200, 0.25);
+  --line-glow: rgba(57, 208, 255, 0.2);
+
+  /* ── Text ── */
+  --text-primary: #eaf1f7;
+  --text-muted: #9bb4c8;
+  --text-dim: #6a8599;
+
+  /* ── Accents ── */
   --accent-cyan: #39d0ff;
   --accent-blue: #2d7cff;
   --accent-amber: #ffbf47;
   --accent-red: #ff5d5d;
   --accent-emerald: #39d98a;
-  --shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --accent-orange: #ff8c42;
+
+  /* ── Severity glows ── */
+  --glow-critical:
+    0 0 20px rgba(255, 93, 93, 0.15), 0 0 4px rgba(255, 93, 93, 0.1);
+  --glow-warning:
+    0 0 16px rgba(255, 140, 66, 0.12), 0 0 4px rgba(255, 140, 66, 0.08);
+  --glow-watch: 0 0 12px rgba(57, 208, 255, 0.1);
+  --glow-info: 0 0 8px rgba(100, 150, 200, 0.08);
+
+  /* ── Shadows ── */
+  --shadow-panel: 0 4px 24px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.25);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* ── Typography ── */
   --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "SFMono-Regular", "Consolas", monospace;
+
+  /* ── Base sizing ── */
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 @theme inline {
@@ -45,6 +74,8 @@ html {
 
 body {
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
@@ -54,7 +85,7 @@ select {
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -62,14 +93,14 @@ select {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(83, 121, 153, 0.42);
+  background: rgba(83, 121, 153, 0.35);
   border-radius: 999px;
 }
-
-.dashboard-grid {
-  /* Grid removed for utilitarian look */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(83, 121, 153, 0.5);
 }
 
+/* ── Panel surfaces ── */
 .panel-surface {
   background: var(--bg-panel);
   border: 1px solid var(--line-soft);
@@ -82,11 +113,24 @@ select {
   box-shadow: var(--shadow-panel);
 }
 
-.map-glow::before {
-  /* Map glow removed for cleaner look */
-  display: none;
+.panel-elevated {
+  background: var(--bg-panel-elevated);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-elevated);
 }
 
+/* ── Severity card glows ── */
+.card-glow-critical {
+  box-shadow: var(--glow-critical), var(--shadow-card);
+}
+.card-glow-warning {
+  box-shadow: var(--glow-warning), var(--shadow-card);
+}
+.card-glow-watch {
+  box-shadow: var(--glow-watch), var(--shadow-card);
+}
+
+/* ── Animations ── */
 .pulse-dot {
   animation: pulse-dot 2.4s ease-out infinite;
 }
@@ -119,6 +163,10 @@ select {
     rgba(255, 255, 255, 0.02);
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;
+}
+
+.live-pulse {
+  animation: live-pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse-ring {
@@ -186,6 +234,16 @@ select {
   }
   100% {
     transform: translateX(300%);
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
   }
 }
 

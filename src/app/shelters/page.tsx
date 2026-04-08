@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   Filter,
@@ -14,6 +15,11 @@ import {
   Cross,
   Zap,
   Info,
+  ClipboardList,
+  MessageSquare,
+  ChevronRight,
+  Lock,
+  ShieldAlert,
 } from "lucide-react";
 import { AppHeader } from "@/components/disasterph/header";
 
@@ -110,17 +116,40 @@ const STATUS_FILTERS: Array<{ label: string; value: ShelterStatus | "all" }> = [
   { label: "Closed", value: "closed" },
 ];
 
-const STATUS_STYLE: Record<ShelterStatus, { text: string; bg: string }> = {
-  open: { text: "text-emerald-400", bg: "bg-emerald-400" },
-  full: { text: "text-orange-400", bg: "bg-orange-400" },
-  standby: { text: "text-cyan-400", bg: "bg-cyan-400" },
-  closed: { text: "text-zinc-500", bg: "bg-zinc-500" },
+const STATUS_STYLE: Record<
+  ShelterStatus,
+  { text: string; bg: string; border: string; glow: string }
+> = {
+  open: {
+    text: "text-emerald-400",
+    bg: "bg-emerald-400",
+    border: "border-emerald-500/30",
+    glow: "shadow-[0_0_8px_rgba(57,217,138,0.1)]",
+  },
+  full: {
+    text: "text-orange-400",
+    bg: "bg-orange-400",
+    border: "border-orange-500/30",
+    glow: "shadow-[0_0_8px_rgba(255,140,66,0.1)]",
+  },
+  standby: {
+    text: "text-cyan-400",
+    bg: "bg-cyan-400",
+    border: "border-cyan-500/30",
+    glow: "",
+  },
+  closed: {
+    text: "text-zinc-500",
+    bg: "bg-zinc-500",
+    border: "border-zinc-600/30",
+    glow: "",
+  },
 };
 
 function occupancyBarColor(pct: number): string {
   if (pct >= 90) return "bg-orange-400";
   if (pct >= 60) return "bg-amber-400";
-  return "bg-cyan-400";
+  return "bg-emerald-400";
 }
 
 const AMENITY_ICONS: Record<string, typeof Wifi> = {
@@ -131,11 +160,34 @@ const AMENITY_ICONS: Record<string, typeof Wifi> = {
   electricity: Zap,
 };
 
+const AMENITY_LABELS: Record<string, string> = {
+  WiFi: "WiFi",
+  water: "Water",
+  food: "Food",
+  medical: "Medical",
+  electricity: "Power",
+};
+
+type DetailTab = "overview" | "guests" | "notices";
+
+/* ── Motion ── */
+const listItemVariants = {
+  hidden: { opacity: 0, x: -12 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.25 } },
+};
+
+const listContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.05 } },
+};
+
 export default function SheltersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ShelterStatus | "all">(
     "all",
   );
+  const [selectedId, setSelectedId] = useState<string>(SHELTERS[0].id);
+  const [detailTab, setDetailTab] = useState<DetailTab>("overview");
 
   const filtered = useMemo(() => {
     let result = SHELTERS;
@@ -153,48 +205,65 @@ export default function SheltersPage() {
     return result;
   }, [statusFilter, search]);
 
+  const selected = SHELTERS.find((s) => s.id === selectedId) ?? SHELTERS[0];
+  const selectedPct =
+    selected.capacity > 0
+      ? Math.round((selected.occupancy / selected.capacity) * 100)
+      : 0;
+
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--bg-base)] text-[var(--text-primary)]">
+    <div className="flex h-screen flex-col bg-[var(--bg-base)] text-[var(--text-primary)]">
       <AppHeader />
 
       <div className="flex min-h-0 flex-1">
-        {/* ── Left: Shelter list ── */}
-        <aside className="flex w-full max-w-md flex-col border-r border-white/8 bg-[var(--bg-panel-strong)]">
+        {/* ══════════════════════════════════════════
+            LEFT PANEL: Shelter List
+        ══════════════════════════════════════════ */}
+        <aside className="flex w-full max-w-sm flex-col border-r border-white/10 bg-[var(--bg-panel-strong)]">
           {/* Title */}
-          <div className="flex items-center justify-between border-b border-white/5 px-4 py-4">
-            <div className="flex items-center gap-2.5">
-              <Building2 className="h-5 w-5 text-orange-400" />
-              <h1 className="text-lg font-bold text-white">Sanctuary</h1>
+          <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-500/30 bg-orange-500/10">
+                <Building2 className="h-[18px] w-[18px] text-orange-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white tracking-tight">
+                  Sanctuary
+                </h1>
+                <p className="text-[11px] font-medium text-[var(--text-dim)] uppercase tracking-wider mt-0.5">
+                  Shelter Operations
+                </p>
+              </div>
             </div>
-            <span className="text-sm text-[var(--text-dim)]">
-              {filtered.length} shelter{filtered.length !== 1 ? "s" : ""}
+            <span className="rounded-lg bg-white/6 px-2.5 py-1 text-[13px] font-semibold text-[var(--text-muted)]">
+              {filtered.length}
             </span>
           </div>
 
           {/* Search */}
-          <div className="relative px-4 pt-3">
+          <div className="relative px-4 pt-4 pb-1">
             <Search className="absolute left-7 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-dim)]" />
             <input
               type="text"
               placeholder="Search shelters..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-[var(--bg-panel)] py-2 pl-10 pr-4 text-sm text-white placeholder-[var(--text-dim)] outline-none transition focus:border-orange-500/40"
+              className="w-full rounded-xl border border-white/10 bg-[var(--bg-panel)] py-3 pl-10 pr-4 text-[14px] text-white placeholder-[var(--text-dim)] outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/15"
             />
           </div>
 
           {/* Status filters */}
-          <div className="flex items-center gap-2 px-4 py-3">
-            <Filter className="h-3.5 w-3.5 text-[var(--text-dim)]" />
+          <div className="flex flex-wrap items-center gap-2 px-5 py-3">
+            <Filter className="h-4 w-4 shrink-0 text-[var(--text-dim)]" />
             {STATUS_FILTERS.map((f) => (
               <button
                 key={f.value}
                 type="button"
                 onClick={() => setStatusFilter(f.value)}
-                className={`rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-wider transition ${
+                className={`rounded-lg border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition ${
                   statusFilter === f.value
-                    ? "bg-orange-500/15 text-orange-400"
-                    : "text-[var(--text-dim)] hover:bg-white/5 hover:text-white"
+                    ? "bg-orange-500/15 text-orange-400 border-orange-500/30"
+                    : "text-[var(--text-dim)] border-transparent hover:bg-white/6 hover:text-white"
                 }`}
               >
                 {f.label}
@@ -205,49 +274,433 @@ export default function SheltersPage() {
           {/* Shelter cards */}
           <div className="flex-1 overflow-y-auto px-4 pb-4">
             {filtered.length === 0 ? (
-              <p className="mt-8 text-center text-xs text-[var(--text-dim)]">
+              <p className="mt-10 text-center text-[14px] text-[var(--text-dim)]">
                 No shelters match your filters.
               </p>
             ) : (
-              <div className="space-y-3">
+              <motion.div
+                className="space-y-3"
+                variants={listContainer}
+                initial="hidden"
+                animate="show"
+              >
                 {filtered.map((shelter) => (
-                  <ShelterCard key={shelter.id} shelter={shelter} />
+                  <ShelterListCard
+                    key={shelter.id}
+                    shelter={shelter}
+                    isSelected={selectedId === shelter.id}
+                    onSelect={() => {
+                      setSelectedId(shelter.id);
+                      setDetailTab("overview");
+                    }}
+                  />
                 ))}
-              </div>
+              </motion.div>
             )}
           </div>
         </aside>
 
-        {/* ── Right: Map placeholder + Coming Soon overlay ── */}
-        <div className="relative hidden flex-1 lg:block">
-          {/* Dark map placeholder */}
-          <div className="h-full w-full bg-[#040d16]" />
+        {/* ══════════════════════════════════════════
+            MAIN PANEL: Selected Shelter Detail
+        ══════════════════════════════════════════ */}
+        <div className="hidden flex-1 flex-col lg:flex">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selected.id}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-1 flex-col overflow-hidden"
+            >
+              {/* ── Detail Header ── */}
+              <div className="border-b border-white/10 bg-[var(--bg-panel)] px-8 py-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-[12px] font-bold uppercase tracking-wider ${STATUS_STYLE[selected.status].text} ${STATUS_STYLE[selected.status].border} ${STATUS_STYLE[selected.status].glow}`}
+                      >
+                        <span
+                          className={`h-2 w-2 rounded-full ${STATUS_STYLE[selected.status].bg} ${selected.status === "open" ? "pulse-dot" : ""}`}
+                        />
+                        {selected.status}
+                      </span>
+                      <span className="text-[12px] font-medium text-[var(--text-dim)] uppercase tracking-wider">
+                        Evacuation Center
+                      </span>
+                    </div>
+                    <h2 className="mt-3 text-2xl font-bold text-white tracking-tight">
+                      {selected.name}
+                    </h2>
+                    <div className="mt-2 flex items-center gap-1.5 text-[14px] text-[var(--text-muted)]">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      <span>{selected.address}</span>
+                    </div>
+                  </div>
 
-          {/* Coming soon overlay */}
-          <div className="absolute inset-0 flex items-center justify-center bg-[rgba(4,13,22,0.85)]">
-            <div className="max-w-md rounded-xl border border-white/10 bg-[var(--bg-panel)] p-8 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-orange-500/30 bg-orange-500/10">
-                <Info className="h-7 w-7 text-orange-400" />
+                  {/* Capacity widget */}
+                  <div className="ml-8 flex flex-col items-end">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-white">
+                        {selectedPct}
+                      </span>
+                      <span className="text-lg text-[var(--text-dim)]">%</span>
+                    </div>
+                    <p className="text-[12px] font-medium text-[var(--text-dim)] uppercase tracking-wider mt-0.5">
+                      Capacity
+                    </p>
+                    <div className="mt-2 h-2 w-36 overflow-hidden rounded-full bg-white/10">
+                      <motion.div
+                        className={`h-full rounded-full ${occupancyBarColor(selectedPct)}`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(selectedPct, 100)}%` }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                      />
+                    </div>
+                    <p className="mt-1.5 text-[13px] text-[var(--text-muted)]">
+                      <span className="font-semibold text-white">
+                        {selected.occupancy.toLocaleString()}
+                      </span>
+                      {" / "}
+                      {selected.capacity.toLocaleString()} evacuees
+                    </p>
+                  </div>
+                </div>
+
+                {/* ── Detail Grid ── */}
+                <div className="mt-6 grid grid-cols-3 gap-4">
+                  {/* Operator */}
+                  <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
+                      Managing Office
+                    </p>
+                    <p className="mt-1.5 text-[15px] font-semibold text-white">
+                      {selected.operator}
+                    </p>
+                  </div>
+
+                  {/* Hotline */}
+                  <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
+                      Hotline
+                    </p>
+                    <a
+                      href={`tel:${selected.phone.replace(/[^0-9+]/g, "")}`}
+                      className="mt-1.5 flex items-center gap-1.5 text-[15px] font-semibold text-cyan-400 transition hover:text-cyan-300"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {selected.phone}
+                    </a>
+                  </div>
+
+                  {/* Amenities */}
+                  <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
+                      Services
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {selected.amenities.map((amenity) => {
+                        const AIcon = AMENITY_ICONS[amenity];
+                        return (
+                          <span
+                            key={amenity}
+                            className="flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium text-[var(--text-muted)]"
+                          >
+                            {AIcon && <AIcon className="h-3 w-3" />}
+                            {AMENITY_LABELS[amenity] ?? amenity}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h2 className="mt-4 text-lg font-bold text-white">Coming Soon</h2>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
-                Shelter management and real-time occupancy tracking are coming
-                soon (requires admin verification).
-              </p>
-              <p className="mt-3 text-xs text-[var(--text-dim)]">
-                The shelter map will show live locations, capacity, and
-                navigation routes.
-              </p>
-            </div>
-          </div>
+
+              {/* ── Tabs ── */}
+              <div className="border-b border-white/8 bg-[var(--bg-panel)]">
+                <div className="flex gap-0 px-8">
+                  {(
+                    [
+                      {
+                        key: "overview" as const,
+                        label: "Overview",
+                        icon: Info,
+                      },
+                      {
+                        key: "guests" as const,
+                        label: "Guest List",
+                        icon: ClipboardList,
+                      },
+                      {
+                        key: "notices" as const,
+                        label: "Notice Board",
+                        icon: MessageSquare,
+                      },
+                    ] as const
+                  ).map((tab) => {
+                    const active = detailTab === tab.key;
+                    return (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setDetailTab(tab.key)}
+                        className={`relative flex items-center gap-2 px-5 py-3.5 text-[13px] font-semibold transition ${
+                          active
+                            ? "text-orange-400"
+                            : "text-[var(--text-dim)] hover:text-white"
+                        }`}
+                      >
+                        <tab.icon className="h-4 w-4" />
+                        {tab.label}
+                        {active && (
+                          <motion.div
+                            layoutId="shelterTab"
+                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-400 rounded-full"
+                            transition={{
+                              type: "spring",
+                              bounce: 0.2,
+                              duration: 0.4,
+                            }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ── Tab Content ── */}
+              <div className="flex-1 overflow-y-auto bg-[var(--bg-base)]">
+                <AnimatePresence mode="wait">
+                  {detailTab === "overview" && (
+                    <motion.div
+                      key="overview"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.2 }}
+                      className="p-8"
+                    >
+                      <div className="rounded-xl border border-white/10 bg-[var(--bg-panel)] p-6">
+                        <h3 className="text-[16px] font-bold text-white">
+                          Facility Overview
+                        </h3>
+                        <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-muted)]">
+                          This evacuation center is currently{" "}
+                          <span
+                            className={`font-semibold ${STATUS_STYLE[selected.status].text}`}
+                          >
+                            {selected.status}
+                          </span>{" "}
+                          and managed by {selected.operator}. The facility has a
+                          maximum capacity of{" "}
+                          {selected.capacity.toLocaleString()} evacuees with
+                          current occupancy at{" "}
+                          {selected.occupancy.toLocaleString()}.
+                        </p>
+
+                        {/* Occupancy breakdown visual */}
+                        <div className="mt-6 rounded-xl border border-white/8 bg-white/[0.02] p-5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
+                              Occupancy Breakdown
+                            </p>
+                            <Users className="h-4 w-4 text-[var(--text-dim)]" />
+                          </div>
+                          <div className="mt-4 grid grid-cols-3 gap-4">
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-white">
+                                {selected.occupancy.toLocaleString()}
+                              </p>
+                              <p className="text-[11px] text-[var(--text-dim)] mt-1">
+                                Current
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-emerald-400">
+                                {(
+                                  selected.capacity - selected.occupancy
+                                ).toLocaleString()}
+                              </p>
+                              <p className="text-[11px] text-[var(--text-dim)] mt-1">
+                                Available
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-[var(--text-muted)]">
+                                {selected.capacity.toLocaleString()}
+                              </p>
+                              <p className="text-[11px] text-[var(--text-dim)] mt-1">
+                                Max Capacity
+                              </p>
+                            </div>
+                          </div>
+                          <div className="mt-5 h-3 w-full overflow-hidden rounded-full bg-white/10">
+                            <motion.div
+                              className={`h-full rounded-full ${occupancyBarColor(selectedPct)}`}
+                              initial={{ width: 0 }}
+                              animate={{
+                                width: `${Math.min(selectedPct, 100)}%`,
+                              }}
+                              transition={{ duration: 0.8, ease: "easeOut" }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {detailTab === "guests" && (
+                    <motion.div
+                      key="guests"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.2 }}
+                      className="p-8"
+                    >
+                      {/* Phase 2 restricted access notice */}
+                      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 mb-6">
+                        <div className="flex items-start gap-3.5">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15">
+                            <ShieldAlert className="h-5 w-5 text-amber-400" />
+                          </div>
+                          <div>
+                            <h4 className="text-[14px] font-bold text-amber-300">
+                              Restricted Access — Phase 2
+                            </h4>
+                            <p className="mt-1 text-[13px] leading-relaxed text-amber-200/70">
+                              Guest registry features are restricted to
+                              authorized shelter administrators. This module is
+                              under active development and will be available in
+                              a future release.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-white/10 bg-[var(--bg-panel)] p-6 opacity-50 pointer-events-none select-none">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-[16px] font-bold text-white">
+                            Guest Registry
+                          </h3>
+                          <span className="flex items-center gap-1.5 rounded-lg bg-white/6 px-2.5 py-1 text-[12px] font-semibold text-[var(--text-dim)]">
+                            <Lock className="h-3 w-3" />
+                            Admin Only
+                          </span>
+                        </div>
+
+                        {/* Disabled search */}
+                        <div className="relative mt-4">
+                          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-dim)]" />
+                          <input
+                            type="text"
+                            placeholder="Search guest name..."
+                            disabled
+                            className="w-full rounded-xl border border-white/10 bg-[var(--bg-base)] py-3 pl-10 pr-4 text-[14px] text-white/30 placeholder-[var(--text-dim)] outline-none cursor-not-allowed"
+                          />
+                        </div>
+
+                        {/* Locked state */}
+                        <div className="mt-8 flex flex-col items-center py-8 text-center">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.03]">
+                            <Lock className="h-7 w-7 text-[var(--text-dim)]" />
+                          </div>
+                          <p className="mt-4 text-[15px] font-medium text-[var(--text-muted)]">
+                            Authentication required
+                          </p>
+                          <p className="mt-1.5 text-[13px] text-[var(--text-dim)]">
+                            Contact the shelter operator for administrator
+                            access.
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {detailTab === "notices" && (
+                    <motion.div
+                      key="notices"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.2 }}
+                      className="p-8"
+                    >
+                      {/* Phase 2 coming soon notice */}
+                      <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-5 mb-6">
+                        <div className="flex items-start gap-3.5">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/15">
+                            <MessageSquare className="h-5 w-5 text-cyan-400" />
+                          </div>
+                          <div>
+                            <h4 className="text-[14px] font-bold text-cyan-300">
+                              Coming Soon — Phase 2
+                            </h4>
+                            <p className="mt-1 text-[13px] leading-relaxed text-cyan-200/70">
+                              The Notice Board will deliver real-time
+                              announcements from shelter operators, including
+                              evacuation updates, relief schedules, and safety
+                              advisories.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-white/10 bg-[var(--bg-panel)] p-6 opacity-50 pointer-events-none select-none">
+                        <h3 className="text-[16px] font-bold text-white">
+                          Notice Board
+                        </h3>
+                        <p className="mt-2 text-[13px] text-[var(--text-dim)]">
+                          Official announcements and updates from shelter
+                          management.
+                        </p>
+
+                        {/* Placeholder state */}
+                        <div className="mt-8 flex flex-col items-center py-8 text-center">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.03]">
+                            <Lock className="h-7 w-7 text-[var(--text-dim)]" />
+                          </div>
+                          <p className="mt-4 text-[15px] font-medium text-[var(--text-muted)]">
+                            Not yet available
+                          </p>
+                          <p className="mt-1.5 text-[13px] text-[var(--text-dim)]">
+                            This feature is under development.
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* ── Mobile: no shelter selected fallback ── */}
+        <div className="flex flex-1 items-center justify-center lg:hidden">
+          <p className="text-[14px] text-[var(--text-dim)]">
+            Select a shelter to view details
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-/* ── Shelter Card Component ── */
-function ShelterCard({ shelter }: { shelter: Shelter }) {
+/* ══════════════════════════════════════════
+   Shelter List Card Component
+══════════════════════════════════════════ */
+function ShelterListCard({
+  shelter,
+  isSelected,
+  onSelect,
+}: {
+  shelter: Shelter;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
   const pct =
     shelter.capacity > 0
       ? Math.round((shelter.occupancy / shelter.capacity) * 100)
@@ -255,36 +708,47 @@ function ShelterCard({ shelter }: { shelter: Shelter }) {
   const statusStyle = STATUS_STYLE[shelter.status];
 
   return (
-    <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-4">
-      {/* Status + capacity icon */}
+    <motion.button
+      type="button"
+      variants={listItemVariants}
+      whileHover={{ scale: 1.01, x: 2 }}
+      whileTap={{ scale: 0.99 }}
+      onClick={onSelect}
+      className={`w-full text-left rounded-xl border p-4 transition-all ${
+        isSelected
+          ? "border-orange-500/40 bg-orange-500/8 shadow-[0_0_16px_rgba(255,140,66,0.08)]"
+          : "border-white/8 bg-[var(--bg-panel)] hover:border-white/15 hover:bg-[var(--bg-card-hover)]"
+      }`}
+    >
+      {/* Status + capacity row */}
       <div className="flex items-center justify-between">
         <span
-          className={`text-[11px] font-bold uppercase tracking-wider ${statusStyle.text}`}
+          className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${statusStyle.text}`}
         >
+          <span className={`h-1.5 w-1.5 rounded-full ${statusStyle.bg}`} />
           {shelter.status}
         </span>
-        <Users className="h-4 w-4 text-[var(--text-dim)]" />
+        <div className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)]">
+          <Users className="h-3.5 w-3.5" />
+          <span className="font-medium">{pct}%</span>
+        </div>
       </div>
 
       {/* Name + address */}
-      <h3 className="mt-1.5 text-[14px] font-semibold text-white">
+      <h3 className="mt-2 text-[15px] font-bold text-white leading-snug">
         {shelter.name}
       </h3>
-      <div className="mt-1 flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
+      <div className="mt-1.5 flex items-center gap-1.5 text-[12px] text-[var(--text-muted)]">
         <MapPin className="h-3 w-3 shrink-0" />
-        <span>{shelter.address}</span>
+        <span className="truncate">{shelter.address}</span>
       </div>
 
       {/* Occupancy bar */}
       <div className="mt-3">
         <div className="flex items-center justify-between text-[11px]">
           <span className="text-[var(--text-dim)]">
-            {shelter.occupancy}/{shelter.capacity}
-          </span>
-          <span
-            className={pct >= 90 ? "text-orange-400" : "text-[var(--text-dim)]"}
-          >
-            {pct}%
+            {shelter.occupancy.toLocaleString()}/
+            {shelter.capacity.toLocaleString()}
           </span>
         </div>
         <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
@@ -295,31 +759,32 @@ function ShelterCard({ shelter }: { shelter: Shelter }) {
         </div>
       </div>
 
-      {/* Operator + phone */}
-      <div className="mt-3 flex items-center justify-between text-[11px]">
-        <span className="text-[var(--text-dim)]">{shelter.operator}</span>
-        <a
-          href={`tel:${shelter.phone.replace(/[^0-9+]/g, "")}`}
-          className="flex items-center gap-1 text-emerald-400 transition hover:text-emerald-300"
-        >
-          <Phone className="h-3 w-3" />
-          {shelter.phone}
-        </a>
-      </div>
-
-      {/* Amenity tags */}
+      {/* Amenity icons */}
       {shelter.amenities.length > 0 && (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {shelter.amenities.map((amenity) => (
-            <span
-              key={amenity}
-              className="rounded border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-[var(--text-dim)]"
-            >
-              {amenity}
-            </span>
-          ))}
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {shelter.amenities.map((amenity) => {
+            const AIcon = AMENITY_ICONS[amenity];
+            return (
+              <span
+                key={amenity}
+                className="flex items-center gap-1 rounded-md border border-white/8 bg-white/[0.03] px-2 py-0.5 text-[10px] text-[var(--text-dim)]"
+                title={AMENITY_LABELS[amenity] ?? amenity}
+              >
+                {AIcon && <AIcon className="h-2.5 w-2.5" />}
+                {AMENITY_LABELS[amenity] ?? amenity}
+              </span>
+            );
+          })}
         </div>
       )}
-    </div>
+
+      {/* Selected indicator */}
+      {isSelected && (
+        <div className="mt-3 flex items-center gap-1 text-[11px] font-medium text-orange-400">
+          <span>Viewing details</span>
+          <ChevronRight className="h-3 w-3" />
+        </div>
+      )}
+    </motion.button>
   );
 }

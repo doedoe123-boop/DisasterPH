@@ -16,6 +16,7 @@ import {
   TriangleAlert,
   AlertTriangle,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { eventTypeLabel, formatDateTime } from "@/lib/incidents";
 import { severityLabel, visualFromSeverity } from "@/lib/severity";
 import { getPrepTips } from "@/lib/prep-guidance";
@@ -183,7 +184,12 @@ export default function PulseDetailPage() {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
         {/* ── Hero Section ── */}
-        <div className="mb-8">
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+        >
           {/* Badges + source line */}
           <div className="flex flex-wrap items-center gap-2">
             <span
@@ -215,10 +221,19 @@ export default function PulseDetailPage() {
               {formatDateTime(incident.updated_at)}
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* ── Content grid ── */}
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <motion.div
+          className="grid gap-6 lg:grid-cols-[1fr_360px]"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.45,
+            delay: 0.15,
+            ease: [0.25, 0.1, 0.25, 1],
+          }}
+        >
           {/* Left column */}
           <div className="space-y-6">
             {/* Description box */}
@@ -297,7 +312,7 @@ export default function PulseDetailPage() {
               </div>
             </a>
           </aside>
-        </div>
+        </motion.div>
       </main>
     </div>
   );
