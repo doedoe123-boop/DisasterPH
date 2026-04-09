@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, Radio, Rss, Building2 } from "lucide-react";
+import { Shield, Tv, Radio, Landmark } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Live", sub: "Live Monitoring", href: "/", icon: Radio },
-  { label: "Pulse", sub: "Alert Feed", href: "/pulse", icon: Rss },
-  { label: "Sanctuary", sub: "Shelters", href: "/shelters", icon: Building2 },
+  { label: "Live", sub: "Live Monitoring", href: "/", icon: Tv },
+  { label: "Pulse", sub: "Alert Feed", href: "/pulse", icon: Radio },
+  { label: "Sanctuary", sub: "Shelters", href: "/shelters", icon: Landmark },
 ] as const;
 
 export function AppHeader() {
@@ -17,7 +17,7 @@ export function AppHeader() {
   return (
     <>
       {/* ── Desktop Header ── */}
-      <header className="hidden md:flex items-center justify-between border-b border-white/10 bg-[var(--bg-panel-strong)] px-5 py-2.5">
+      <header className="hidden md:flex items-center justify-between border-b border-white/10 bg-[var(--bg-base)] px-5 py-1.5">
         {/* Left: Logo */}
         <Link href="/" className="flex items-center gap-3 group">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-orange-500/40 bg-orange-500/15 shadow-[0_0_12px_rgba(255,140,66,0.15)] transition group-hover:shadow-[0_0_18px_rgba(255,140,66,0.25)]">
@@ -58,15 +58,15 @@ export function AppHeader() {
                 )}
                 <span className="relative z-10 flex items-center gap-2.5">
                   <Icon
-                    className={`h-[18px] w-[18px] ${active ? "text-orange-400" : ""}`}
+                    className={`h-[20px] w-[20px] ${active ? "text-orange-400" : ""}`}
                   />
                   <div className="leading-tight">
                     <span
-                      className={`text-[14px] font-semibold ${active ? "text-orange-300" : ""}`}
+                      className={`text-md font-semibold ${active ? "text-orange-300" : ""}`}
                     >
                       {item.label}
                     </span>
-                    <p className="text-[10px] font-medium text-[var(--text-dim)] tracking-wide">
+                    <p className="text-sm font-medium text-[var(--text-dim)] tracking-wide">
                       {item.sub}
                     </p>
                   </div>
@@ -91,7 +91,7 @@ export function AppHeader() {
       </header>
 
       {/* ── Mobile Header (compact) ── */}
-      <header className="flex md:hidden items-center justify-between border-b border-white/10 bg-[var(--bg-panel-strong)] px-4 py-2.5">
+      <header className="flex md:hidden items-center justify-between border-b border-white/10 bg-[var(--bg-base)] px-4 py-2.5">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-orange-500/40 bg-orange-500/15">
             <Shield className="h-4 w-4 text-orange-400" />
