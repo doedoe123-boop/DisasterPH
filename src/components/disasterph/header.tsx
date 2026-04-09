@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, Tv, Radio, Landmark } from "lucide-react";
+import { Shield, Tv, Radio, Landmark, BookOpen } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Live", sub: "Live Monitoring", href: "/", icon: Tv },
   { label: "Pulse", sub: "Alert Feed", href: "/pulse", icon: Radio },
   { label: "Sanctuary", sub: "Shelters", href: "/shelters", icon: Landmark },
+  { label: "Archive", sub: "Event History", href: "/archive", icon: BookOpen },
 ] as const;
 
 export function AppHeader() {
@@ -37,7 +38,10 @@ export function AppHeader() {
         <nav className="flex items-center gap-1.5">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href;
+            const active =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
 
             return (
               <Link
@@ -115,7 +119,10 @@ export function AppHeader() {
       <nav className="fixed bottom-0 left-0 right-0 z-[998] flex md:hidden border-t border-white/10 bg-slate-900/95 backdrop-blur-md safe-bottom">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const active = pathname === item.href;
+          const active =
+            item.href === "/"
+              ? pathname === "/"
+              : pathname.startsWith(item.href);
 
           return (
             <Link

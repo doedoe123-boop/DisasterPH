@@ -189,7 +189,7 @@ export default function PulseFeedPage() {
             placeholder="Search events..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-white/12 bg-[var(--bg-panel)] py-3 md:py-3.5 pl-12 pr-5 text-[14px] md:text-[15px] text-white placeholder-[var(--text-dim)] outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/15 shadow-[var(--shadow-card)]"
+            className="w-full rounded-xl border border-white/12 bg-[var(--bg-panel)] py-3 md:py-3 pl-12 pr-5 text-[14px] md:text-[15px] text-white placeholder-[var(--text-dim)] outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/15 shadow-[var(--shadow-card)]"
           />
         </motion.div>
 
@@ -208,7 +208,7 @@ export default function PulseFeedPage() {
               key={`type-${f.value}`}
               type="button"
               onClick={() => setTypeFilter(f.value)}
-              className={`shrink-0 rounded-lg px-3 md:px-3.5 py-2 md:py-1.5 text-[12px] font-semibold uppercase tracking-wider transition border ${
+              className={`shrink-0 rounded-full px-3 md:px-3.5 py-2 md:py-1.5 text-[12px] font-semibold uppercase tracking-wider transition border ${
                 typeFilter === f.value
                   ? "bg-orange-500/15 text-orange-400 border-orange-500/30"
                   : "text-[var(--text-dim)] border-transparent hover:bg-white/6 hover:text-white"
@@ -227,7 +227,7 @@ export default function PulseFeedPage() {
               key={`sev-${f.value}`}
               type="button"
               onClick={() => setSeverityFilter(f.value)}
-              className={`shrink-0 rounded-lg px-3 md:px-3.5 py-2 md:py-1.5 text-[12px] font-semibold uppercase tracking-wider transition border ${
+              className={`shrink-0 rounded-full px-3 md:px-3.5 py-2 md:py-1.5 text-[12px] font-semibold uppercase tracking-wider transition border ${
                 severityFilter === f.value
                   ? f.value === "critical"
                     ? "bg-red-500/15 text-red-400 border-red-500/30"
