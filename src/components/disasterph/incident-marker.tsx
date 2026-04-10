@@ -260,8 +260,6 @@ export function IncidentMarker({
   y,
 }: IncidentMarkerProps) {
   const color = hazardColor[incident.event_type];
-  const isHighPriority =
-    incident.severity === "warning" || incident.severity === "critical";
 
   // Severity-scaled base radius
   const baseR =

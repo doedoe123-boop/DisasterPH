@@ -12,7 +12,6 @@ import {
   Copy,
   Maximize2,
   Minimize2,
-  ChevronRight,
 } from "lucide-react";
 import type {
   HelpAction,
@@ -146,7 +145,7 @@ export function FloatingIncidentCard({
           <div className="mt-1 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
             <span>{incident.region}</span>
             <span className="text-[var(--text-dim)]">·</span>
-            <span>{formatShortTime(incident.updated_at)}</span>
+            <span suppressHydrationWarning>{formatShortTime(incident.updated_at)}</span>
           </div>
         </div>
 
@@ -232,7 +231,7 @@ export function FloatingIncidentCard({
             <MapPin className="h-3 w-3 shrink-0 text-[var(--text-dim)]" />
             <span>{incident.region}</span>
             <span className="text-[var(--text-dim)]">·</span>
-            <span>{formatShortTime(incident.updated_at)}</span>
+            <span suppressHydrationWarning>{formatShortTime(incident.updated_at)}</span>
           </div>
 
           {incident.description && (
@@ -354,7 +353,7 @@ export function FloatingIncidentCard({
                 <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
                   {relatedAdvisory.source}
                 </span>
-                <span className="ml-auto text-[10px] text-[var(--text-dim)]">
+                <span className="ml-auto text-[10px] text-[var(--text-dim)]" suppressHydrationWarning>
                   {formatShortTime(relatedAdvisory.issued_at)}
                 </span>
               </div>

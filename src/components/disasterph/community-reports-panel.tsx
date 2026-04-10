@@ -252,7 +252,9 @@ function ReportCard({
             <span className="text-white/10">·</span>
             <span>{report.locationLabel}</span>
             <span className="text-white/10">·</span>
-            <span>{formatShortTime(report.createdAt)}</span>
+            <span suppressHydrationWarning>
+              {formatShortTime(report.createdAt)}
+            </span>
           </div>
         </div>
         <ChevronDown
@@ -283,7 +285,10 @@ function ReportCard({
 
           {/* Moderation outcome (if already moderated) */}
           {report.moderatedAt && (
-            <div className="rounded-md border border-white/6 bg-white/[0.02] px-2 py-1.5 text-[10px] text-[var(--text-dim)]">
+            <div
+              className="rounded-md border border-white/6 bg-white/[0.02] px-2 py-1.5 text-[10px] text-[var(--text-dim)]"
+              suppressHydrationWarning
+            >
               <span className="font-medium text-white/70">
                 {report.status === "approved" ? "Approved" : "Rejected"}
               </span>{" "}

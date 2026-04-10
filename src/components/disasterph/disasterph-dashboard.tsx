@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronsLeft, WifiOff } from "lucide-react";
 import {
-  eventTypeLabel,
   nearestPlaceName,
   formatShortTime,
 } from "@/lib/incidents";
@@ -11,7 +10,7 @@ import { getHelpActions } from "@/lib/help-actions";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
 import { getPrepTips } from "@/lib/prep-guidance";
 import { computeThreatHeadline } from "@/lib/threat-headline";
-import type { Incident, IncidentEventType } from "@/types/incident";
+import type { Incident } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
 import { useAdvisories } from "@/hooks/use-advisories";
 import { useAlertCenter } from "@/hooks/use-alert-center";
@@ -37,19 +36,7 @@ import { EmergencyContacts } from "./emergency-contacts";
 import { CommunityReportsPanel } from "./community-reports-panel";
 import { useCommunityReports } from "@/hooks/use-community-reports";
 
-const filters: Array<{ label: string; value: IncidentEventType | "all" }> = [
-  { label: "All", value: "all" },
-  { label: eventTypeLabel.typhoon, value: "typhoon" },
-  { label: eventTypeLabel.flood, value: "flood" },
-  { label: eventTypeLabel.earthquake, value: "earthquake" },
-  { label: eventTypeLabel.volcano, value: "volcano" },
-  { label: eventTypeLabel.landslide, value: "landslide" },
-];
-
 export function DisasterPHDashboard() {
-  const [activeFilter, setActiveFilter] = useState<IncidentEventType | "all">(
-    "all",
-  );
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isBooting, setIsBooting] = useState(true);
   const [selectedIncidentId, setSelectedIncidentId] = useState("");
@@ -70,7 +57,7 @@ export function DisasterPHDashboard() {
     error,
     staleAt,
     generatedAt,
-  } = useIncidents(activeFilter);
+  } = useIncidents();
   const { advisories, error: advisoryError } = useAdvisories();
   const { places, addPlace, removePlace } = useSavedPlaces();
   const { isOnline } = useNetworkStatus();
@@ -222,11 +209,7 @@ export function DisasterPHDashboard() {
               }}
             />
             <SourceStrip sources={sourceStatuses} />
-            <AppHeader
-              activeFilter={activeFilter}
-              filters={filters}
-              onFilterChange={setActiveFilter}
-            />
+            <AppHeader />
           </div>
         </div>
 
@@ -236,7 +219,7 @@ export function DisasterPHDashboard() {
             <WifiOff className="h-3.5 w-3.5 shrink-0" />
             <div>
               <p className="font-medium">You are offline</p>
-              <p className="mt-0.5 opacity-90">
+              <p className="mt-0.5 opacity-90" suppressHydrationWarning>
                 {generatedAt
                   ? `Showing cached data from ${formatShortTime(generatedAt)}.`
                   : "Showing cached data. Live updates will resume when you reconnect."}

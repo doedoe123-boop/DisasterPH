@@ -49,7 +49,10 @@ export function SituationCard({
               Near {nearPlaceName}
             </span>
           )}
-          <span className="ml-auto text-[10px] text-[var(--text-dim)]">
+          <span
+            className="ml-auto text-[10px] text-[var(--text-dim)]"
+            suppressHydrationWarning
+          >
             {incident.source} · {formatShortTime(incident.updated_at)}
           </span>
         </div>
@@ -112,9 +115,9 @@ export function SituationCard({
               <span
                 key={key}
                 className={`max-w-full truncate rounded-full border px-2 py-1 text-[11px] ${
-                  incident.severity === 'critical'
-                    ? 'border-red-500/30 bg-red-500/20 text-red-200 font-medium'
-                    : 'border-white/8 bg-white/[0.03] text-[var(--text-muted)]'
+                  incident.severity === "critical"
+                    ? "border-red-500/30 bg-red-500/20 text-red-200 font-medium"
+                    : "border-white/8 bg-white/[0.03] text-[var(--text-muted)]"
                 }`}
               >
                 {key}: {String(value)}

@@ -68,7 +68,6 @@ export async function fetchEonetEvents(): Promise<Incident[]> {
     const severity = deriveSeverity(categoryId, latest);
 
     const firstGeo = geometry[0];
-    const firstCoords = firstGeo?.coordinates as number[] | undefined;
 
     // Build track points from multi-geometry events (storms)
     const trackPoints =

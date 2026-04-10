@@ -54,7 +54,10 @@ export function IncidentFeedCard({
             Near {nearPlaceName}
           </span>
         )}
-        <span className="ml-auto text-[10px] text-[var(--text-dim)]">
+        <span
+          className="ml-auto text-[10px] text-[var(--text-dim)]"
+          suppressHydrationWarning
+        >
           {formatShortTime(incident.updated_at)}
         </span>
       </div>

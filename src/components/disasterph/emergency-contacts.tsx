@@ -1,152 +1,100 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Phone, Copy, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown, Phone } from "lucide-react";
 
 interface EmergencyContact {
   name: string;
   number: string;
-  category: "national" | "rescue" | "health" | "utility";
+  category: "national";
 }
 
 const CONTACTS: EmergencyContact[] = [
-  // National emergency
-  { name: "National Emergency (NDRRMC)", number: "911", category: "national" },
-  {
-    name: "NDRRMC Operations Center",
-    number: "(02) 8911-5061",
-    category: "national",
-  },
+  { name: "NDRRMC", number: "(02) 8911-5061", category: "national" },
   { name: "Philippine Red Cross", number: "143", category: "national" },
-
-  // Rescue
-  { name: "PNP Hotline", number: "117", category: "rescue" },
-  {
-    name: "Bureau of Fire Protection",
-    number: "(02) 8426-0219",
-    category: "rescue",
-  },
-  {
-    name: "Philippine Coast Guard",
-    number: "(02) 8527-8481",
-    category: "rescue",
-  },
-
-  // Health
-  { name: "DOH Hotline", number: "1555", category: "health" },
-
-  // Utilities
-  { name: "PAGASA (Weather)", number: "(02) 8284-0800", category: "utility" },
-  {
-    name: "PHIVOLCS (Earthquake/Volcano)",
-    number: "(02) 8929-9254",
-    category: "utility",
-  },
-];
-
-const categoryLabel: Record<EmergencyContact["category"], string> = {
-  national: "National Emergency",
-  rescue: "Rescue & Security",
-  health: "Health",
-  utility: "Information",
-};
-
-const categoryOrder: EmergencyContact["category"][] = [
-  "national",
-  "rescue",
-  "health",
-  "utility",
+  { name: "PHIVOLCS", number: "(02) 8426-1468", category: "national" },
+  { name: "PAGASA", number: "(02) 8284-0800", category: "national" },
+  { name: "PNP Emergency", number: "117", category: "national" },
+  { name: "BFP (Fire)", number: "(02) 8426-0219", category: "national" },
+  { name: "DOH Hotline", number: "1555", category: "national" },
+  { name: "Coast Guard", number: "(02) 8527-8481", category: "national" },
 ];
 
 function toDialable(number: string): string {
   return number.replace(/[^0-9+]/g, "");
 }
 
-function ContactRow({ contact }: { contact: EmergencyContact }) {
-  const [copied, setCopied] = useState(false);
-
-  function handleCopy() {
-    navigator.clipboard.writeText(contact.number).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  }
-
+function ContactCard({ contact }: { contact: EmergencyContact }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-md border border-white/6 bg-white/[0.02] px-2.5 py-2">
-      <div className="min-w-0">
-        <p className="truncate text-[12px] text-white">{contact.name}</p>
-        <p className="text-[11px] text-[var(--text-dim)]">{contact.number}</p>
-      </div>
-      <div className="flex shrink-0 items-center gap-1">
-        <a
-          href={`tel:${toDialable(contact.number)}`}
-          className="flex h-7 w-7 items-center justify-center rounded-md bg-cyan-500/15 text-cyan-300 transition hover:bg-cyan-500/25"
-          title={`Call ${contact.name}`}
-        >
-          <Phone className="h-3.5 w-3.5" />
-        </a>
-        <button
-          type="button"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-dim)] transition hover:bg-white/8 hover:text-white"
-          onClick={handleCopy}
-          title="Copy number"
-        >
-          {copied ? (
-            <Check className="h-3.5 w-3.5 text-emerald-400" />
-          ) : (
-            <Copy className="h-3.5 w-3.5" />
-          )}
-        </button>
-      </div>
-    </div>
+    <motion.a
+      href={`tel:${toDialable(contact.number)}`}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02, y: -1 }}
+      whileTap={{ scale: 0.98 }}
+      className="block rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 md:px-4 md:py-3.5 transition-colors hover:border-cyan-400/25 hover:bg-white/[0.06] active:bg-white/[0.06]"
+    >
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-dim)]">
+        National
+      </p>
+      <p className="mt-1 md:mt-1.5 text-[14px] md:text-[16px] font-bold leading-snug text-white">
+        {contact.name}
+      </p>
+      <p className="mt-1 flex items-center gap-1.5 text-[13px] md:text-[15px] font-semibold text-cyan-400">
+        <Phone className="h-3.5 w-3.5" />
+        {contact.number}
+      </p>
+    </motion.a>
   );
 }
 
 export function EmergencyContacts() {
   const [open, setOpen] = useState(false);
 
-  const grouped = categoryOrder
-    .map((cat) => ({
-      category: cat,
-      label: categoryLabel[cat],
-      contacts: CONTACTS.filter((c) => c.category === cat),
-    }))
-    .filter((g) => g.contacts.length > 0);
-
   return (
-    <div className="shrink-0">
-      <button
-        className="flex w-full items-center justify-between rounded-lg border border-white/8 bg-[var(--bg-panel)] px-3 py-2 text-left"
-        onClick={() => setOpen(!open)}
-        type="button"
-      >
-        <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
-          Emergency Contacts
-        </span>
-        <ChevronDown
-          className={`h-3 w-3 text-[var(--text-dim)] transition ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      {open && (
-        <div className="mt-1 max-h-72 overflow-y-auto rounded-lg border border-white/8 bg-[var(--bg-panel)] p-2">
-          {grouped.map((group) => (
-            <div key={group.category} className="mb-2 last:mb-0">
-              <p className="mb-1 px-0.5 text-[9px] uppercase tracking-[0.2em] text-[var(--text-dim)]">
-                {group.label}
-              </p>
-              <div className="space-y-1">
-                {group.contacts.map((contact) => (
-                  <ContactRow key={contact.number} contact={contact} />
-                ))}
+    <>
+      {/* Fixed bottom overlay — sits above mobile bottom tab bar */}
+      <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 z-[999] flex flex-col">
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden border-t border-white/8 bg-slate-900/98 backdrop-blur-md max-h-[60vh] overflow-y-auto"
+            >
+              <div className="px-4 py-4 md:px-5 md:py-5">
+                <div className="grid grid-cols-2 gap-2.5 md:gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {CONTACTS.map((contact) => (
+                    <ContactCard key={contact.number} contact={contact} />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-          <p className="mt-2 text-center text-[9px] text-[var(--text-dim)]">
-            Available offline · Tap phone icon to call
-          </p>
-        </div>
-      )}
-    </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <button
+          className="flex w-full items-center justify-between border-t border-white/10 bg-slate-900/95 backdrop-blur-sm px-4 py-3 md:px-5 text-left transition hover:bg-slate-800/95 active:bg-slate-800/95"
+          onClick={() => setOpen(!open)}
+          type="button"
+        >
+          <div className="flex items-center gap-2.5">
+            <Phone className="h-[18px] w-[18px] text-amber-400" />
+            <span className="text-[12px] md:text-[13px] font-bold uppercase tracking-[0.18em] text-white">
+              Emergency Hotlines
+            </span>
+          </div>
+          <motion.div
+            animate={{ rotate: open ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDown className="h-4 w-4 text-[var(--text-dim)]" />
+          </motion.div>
+        </button>
+      </div>
+    </>
   );
 }

@@ -216,7 +216,10 @@ export function SavedPlaces({
                   {risk.placeRegion}
                 </p>
                 {risk.freshestUpdateAt && (
-                  <p className="mt-0.5 text-[10px] text-[var(--text-dim)]">
+                  <p
+                    className="mt-0.5 text-[10px] text-[var(--text-dim)]"
+                    suppressHydrationWarning
+                  >
                     Updated {formatShortTime(risk.freshestUpdateAt)}
                   </p>
                 )}

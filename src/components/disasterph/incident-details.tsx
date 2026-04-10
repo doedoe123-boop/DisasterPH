@@ -238,7 +238,9 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
         <MapPin className="h-3 w-3 shrink-0 text-[var(--text-dim)]" />
         <span>{incident.region}</span>
         <span className="text-[var(--text-dim)]">·</span>
-        <span>{formatShortTime(incident.updated_at)}</span>
+        <span suppressHydrationWarning>
+          {formatShortTime(incident.updated_at)}
+        </span>
       </div>
 
       {/* Hazard-specific structured stats */}

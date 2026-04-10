@@ -44,12 +44,15 @@ export default function MapLibreMapComponent({
   const markersRef = useRef<Map<string, MlMarker>>(new Map());
   const communityMarkersRef = useRef<Map<string, MlMarker>>(new Map());
   const popupRef = useRef<MlPopup | null>(null);
+  const initialSidebarWidthRef = useRef(sidebarWidth);
   const [mapReady, setMapReady] = useState(false);
 
   // ── Initialize map (runtime-only import) ──
   useEffect(() => {
     if (!containerRef.current) return;
     let cancelled = false;
+    const markers = markersRef.current;
+    const communityMarkers = communityMarkersRef.current;
 
     async function init() {
       const maplibregl = await import("maplibre-gl");
@@ -102,7 +105,12 @@ export default function MapLibreMapComponent({
 
         // Fit to Philippines bounds with padding that accounts for sidebar
         map.fitBounds(PH_BOUNDS, {
-          padding: { top: 40, bottom: 40, left: 40, right: 40 + sidebarWidth },
+          padding: {
+            top: 40,
+            bottom: 40,
+            left: 40,
+            right: 40 + initialSidebarWidthRef.current,
+          },
           pitch: DEFAULT_CAMERA.pitch,
           bearing: DEFAULT_CAMERA.bearing,
           duration: 0,
@@ -118,10 +126,10 @@ export default function MapLibreMapComponent({
 
     return () => {
       cancelled = true;
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current.clear();
-      communityMarkersRef.current.forEach((m) => m.remove());
-      communityMarkersRef.current.clear();
+      markers.forEach((marker) => marker.remove());
+      markers.clear();
+      communityMarkers.forEach((marker) => marker.remove());
+      communityMarkers.clear();
       popupRef.current?.remove();
       mapRef.current?.remove();
       mapRef.current = null;

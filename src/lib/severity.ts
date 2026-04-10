@@ -20,7 +20,7 @@ export const severityToneByIncident: Record<IncidentSeverity, SeverityTone> = {
 };
 
 export const severityLabel: Record<IncidentSeverity, string> = {
-  advisory: "Advisory",
+  advisory: "Info",
   watch: "Watch",
   warning: "Warning",
   critical: "Critical",

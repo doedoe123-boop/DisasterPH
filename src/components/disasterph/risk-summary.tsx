@@ -86,7 +86,10 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
         </div>
       )}
       {freshestUpdateAt && (
-        <div className="mt-1 text-[11px] text-[var(--text-dim)]">
+        <div
+          className="mt-1 text-[11px] text-[var(--text-dim)]"
+          suppressHydrationWarning
+        >
           Last nearby update {formatShortTime(freshestUpdateAt)}
         </div>
       )}
@@ -115,7 +118,10 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
                   <p className="truncate text-[12px] font-medium text-white">
                     {inc.title}
                   </p>
-                  <p className="text-[10px] text-[var(--text-dim)]">
+                  <p
+                    className="text-[10px] text-[var(--text-dim)]"
+                    suppressHydrationWarning
+                  >
                     {eventTypeLabel[inc.event_type]} ·{" "}
                     {severityLabel[inc.severity]} ·{" "}
                     {formatShortTime(inc.updated_at)}
