@@ -27,15 +27,6 @@ import { getPrepTips } from "@/lib/prep-guidance";
 import type { Incident } from "@/types/incident";
 import { AppHeader } from "@/components/disasterph/header";
 
-const HAZARD_ICON: Record<string, typeof Waves> = {
-  earthquake: Waves,
-  typhoon: Wind,
-  flood: Droplets,
-  volcano: Mountain,
-  landslide: TriangleAlert,
-  wildfire: AlertTriangle,
-};
-
 /** Map source to display label */
 function sourceLabel(incident: Incident): string {
   const labels: Record<string, string> = {
@@ -255,7 +246,6 @@ export default function PulseDetailPage() {
   }
 
   const sv = visualFromSeverity(incident.severity);
-  const Icon = HAZARD_ICON[incident.event_type] ?? AlertTriangle;
   const confidence = dataConfidence(incident);
   const affectedAreas = estimateAffectedAreas(incident);
 

@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, Tv, Radio, Landmark, BookOpen } from "lucide-react";
+import { Shield, Tv, Radio, Landmark } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Live", sub: "Live Monitoring", href: "/", icon: Tv },
   { label: "Pulse", sub: "Alert Feed", href: "/pulse", icon: Radio },
   { label: "Sanctuary", sub: "Shelters", href: "/shelters", icon: Landmark },
-  { label: "Archive", sub: "Event History", href: "/archive", icon: BookOpen },
+  // { label: "Archive", sub: "Event History", href: "/archive", icon: BookOpen },
 ] as const;
 
 export function AppHeader() {

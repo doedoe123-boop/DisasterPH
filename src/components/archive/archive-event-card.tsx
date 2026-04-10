@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, AlertTriangle, Users, BookOpen } from "lucide-react";
+import { MapPin, Calendar, AlertTriangle, Users } from "lucide-react";
 import type { ArchiveEvent } from "@/types/archive";
 import {
   HAZARD_COLORS,

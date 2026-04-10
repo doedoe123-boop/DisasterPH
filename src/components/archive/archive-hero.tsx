@@ -27,7 +27,7 @@ export function ArchiveHero() {
             Disaster Archive
           </span>
           <span className="text-[10px] font-mono text-[var(--text-dim)] ml-2 hidden sm:inline">
-            // Historical Intelligence
+            {"// Historical Intelligence"}
           </span>
         </div>
         <h1 className="text-3xl lg:text-4xl font-extrabold text-white tracking-tight mb-2">

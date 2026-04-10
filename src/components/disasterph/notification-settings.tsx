@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Bell, BellOff, BellRing } from "lucide-react";
 import {
   type NotificationPrefs,
@@ -15,11 +15,7 @@ export function NotificationSettings() {
   const [prefs, setPrefs] = useState<NotificationPrefs>(getNotificationPrefs);
   const [permission, setPermission] = useState<
     NotificationPermission | "unsupported"
-  >("default");
-
-  useEffect(() => {
-    setPermission(getPermissionState());
-  }, []);
+  >(getPermissionState);
 
   const update = useCallback((patch: Partial<NotificationPrefs>) => {
     setPrefs((prev) => {
@@ -43,7 +39,6 @@ export function NotificationSettings() {
 
   if (!notificationsSupported()) return null;
 
-  const canEnable = permission !== "denied";
   const isActive = prefs.enabled && permission === "granted";
 
   return (

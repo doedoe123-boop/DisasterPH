@@ -87,9 +87,14 @@ export function useCommunityReports() {
 
   /* Initial fetch + polling */
   useEffect(() => {
-    fetchReports();
+    const initialFetch = window.setTimeout(() => {
+      void fetchReports();
+    }, 0);
     polling.current = setInterval(fetchReports, POLL_INTERVAL);
-    return () => clearInterval(polling.current);
+    return () => {
+      window.clearTimeout(initialFetch);
+      clearInterval(polling.current);
+    };
   }, [fetchReports]);
 
   /* Add */

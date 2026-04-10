@@ -12,7 +12,6 @@ import {
   Copy,
   Maximize2,
   Minimize2,
-  ChevronRight,
 } from "lucide-react";
 import type {
   HelpAction,

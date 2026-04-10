@@ -24,18 +24,14 @@ import { computeAllPlaceRisks } from "@/lib/risk-summary";
 import { severityLabel, visualFromSeverity } from "@/lib/severity";
 import type { Incident, IncidentEventType } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
-import { useAdvisories } from "@/hooks/use-advisories";
 import { useAlertCenter } from "@/hooks/use-alert-center";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
 import { useNetworkStatus } from "@/hooks/use-network-status";
-import { useCommunityReports } from "@/hooks/use-community-reports";
 import { AppHeader } from "./header";
 import { CommandMap } from "./command-map";
 import { EmergencyContacts } from "./emergency-contacts";
 
-import { getHelpActions } from "@/lib/help-actions";
 import { getPrepTips } from "@/lib/prep-guidance";
-import { nearestPlaceName } from "@/lib/incidents";
 
 /* ── Hazard type icons ── */
 const HAZARD_ICON: Record<string, typeof Waves> = {
@@ -91,10 +87,8 @@ export function DisasterPHCommand() {
 
   // ── Live data hooks ──
   const { incidents, stats, isLoading, generatedAt } = useIncidents();
-  const { advisories } = useAdvisories();
   const { places } = useSavedPlaces();
   const { isOnline } = useNetworkStatus();
-  const { reports } = useCommunityReports();
 
   const placeRisks = useMemo(
     () => computeAllPlaceRisks(places, incidents),
@@ -105,21 +99,12 @@ export function DisasterPHCommand() {
   const selectedIncident: Incident | undefined =
     incidents.find((i) => i.id === selectedIncidentId) ?? incidents[0];
 
-  const helpActions = useMemo(
-    () => getHelpActions(selectedIncident),
-    [selectedIncident],
-  );
   const prepTips = useMemo(
     () =>
       selectedIncident
         ? getPrepTips(selectedIncident.event_type, selectedIncident.severity)
         : [],
     [selectedIncident],
-  );
-  const selectedNearPlace = useMemo(
-    () =>
-      selectedIncident ? nearestPlaceName(selectedIncident, places) : null,
-    [selectedIncident, places],
   );
 
   // ── 10-day window filter ──
@@ -429,7 +414,7 @@ export function DisasterPHCommand() {
           >
             <CommandMap
               incidents={filteredIncidents}
-              communityReports={reports}
+              communityReports={[]}
               selectedIncidentId={selectedIncident?.id ?? ""}
               hoveredIncidentId={hoveredIncidentId}
               onHoverIncident={setHoveredIncidentId}
