@@ -116,6 +116,7 @@ export function evaluateAlertEngine(
       incidentId: incident.id,
       incidentTitle: incident.title,
       incidentSeverity: incident.severity,
+      incidentRegion: incident.region,
       trigger,
       placeIds: snapshot.placeIds,
       placeLabels,

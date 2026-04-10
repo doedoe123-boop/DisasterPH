@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
 import { ServiceWorkerRegistrar } from "@/components/disasterph/sw-registrar";
+import { LOCALE_KEY, normalizeLocale } from "@/lib/i18n";
 import { THEME_KEY, type Theme } from "@/lib/theme";
 import "./globals.css";
 
@@ -58,20 +59,23 @@ export default async function RootLayout({
   const theme = normalizeTheme(
     (await cookies()).get(THEME_KEY)?.value,
   );
+  const locale = normalizeLocale((await cookies()).get(LOCALE_KEY)?.value);
   const themeScript = `(function(){try{var serverTheme='${theme}';var key='${THEME_KEY}';var stored=localStorage.getItem(key);var storedTheme=stored==='day'||stored==='night'?stored:null;var cookieMatch=document.cookie.match(/(?:^|; )disasterph-theme=(day|night)/);var cookieTheme=cookieMatch?cookieMatch[1]:null;var theme=cookieTheme||serverTheme;if(!cookieTheme&&storedTheme){document.cookie=key+'='+storedTheme+'; path=/; max-age=31536000; SameSite=Lax';}if(cookieTheme){localStorage.setItem(key,cookieTheme);}document.documentElement.setAttribute('data-theme',theme);document.documentElement.style.colorScheme=theme==='day'?'light':'dark';}catch(e){document.documentElement.setAttribute('data-theme','${theme}');document.documentElement.style.colorScheme='${theme}'==='day'?'light':'dark';}})();`;
+  const localeScript = `(function(){try{var serverLocale='${locale}';var key='${LOCALE_KEY}';var stored=localStorage.getItem(key);var storedLocale=stored==='fil'||stored==='en'?stored:null;var cookieMatch=document.cookie.match(/(?:^|; )disasterph-locale=(fil|en)/);var cookieLocale=cookieMatch?cookieMatch[1]:null;var locale=cookieLocale||serverLocale;if(!cookieLocale&&storedLocale){document.cookie=key+'='+storedLocale+'; path=/; max-age=31536000; SameSite=Lax';}if(cookieLocale){localStorage.setItem(key,cookieLocale);}document.documentElement.setAttribute('data-locale',locale);}catch(e){document.documentElement.setAttribute('data-locale','${locale}');}})();`;
 
   return (
     <html
       lang="en"
       className="h-full antialiased"
       data-theme={theme}
+      data-locale={locale}
       style={{ colorScheme: theme === "day" ? "light" : "dark" }}
       suppressHydrationWarning
     >
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: themeScript,
+            __html: `${themeScript}${localeScript}`,
           }}
         />
         <meta name="theme-color" content="#040d16" />

@@ -15,23 +15,22 @@ import {
   Mountain,
   TriangleAlert,
 } from "lucide-react";
-import {
-  eventTypeLabel,
-  filterIncidentsByType,
-  formatShortTime,
-} from "@/lib/incidents";
+import { filterIncidentsByType, formatShortTime } from "@/lib/incidents";
+import { eventLabel, severityText, t } from "@/lib/i18n";
+import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
-import { severityLabel, visualFromSeverity } from "@/lib/severity";
+import { visualFromSeverity } from "@/lib/severity";
 import type { Incident, IncidentEventType } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
 import { useAlertCenter } from "@/hooks/use-alert-center";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
 import { useNetworkStatus } from "@/hooks/use-network-status";
+import { useLocale } from "@/hooks/useLocale";
 import { AppHeader } from "./header";
 import { CommandMap } from "./command-map";
 import { EmergencyContacts } from "./emergency-contacts";
 
-import { getPrepTips } from "@/lib/prep-guidance";
+import { getPrepTips, localizePrepTip } from "@/lib/prep-guidance";
 
 /* ── Hazard type icons ── */
 const HAZARD_ICON: Record<string, typeof Waves> = {
@@ -89,6 +88,8 @@ export function DisasterPHCommand() {
   const { incidents, stats, isLoading, generatedAt } = useIncidents();
   const { places } = useSavedPlaces();
   const { isOnline } = useNetworkStatus();
+  const { locale } = useLocale();
+  const i18n = t(locale);
 
   const placeRisks = useMemo(
     () => computeAllPlaceRisks(places, incidents),
@@ -154,17 +155,17 @@ export function DisasterPHCommand() {
 
   // ── Filter bar chips ──
   const filterChips: FilterChip[] = [
-    { label: "Active", value: "all", icon: Activity },
+    { label: i18n.common.active, value: "all", icon: Activity },
     {
-      label: "Critical",
+      label: i18n.common.critical,
       value: "critical",
       accentClass: "text-red-400 border-red-500/40",
     },
-    { label: "Earthquake", value: "earthquake", icon: Waves },
-    { label: "Typhoon", value: "typhoon", icon: Wind },
-    { label: "Flood", value: "flood", icon: Droplets },
-    { label: "Volcano", value: "volcano", icon: Mountain },
-    { label: "Landslide", value: "landslide", icon: TriangleAlert },
+    { label: eventLabel("earthquake", locale), value: "earthquake", icon: Waves },
+    { label: eventLabel("typhoon", locale), value: "typhoon", icon: Wind },
+    { label: eventLabel("flood", locale), value: "flood", icon: Droplets },
+    { label: eventLabel("volcano", locale), value: "volcano", icon: Mountain },
+    { label: eventLabel("landslide", locale), value: "landslide", icon: TriangleAlert },
   ];
 
   function chipCount(value: string): number {
@@ -186,7 +187,9 @@ export function DisasterPHCommand() {
           <div className="loading-shimmer mx-auto h-3 w-32 rounded-full" />
           <div className="loading-shimmer mt-4 h-7 w-44 rounded-xl mx-auto" />
           <p className="mt-5 text-sm text-[var(--text-dim)]">
-            Fetching live data from PAGASA, PHIVOLCS, and EONET…
+            {locale === "fil"
+              ? "Kinukuha ang live data mula sa PAGASA, PHIVOLCS, at EONET…"
+              : "Fetching live data from PAGASA, PHIVOLCS, and EONET…"}
           </p>
         </motion.div>
       </main>
@@ -209,7 +212,7 @@ export function DisasterPHCommand() {
           >
             <WifiOff className="h-4 w-4 shrink-0" />
             <span suppressHydrationWarning>
-              Offline — showing cached data
+              {i18n.common.offlineShowingCached}
               {generatedAt ? ` from ${formatShortTime(generatedAt)}` : ""}.
             </span>
           </motion.div>
@@ -230,7 +233,7 @@ export function DisasterPHCommand() {
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-overlay/8">
                 <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
-                  Recent Signals
+                  {locale === "fil" ? "Mga Bagong Abiso" : "Recent Signals"}
                 </h2>
                 <button
                   type="button"
@@ -246,16 +249,20 @@ export function DisasterPHCommand() {
               <div className="grid grid-cols-3 gap-px border-b border-overlay/8 bg-overlay/5">
                 {[
                   {
-                    label: "Active",
+                    label: i18n.common.active,
                     count: stats.activeAlerts,
                     color: "text-orange-400",
                   },
                   {
-                    label: "Critical",
+                    label: i18n.common.critical,
                     count: criticalCount,
                     color: "text-red-400",
                   },
-                  { label: "Sources", count: 3, color: "text-cyan-400" },
+                  {
+                    label: i18n.common.sources,
+                    count: 3,
+                    color: "text-cyan-400",
+                  },
                 ].map((s) => (
                   <div
                     key={s.label}
@@ -272,7 +279,7 @@ export function DisasterPHCommand() {
               <div className="flex-1 overflow-y-auto scrollbar-none">
                 {recentIncidents.length === 0 ? (
                   <p className="px-5 py-10 text-center text-sm text-[var(--text-dim)]">
-                    No active signals
+                    {i18n.common.noSignals}
                   </p>
                 ) : (
                   <motion.div
@@ -327,7 +334,7 @@ export function DisasterPHCommand() {
                                       : "text-[var(--text-dim)]"
                                 }`}
                               >
-                                {severityLabel[incident.severity]}
+                                {severityText(incident.severity, locale)}
                               </span>
                               <span className="text-[var(--text-dim)] opacity-50">
                                 ·
@@ -510,12 +517,12 @@ export function DisasterPHCommand() {
                             <FocusIcon className="h-3.5 w-3.5" />
                           </div>
                           <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-dim)]">
-                            {eventTypeLabel[selectedIncident.event_type]}
+                            {eventLabel(selectedIncident.event_type, locale)}
                           </span>
                           <span
                             className={`rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${sv.badge}`}
                           >
-                            {severityLabel[selectedIncident.severity]}
+                            {severityText(selectedIncident.severity, locale)}
                           </span>
                           <button
                             type="button"
@@ -530,6 +537,10 @@ export function DisasterPHCommand() {
                         <h3 className="mt-2.5 text-[15px] font-bold leading-snug text-[var(--text-primary)]">
                           {selectedIncident.title}
                         </h3>
+
+                        <p className="mt-2 rounded-lg border border-cyan-400/15 bg-cyan-400/8 px-3 py-2 text-[12px] font-medium leading-5 text-[var(--text-primary)]">
+                          {plainAlertInterpretation(selectedIncident, locale)}
+                        </p>
 
                         {/* Location + time */}
                         <div className="mt-1.5 flex items-center gap-3 text-[12px] text-[var(--text-muted)]">
@@ -560,7 +571,7 @@ export function DisasterPHCommand() {
                         {topTips.length > 0 && (
                           <div className="mt-3 border-t border-overlay/6 pt-3">
                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)] mb-1.5">
-                              What to do
+                              {i18n.common.whatToDo}
                             </p>
                             <div className="space-y-1">
                               {topTips.map((tip) => (
@@ -569,7 +580,7 @@ export function DisasterPHCommand() {
                                   className="flex items-start gap-1.5 text-[12px] leading-tight text-[var(--text-muted)]"
                                 >
                                   <span className="mt-px text-cyan-400">✓</span>
-                                  {tip.title}
+                                  {localizePrepTip(tip, locale).title}
                                 </p>
                               ))}
                             </div>
@@ -581,7 +592,7 @@ export function DisasterPHCommand() {
                           href={`/pulse/${encodeURIComponent(selectedIncident.id)}`}
                           className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-overlay/10 bg-overlay/[0.04] px-3 py-2 text-[12px] font-semibold text-[var(--text-primary)] transition hover:bg-overlay/8 hover:border-overlay/15"
                         >
-                          View full detail
+                          {i18n.common.viewFullDetail}
                           <ArrowUpRight className="h-3.5 w-3.5" />
                         </Link>
                       </div>
@@ -626,14 +637,14 @@ export function DisasterPHCommand() {
                         }
                       >
                         {t === "all"
-                          ? "All"
-                          : eventTypeLabel[t as IncidentEventType]}
+                          ? i18n.common.all
+                          : eventLabel(t as IncidentEventType, locale)}
                       </button>
                     );
                   })}
                 </div>
                 <span className="ml-auto text-[13px] font-medium text-[var(--text-dim)]">
-                  {filteredIncidents.length} active
+                  {filteredIncidents.length} {i18n.common.active.toLowerCase()}
                 </span>
               </div>
 
@@ -641,7 +652,7 @@ export function DisasterPHCommand() {
               <div className="md:max-h-72 md:overflow-y-auto pb-16 md:pb-0">
                 {filteredIncidents.length === 0 ? (
                   <p className="py-8 text-center text-[15px] text-[var(--text-dim)]">
-                    No incidents match the current filter.
+                    {i18n.common.noFilterMatches}
                   </p>
                 ) : (
                   <motion.div
@@ -684,14 +695,17 @@ export function DisasterPHCommand() {
                                 <span
                                   className={`rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider ${sv.badge}`}
                                 >
-                                  {severityLabel[incident.severity]}
+                                  {severityText(incident.severity, locale)}
                                 </span>
                                 <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-dim)]">
-                                  {eventTypeLabel[incident.event_type]}
+                                  {eventLabel(incident.event_type, locale)}
                                 </span>
                               </div>
                               <p className="mt-1.5 text-[16px] font-semibold leading-snug text-[var(--text-primary)] group-hover:text-orange-500 transition-colors">
                                 {incident.title}
+                              </p>
+                              <p className="mt-1 text-[13px] leading-5 text-[var(--text-muted)]">
+                                {plainAlertInterpretation(incident, locale)}
                               </p>
                               <div className="mt-1.5 flex items-center gap-3 text-[13px] text-[var(--text-muted)]">
                                 <span>{incident.region}</span>

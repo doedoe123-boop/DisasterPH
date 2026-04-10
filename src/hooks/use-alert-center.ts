@@ -26,6 +26,17 @@ type AlertCenterAction = {
 };
 
 const STORAGE_KEY = "disasterph-alert-center";
+const PUSH_DISPATCH_ENDPOINT = "/api/push/dispatch";
+
+function dispatchWebPush(alert: AlertEvent): void {
+  fetch(PUSH_DISPATCH_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ alert }),
+  }).catch(() => {
+    // Push dispatch is best-effort from the browser MVP path.
+  });
+}
 
 function initState(): AlertCenterState {
   if (typeof window === "undefined") {
@@ -65,6 +76,9 @@ function reducer(
   for (const event of result.events) {
     if (alertPassesPrefs(event, prefs)) {
       showAlertNotification(event);
+      if (prefs.webPushEnabled) {
+        dispatchWebPush(event);
+      }
     }
   }
 

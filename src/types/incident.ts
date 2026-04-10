@@ -130,6 +130,7 @@ export interface AlertEvent {
   incidentId: string;
   incidentTitle: string;
   incidentSeverity: IncidentSeverity;
+  incidentRegion: string;
   trigger: AlertTrigger;
   placeIds: string[];
   placeLabels: string[];

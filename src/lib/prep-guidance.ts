@@ -1,4 +1,5 @@
 import type { IncidentEventType, IncidentSeverity } from "@/types/incident";
+import type { Locale } from "@/lib/i18n";
 
 export interface PrepTip {
   id: string;
@@ -185,4 +186,101 @@ export function getPrepTips(
   }
   // advisory — show general readiness tips only
   return tips.filter((t) => t.urgency === "general");
+}
+
+const filipinoTips: Record<string, Pick<PrepTip, "title" | "body">> = {
+  "ty-1": {
+    title: "Patibayin ang bahay",
+    body: "Isara o takpan ang bintana, itali ang maluluwag na gamit sa labas, at ilipat sa mataas na lugar ang mahahalagang gamit.",
+  },
+  "ty-2": {
+    title: "Ihanda ang go-bag",
+    body: "Maglagay ng tubig, de-lata, flashlight, baterya, first-aid kit, at importanteng dokumento sa waterproof na lalagyan.",
+  },
+  "ty-3": {
+    title: "Alamin ang evacuation route",
+    body: "Tukuyin ang pinakamalapit na evacuation center. I-charge ang devices at i-save ang emergency numbers.",
+  },
+  "ty-4": {
+    title: "Makinig sa opisyal na balita",
+    body: "Bantayan ang PAGASA bulletins. Huwag tumawid sa baha, ilog, o tulay na may malakas na agos.",
+  },
+  "fl-1": {
+    title: "Lumipat sa mataas na lugar",
+    body: "Kung tumataas ang tubig, lumikas agad. Huwag maghintay kung hindi na ligtas ang paligid.",
+  },
+  "fl-2": {
+    title: "Iwasan ang baha",
+    body: "Huwag lumakad, lumangoy, o magmaneho sa baha. Kahit mababaw na agos ay puwedeng makatumba.",
+  },
+  "fl-3": {
+    title: "Protektahan ang dokumento",
+    body: "Ilagay ang papeles at electronics sa sealed bags. Itaas ang appliances kung kaya.",
+  },
+  "fl-4": {
+    title: "Pagkatapos ng baha",
+    body: "Huwag uminom ng posibleng kontaminadong tubig. Pakuluan muna at suriin ang pinsala sa bahay.",
+  },
+  "eq-1": {
+    title: "Dapa, Kubli, Kapit",
+    body: "Pumasok sa ilalim ng matibay na mesa. Protektahan ang ulo at leeg hanggang tumigil ang pagyanig.",
+  },
+  "eq-2": {
+    title: "Lumayo sa salamin",
+    body: "Lumayo sa bintana, salamin, at mabibigat na bagay na maaaring mahulog. Kung nasa labas, pumunta sa bukas na lugar.",
+  },
+  "eq-3": {
+    title: "Suriin ang pinsala",
+    body: "Pagkatapos ng pagyanig, tingnan kung may nasaktan o may structural damage. Maghanda sa aftershocks.",
+  },
+  "eq-4": {
+    title: "Ihanda ang emergency kit",
+    body: "Maghanda ng flashlight, pito, tubig, at first-aid kit. Alamin kung paano patayin ang gas at kuryente.",
+  },
+  "vo-1": {
+    title: "Lumikas kung inutusan",
+    body: "Sundin ang PHIVOLCS advisories. Umalis agad sa danger zone kapag tumaas ang alert level.",
+  },
+  "vo-2": {
+    title: "Proteksyon sa ashfall",
+    body: "Gumamit ng N95 mask o basang tela sa ilong at bibig. Isara ang bintana at takpan ang water tanks.",
+  },
+  "vo-3": {
+    title: "Iwasan ang lambak at ilog",
+    body: "Ang lahar ay dumadaan sa river channels. Manatili sa mataas na lugar at lumayo sa valleys.",
+  },
+  "vo-4": {
+    title: "Pagkatapos ng pagputok",
+    body: "Tanggalin ang abo sa bubong para maiwasan ang pagbagsak. Iwasang magmaneho sa makapal na ashfall.",
+  },
+  "ls-1": {
+    title: "Lumikas sa matarik na lugar",
+    body: "Kung malapit sa gilid ng bundok o burol, lumipat sa ligtas na lugar kapag malakas ang ulan.",
+  },
+  "ls-2": {
+    title: "Makinig sa senyales",
+    body: "Ang tunog ng pagbitak ng puno, gumugulong na bato, o dagundong ay maaaring senyales ng pagguho.",
+  },
+  "ls-3": {
+    title: "Mag-ingat sa gabi",
+    body: "Maraming pagguho ang nangyayari habang malakas ang ulan sa gabi. Ihanda ang escape plan bago matulog.",
+  },
+  "wf-1": {
+    title: "Maghanda sa paglikas",
+    body: "Ihanda ang essentials at dokumento. Alamin ang dalawang posibleng ruta palabas ng lugar.",
+  },
+  "wf-2": {
+    title: "Iwasan ang usok",
+    body: "Manatili sa loob, isara ang bintana, at gumamit ng basang tuwalya sa ilalim ng pinto kung makapal ang usok.",
+  },
+  "wf-3": {
+    title: "Linisin ang paligid",
+    body: "Alisin ang tuyong damo at dahon malapit sa bahay. Panatilihing malinis ang alulod.",
+  },
+};
+
+export function localizePrepTip(tip: PrepTip, locale: Locale): PrepTip {
+  if (locale !== "fil") return tip;
+  const translated = filipinoTips[tip.id];
+  return translated ? { ...tip, ...translated } : tip;
 }

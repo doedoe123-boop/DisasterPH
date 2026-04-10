@@ -186,10 +186,10 @@ self.addEventListener("push", (event) => {
       body: data.body,
       icon: "/icon.svg",
       badge: "/icon.svg",
-      tag: data.url || "disasterph-alert",
-      data: { url: data.url },
+      tag: data.tag || data.url || "disasterph-alert",
+      data: { incidentId: data.incidentId, url: data.url },
       vibrate: [200, 100, 200],
-      requireInteraction: true,
+      requireInteraction: data.severity === "critical",
     }),
   );
 });
