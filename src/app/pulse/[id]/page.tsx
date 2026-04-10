@@ -493,15 +493,14 @@ function ShareDropdownContext({
 }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
-  const getShareUrl = useCallback(
-    () =>
-      typeof window !== "undefined"
-        ? `${window.location.origin}/pulse/${encodeURIComponent(incident.id)}`
-        : "",
-    [incident.id],
-  );
+  useEffect(() => {
+    setShareUrl(
+      `${window.location.origin}/pulse/${encodeURIComponent(incident.id)}`,
+    );
+  }, [incident.id]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -515,7 +514,7 @@ function ShareDropdownContext({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(getShareUrl());
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -553,7 +552,7 @@ function ShareDropdownContext({
               {copied ? "Copied!" : "Copy link"}
             </button>
             <a
-              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(getShareUrl())}`}
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[var(--text-primary)] transition hover:bg-overlay/[0.06]"
@@ -562,7 +561,7 @@ function ShareDropdownContext({
               Post to X
             </a>
             <a
-              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`}
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[var(--text-primary)] transition hover:bg-overlay/[0.06]"

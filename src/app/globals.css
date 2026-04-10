@@ -721,3 +721,26 @@ select {
     transform 0.2s ease,
     filter 0.2s ease;
 }
+
+/* ── Day-mode popup overrides ── */
+[data-theme="day"] .bantay-popup .maplibregl-popup-content {
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: hsl(222 26% 10%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+[data-theme="day"] .bantay-popup .maplibregl-popup-tip {
+  border-top-color: rgba(255, 255, 255, 0.97);
+}
+
+/* ── Day-mode map controls ── */
+[data-theme="day"] .maplibregl-ctrl-group {
+  background: rgba(255, 255, 255, 0.97) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+[data-theme="day"] .maplibregl-ctrl-group button span {
+  filter: none;
+}
+[data-theme="day"] .maplibregl-ctrl-group button:hover span {
+  filter: brightness(0.4);
+}

@@ -107,8 +107,12 @@ export function DisasterPHCommand() {
     [selectedIncident],
   );
 
-  // ── 10-day window filter ──
-  const [tenDayCutoff] = useState(() => Date.now() - 10 * 24 * 60 * 60 * 1000);
+  // ── 10-day window filter (rounded to midnight for SSR/hydration stability) ──
+  const tenDayCutoff = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.getTime() - 10 * 24 * 60 * 60 * 1000;
+  }, []);
   const recentIncidents = useMemo(() => {
     return incidents.filter(
       (i) => new Date(i.updated_at).getTime() >= tenDayCutoff,
