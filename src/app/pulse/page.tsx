@@ -16,14 +16,17 @@ import {
   Clock,
   Activity,
 } from "lucide-react";
-import { eventTypeLabel, filterIncidentsByType } from "@/lib/incidents";
-import { severityLabel, visualFromSeverity } from "@/lib/severity";
+import { filterIncidentsByType } from "@/lib/incidents";
+import { eventLabel, severityText, t } from "@/lib/i18n";
+import { plainAlertInterpretation } from "@/lib/plain-alert";
+import { visualFromSeverity } from "@/lib/severity";
 import type {
   Incident,
   IncidentEventType,
   IncidentSeverity,
 } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
+import { useLocale } from "@/hooks/useLocale";
 import { AppHeader } from "@/components/disasterph/header";
 
 /* ── Icons per hazard type ── */
@@ -121,6 +124,8 @@ const cardVariants = {
 
 export default function PulseFeedPage() {
   const { incidents, isLoading } = useIncidents();
+  const { locale } = useLocale();
+  const i18n = t(locale);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<IncidentEventType | "all">(
     "all",
@@ -128,6 +133,30 @@ export default function PulseFeedPage() {
   const [severityFilter, setSeverityFilter] = useState<
     IncidentSeverity | "all"
   >("all");
+
+  const typeFilters = useMemo(
+    () =>
+      TYPE_FILTERS.map((filter) => ({
+        ...filter,
+        label:
+          filter.value === "all"
+            ? i18n.common.all
+            : eventLabel(filter.value, locale),
+      })),
+    [i18n.common.all, locale],
+  );
+
+  const severityFilters = useMemo(
+    () =>
+      SEVERITY_FILTERS.map((filter) => ({
+        ...filter,
+        label:
+          filter.value === "all"
+            ? i18n.common.all
+            : severityText(filter.value, locale),
+      })),
+    [i18n.common.all, locale],
+  );
 
   const filtered = useMemo(() => {
     let result = filterIncidentsByType(incidents, typeFilter);
@@ -164,15 +193,18 @@ export default function PulseFeedPage() {
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] tracking-tight">
-                Pulse Feed
+                {locale === "fil" ? "Mga Abiso" : "Pulse Feed"}
               </h1>
               <p className="text-[12px] md:text-[13px] text-[var(--text-dim)] mt-0.5 hidden sm:block">
-                Real-time disaster event stream
+                {locale === "fil"
+                  ? "Live na daloy ng mga abiso sa sakuna"
+                  : "Real-time disaster event stream"}
               </p>
             </div>
           </div>
           <span className="text-[13px] md:text-[15px] font-medium text-[var(--text-muted)] shrink-0">
-            {filtered.length} event{filtered.length !== 1 ? "s" : ""}
+            {filtered.length}{" "}
+            {filtered.length === 1 ? i18n.common.event : i18n.common.events}
           </span>
         </motion.div>
 
@@ -186,7 +218,7 @@ export default function PulseFeedPage() {
           <Search className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[var(--text-dim)]" />
           <input
             type="text"
-            placeholder="Search events..."
+            placeholder={i18n.common.searchEvents}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-overlay/12 bg-[var(--bg-panel)] py-3 md:py-3 pl-12 pr-5 text-[14px] md:text-[15px] text-[var(--text-primary)] placeholder-[var(--text-dim)] outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/15 shadow-[var(--shadow-card)]"
@@ -203,7 +235,7 @@ export default function PulseFeedPage() {
           <Filter className="h-[18px] w-[18px] shrink-0 text-[var(--text-dim)]" />
 
           {/* Type filters */}
-          {TYPE_FILTERS.map((f) => (
+          {typeFilters.map((f) => (
             <button
               key={`type-${f.value}`}
               type="button"
@@ -222,7 +254,7 @@ export default function PulseFeedPage() {
           <div className="mx-0.5 md:mx-1 h-5 w-px shrink-0 bg-overlay/12" />
 
           {/* Severity filters */}
-          {SEVERITY_FILTERS.map((f) => (
+          {severityFilters.map((f) => (
             <button
               key={`sev-${f.value}`}
               type="button"
@@ -247,7 +279,7 @@ export default function PulseFeedPage() {
           <div className="mt-16 text-center">
             <div className="loading-shimmer mx-auto h-5 w-48 rounded-full" />
             <p className="mt-4 text-sm text-[var(--text-dim)]">
-              Loading events…
+              {i18n.common.loadingEvents}
             </p>
           </div>
         )}
@@ -274,7 +306,7 @@ export default function PulseFeedPage() {
             className="mt-20 text-center"
           >
             <p className="text-[16px] text-[var(--text-muted)]">
-              No events match your current filters.
+              {i18n.common.noEventsMatch}
             </p>
           </motion.div>
         )}
@@ -285,6 +317,7 @@ export default function PulseFeedPage() {
 
 /* ── Event Card Component ── */
 function EventCard({ incident }: { incident: Incident }) {
+  const { locale } = useLocale();
   const sv = visualFromSeverity(incident.severity);
   const Icon = HAZARD_ICON[incident.event_type] ?? AlertTriangle;
   const pills = dataPills(incident);
@@ -322,10 +355,10 @@ function EventCard({ incident }: { incident: Incident }) {
               <span
                 className={`rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider ${sv.badge}`}
               >
-                {severityLabel[incident.severity]}
+                {severityText(incident.severity, locale)}
               </span>
               <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-dim)]">
-                {eventTypeLabel[incident.event_type]}
+                {eventLabel(incident.event_type, locale)}
               </span>
             </div>
 
@@ -333,6 +366,10 @@ function EventCard({ incident }: { incident: Incident }) {
             <h3 className="mt-2 text-[16px] font-bold leading-snug text-[var(--text-primary)] transition group-hover:text-orange-200">
               {incident.title}
             </h3>
+
+            <p className="mt-1.5 text-[13px] leading-5 text-[var(--text-muted)]">
+              {plainAlertInterpretation(incident, locale)}
+            </p>
 
             {/* Location + time */}
             <div className="mt-2.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[13px] text-[var(--text-muted)]">
