@@ -43,11 +43,11 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
 
   return (
     <section
-      className={`shrink-0 rounded-lg border border-white/10 border-l-2 bg-gradient-to-r p-3 ${riskVisual.panel}`}
+      className={`shrink-0 rounded-lg border border-overlay/10 border-l-2 bg-gradient-to-r p-3 ${riskVisual.panel}`}
     >
       {/* Header */}
       <div className="flex items-center gap-1.5">
-        <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+        <span className="rounded border border-overlay/10 bg-overlay/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
           Risk Summary
         </span>
         <span className="ml-auto text-[10px] text-[var(--text-dim)]">
@@ -59,7 +59,7 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
       </p>
 
       {/* Headline */}
-      <h3 className="mt-2 text-[15px] font-semibold leading-6 text-white">
+      <h3 className="mt-2 text-[15px] font-semibold leading-6 text-[var(--text-primary)]">
         {riskHeadline[riskLevel]}
       </h3>
       <p className="mt-1 text-[12px] leading-[1.5] text-[var(--text-muted)]">
@@ -93,13 +93,13 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
           Last nearby update {formatShortTime(freshestUpdateAt)}
         </div>
       )}
-      <div className="mt-2 rounded-lg border border-white/6 bg-white/[0.02] px-2.5 py-2 text-[11px] leading-5 text-[var(--text-muted)]">
+      <div className="mt-2 rounded-lg border border-overlay/6 bg-overlay/[0.02] px-2.5 py-2 text-[11px] leading-5 text-[var(--text-muted)]">
         {matchingSummary}
       </div>
 
       {/* Nearby incidents list */}
       {nearbyIncidents.length > 0 && (
-        <div className="mt-2.5 border-t border-white/6 pt-2">
+        <div className="mt-2.5 border-t border-overlay/6 pt-2">
           <p className="mb-1.5 text-[10px] uppercase tracking-[0.2em] text-[var(--text-dim)]">
             Nearby incidents ({nearbyIncidents.length})
           </p>
@@ -107,7 +107,7 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
             {nearbyIncidents.slice(0, 5).map((inc) => (
               <button
                 key={inc.id}
-                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-white/[0.04]"
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-overlay/[0.04]"
                 onClick={() => onSelectIncident(inc.id)}
                 type="button"
               >
@@ -115,7 +115,7 @@ export function RiskSummary({ risk, onSelectIncident }: RiskSummaryProps) {
                   className={`h-1.5 w-1.5 shrink-0 rounded-full ${visualFromSeverity(inc.severity).dot}`}
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12px] font-medium text-white">
+                  <p className="truncate text-[12px] font-medium text-[var(--text-primary)]">
                     {inc.title}
                   </p>
                   <p

@@ -9,7 +9,7 @@ export function SourceHealth({
   sourceStatuses: SourceStatus[];
 }) {
   return (
-    <div className="rounded-lg border border-white/8 bg-[var(--bg-panel)] p-2.5">
+    <div className="rounded-lg border border-overlay/8 bg-[var(--bg-panel)] p-2.5">
       <p className="mb-2 text-[10px] uppercase tracking-[0.22em] text-[var(--text-dim)]">
         Source Health
       </p>
@@ -18,14 +18,14 @@ export function SourceHealth({
           sourceStatuses.map((source) => (
             <div
               key={source.source}
-              className="rounded-md border border-white/6 bg-white/[0.02] px-2 py-1.5 text-xs"
+              className="rounded-md border border-overlay/6 bg-overlay/[0.02] px-2 py-1.5 text-xs"
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span
                     className={`h-1.5 w-1.5 rounded-full ${sourceStatusVisual[source.status].dot}`}
                   />
-                  <span className="text-[12px] text-white">
+                  <span className="text-[12px] text-[var(--text-primary)]">
                     {source.source}
                   </span>
                 </div>

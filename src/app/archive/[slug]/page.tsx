@@ -26,13 +26,15 @@ export default function ArchiveDetailPage() {
         <AppHeader />
         <main className="flex flex-1 items-center justify-center">
           <div className="text-center">
-            <h1 className="text-xl font-bold text-white">Event Not Found</h1>
+            <h1 className="text-xl font-bold text-[var(--text-primary)]">
+              Event Not Found
+            </h1>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
               This archived event could not be found.
             </p>
             <Link
               href="/archive"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-[var(--bg-panel)] px-4 py-2 text-sm text-white transition hover:bg-white/[0.06]"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-overlay/10 bg-[var(--bg-panel)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:bg-overlay/[0.06]"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Archive
@@ -52,16 +54,16 @@ export default function ArchiveDetailPage() {
       <AppHeader />
 
       {/* ── Hero Banner ── */}
-      <div className="relative py-12 px-4 border-b border-white/8 overflow-hidden">
+      <div className="relative py-12 px-4 border-b border-overlay/8 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-base)] via-[var(--bg-base)]/85 to-[var(--bg-base)]/50 pointer-events-none" />
         {/* Archived event watermark stripe */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-overlay/20 to-transparent" />
 
         <div className="relative max-w-4xl mx-auto">
           {/* Back button */}
           <Link
             href="/archive"
-            className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-[var(--bg-panel)] px-3 py-1.5 text-sm text-white transition hover:bg-white/[0.06] mb-6"
+            className="inline-flex items-center gap-2 rounded-lg border border-overlay/10 bg-[var(--bg-panel)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:bg-overlay/[0.06] mb-6"
           >
             <ArrowLeft className="h-4 w-4" />
             Archive
@@ -73,7 +75,7 @@ export default function ArchiveDetailPage() {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <span className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest px-3 py-1 rounded-full border border-white/15 text-[var(--text-dim)] bg-white/5">
+            <span className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest px-3 py-1 rounded-full border border-overlay/15 text-[var(--text-dim)] bg-overlay/5">
               <BookOpen className="w-3 h-3" /> Archived Event
             </span>
             <span
@@ -94,7 +96,7 @@ export default function ArchiveDetailPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="text-3xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3"
+            className="text-3xl lg:text-5xl font-extrabold text-[var(--text-primary)] tracking-tight leading-tight mb-3"
           >
             {event.title}
           </motion.h1>
@@ -144,7 +146,7 @@ export default function ArchiveDetailPage() {
               <h3 className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-dim)] mb-3 flex items-center gap-2">
                 <MapPin className="w-3 h-3" /> Origin / Epicenter
               </h3>
-              <div className="rounded-xl overflow-hidden border border-white/8 bg-white/[0.02] flex items-center justify-center h-[180px]">
+              <div className="rounded-xl overflow-hidden border border-overlay/8 bg-overlay/[0.02] flex items-center justify-center h-[180px]">
                 <div className="text-center">
                   <div
                     className="mx-auto h-5 w-5 rounded-full border-2 opacity-60"
@@ -177,7 +179,7 @@ export default function ArchiveDetailPage() {
                   Event Summary
                 </h2>
                 <div className="glass-pane rounded-xl p-5">
-                  <p className="text-sm leading-relaxed text-white/90 whitespace-pre-line">
+                  <p className="text-sm leading-relaxed text-[var(--text-primary)] whitespace-pre-line">
                     {event.summary}
                   </p>
                 </div>
@@ -191,7 +193,7 @@ export default function ArchiveDetailPage() {
                   <h2 className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-dim)]">
                     Event Timeline
                   </h2>
-                  <span className="text-[9px] font-mono text-[var(--text-dim)]/50 border border-white/8 px-1.5 py-0.5 rounded">
+                  <span className="text-[9px] font-mono text-[var(--text-dim)]/50 border border-overlay/8 px-1.5 py-0.5 rounded">
                     {event.timelineEvents.length} entries
                   </span>
                 </div>
@@ -214,7 +216,7 @@ export default function ArchiveDetailPage() {
               <h3 className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-dim)] mb-3 flex items-center gap-2">
                 <MapPin className="w-3 h-3" /> Origin / Epicenter
               </h3>
-              <div className="rounded-xl overflow-hidden border border-white/8 bg-white/[0.02] flex items-center justify-center h-[180px]">
+              <div className="rounded-xl overflow-hidden border border-overlay/8 bg-overlay/[0.02] flex items-center justify-center h-[180px]">
                 <div className="text-center">
                   <div
                     className="mx-auto h-5 w-5 rounded-full border-2 opacity-60"
@@ -238,7 +240,7 @@ export default function ArchiveDetailPage() {
                   </p>
                 </div>
               </div>
-              <div className="font-mono text-xs text-white mt-3 space-y-1">
+              <div className="font-mono text-xs text-[var(--text-primary)] mt-3 space-y-1">
                 <div className="flex justify-between">
                   <span className="text-[var(--text-dim)]">Lat</span>
                   <span>{event.latitude.toFixed(4)}°</span>
@@ -260,7 +262,7 @@ export default function ArchiveDetailPage() {
                   {event.affectedRegions.map((r) => (
                     <span
                       key={r}
-                      className="text-xs font-mono px-2 py-0.5 rounded border border-white/10 bg-white/[0.04] text-white/80"
+                      className="text-xs font-mono px-2 py-0.5 rounded border border-overlay/10 bg-overlay/[0.04] text-overlay/80"
                     >
                       {r}
                     </span>
@@ -275,7 +277,7 @@ export default function ArchiveDetailPage() {
             )}
 
             {/* Historical Record stamp */}
-            <div className="rounded-xl border border-white/8 p-4 bg-white/[0.02]">
+            <div className="rounded-xl border border-overlay/8 p-4 bg-overlay/[0.02]">
               <div className="flex items-center gap-2 mb-1">
                 <BookOpen className="w-3.5 h-3.5 text-[var(--text-dim)]" />
                 <span className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-wider">

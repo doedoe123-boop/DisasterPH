@@ -31,12 +31,12 @@ export function SituationCard({
 
   return (
     <section
-      className={`shrink-0 rounded-lg border border-white/10 border-l-2 bg-gradient-to-r ${severityVisual.panel}`}
+      className={`shrink-0 rounded-lg border border-overlay/10 border-l-2 bg-gradient-to-r ${severityVisual.panel}`}
     >
       {/* ── Status Block ── */}
       <div className="p-3 pb-2">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+          <span className="rounded border border-overlay/10 bg-overlay/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
             {eventTypeLabel[incident.event_type]}
           </span>
           <span
@@ -57,7 +57,7 @@ export function SituationCard({
           </span>
         </div>
 
-        <h3 className="mt-2 text-[15px] font-semibold leading-6 text-white">
+        <h3 className="mt-2 text-[15px] font-semibold leading-6 text-[var(--text-primary)]">
           {incident.title}
         </h3>
 
@@ -75,7 +75,7 @@ export function SituationCard({
 
       {/* ── Quick Actions ── */}
       {topTips.length > 0 && (
-        <div className="border-t border-white/6 px-3 py-2">
+        <div className="border-t border-overlay/6 px-3 py-2">
           <p className="text-[9px] uppercase tracking-[0.22em] text-[var(--text-dim)] mb-1.5">
             What to do
           </p>
@@ -102,14 +102,14 @@ export function SituationCard({
 
       {/* ── Action Buttons ── */}
       {helpActions.length > 0 && (
-        <div className="border-t border-white/6 p-2">
+        <div className="border-t border-overlay/6 p-2">
           <HelpActions actions={helpActions} compact />
         </div>
       )}
 
       {/* ── Metadata ── */}
       {Object.keys(incident.metadata).length > 0 && (
-        <div className="border-t border-white/6 px-3 py-3">
+        <div className="border-t border-overlay/6 px-3 py-3">
           <div className="flex flex-wrap gap-1.5 overflow-hidden">
             {Object.entries(incident.metadata).map(([key, value]) => (
               <span
@@ -117,7 +117,7 @@ export function SituationCard({
                 className={`max-w-full truncate rounded-full border px-2 py-1 text-[11px] ${
                   incident.severity === "critical"
                     ? "border-red-500/30 bg-red-500/20 text-red-200 font-medium"
-                    : "border-white/8 bg-white/[0.03] text-[var(--text-muted)]"
+                    : "border-overlay/8 bg-overlay/[0.03] text-[var(--text-muted)]"
                 }`}
               >
                 {key}: {String(value)}

@@ -26,7 +26,7 @@ export function ArchiveEventCard({
   return (
     <Link href={`/archive/${event.slug}`} className="group block">
       <motion.div
-        className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-5 transition-all duration-200 hover:bg-white/[0.04] hover:border-white/15 hover:shadow-[var(--shadow-elevated)]"
+        className="rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-5 transition-all duration-200 hover:bg-overlay/[0.04] hover:border-overlay/15 hover:shadow-[var(--shadow-elevated)]"
         whileTap={{ scale: 0.98 }}
       >
         {/* Top row: badges + featured tag */}
@@ -52,7 +52,7 @@ export function ArchiveEventCard({
         </div>
 
         {/* Title */}
-        <h3 className="mt-3 text-[16px] font-bold leading-snug text-white transition group-hover:text-orange-200">
+        <h3 className="mt-3 text-[16px] font-bold leading-snug text-[var(--text-primary)] transition group-hover:text-orange-200">
           {event.title}
         </h3>
 

@@ -6,7 +6,7 @@ interface StateCardProps {
 }
 
 const toneStyle = {
-  neutral: "border-white/8 bg-[var(--bg-panel)] text-[var(--text-muted)]",
+  neutral: "border-overlay/8 bg-[var(--bg-panel)] text-[var(--text-muted)]",
   warning: "border-amber-400/15 bg-amber-400/8 text-amber-100",
   danger: "border-red-400/15 bg-red-400/8 text-red-100",
   info: "border-cyan-400/15 bg-cyan-400/8 text-cyan-100",
@@ -24,7 +24,7 @@ export function StateCard({
         compact ? "text-xs" : "text-sm"
       }`}
     >
-      <p className="font-medium text-white">{title}</p>
+      <p className="font-medium text-[var(--text-primary)]">{title}</p>
       <p className="mt-1 leading-5 opacity-90">{message}</p>
     </div>
   );

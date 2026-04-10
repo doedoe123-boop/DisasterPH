@@ -15,7 +15,7 @@ export function ArchiveStatBlock({
   icon: Icon,
   label,
   value,
-  color = "text-white",
+  color = "text-[var(--text-primary)]",
   note,
 }: StatBlockProps) {
   return (

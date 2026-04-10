@@ -177,7 +177,7 @@ export function DisasterPHCommand() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
-          className="rounded-xl border border-white/10 bg-[var(--bg-panel)] p-8 text-center shadow-[var(--shadow-elevated)]"
+          className="rounded-xl border border-overlay/10 bg-[var(--bg-panel)] p-8 text-center shadow-[var(--shadow-elevated)]"
         >
           <div className="loading-shimmer mx-auto h-3 w-32 rounded-full" />
           <div className="loading-shimmer mt-4 h-7 w-44 rounded-xl mx-auto" />
@@ -222,15 +222,15 @@ export function DisasterPHCommand() {
               animate={{ width: 300, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="hidden shrink-0 flex-col border-r border-white/10 bg-[var(--bg-panel-strong)] lg:flex overflow-hidden"
+              className="hidden shrink-0 flex-col border-r border-overlay/10 bg-[var(--bg-panel-strong)] lg:flex overflow-hidden"
             >
-              <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-overlay/8">
                 <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
                   Recent Signals
                 </h2>
                 <button
                   type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-dim)] transition hover:bg-white/8 hover:text-white"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-dim)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
                   onClick={() => setSidebarOpen(false)}
                   title="Close sidebar"
                 >
@@ -239,7 +239,7 @@ export function DisasterPHCommand() {
               </div>
 
               {/* ── Summary counters ── */}
-              <div className="grid grid-cols-3 gap-px border-b border-white/8 bg-white/5">
+              <div className="grid grid-cols-3 gap-px border-b border-overlay/8 bg-overlay/5">
                 {[
                   {
                     label: "Active",
@@ -288,10 +288,10 @@ export function DisasterPHCommand() {
                           type="button"
                           variants={fadeSlideUp}
                           transition={{ duration: 0.2 }}
-                          className={`flex items-start gap-3.5 px-5 py-4 text-left transition-all border-b border-white/5 ${
+                          className={`flex items-start gap-3.5 px-5 py-4 text-left transition-all border-b border-overlay/5 ${
                             isSelected
-                              ? "bg-white/8 border-l-2 border-l-orange-400"
-                              : "hover:bg-white/4 border-l-2 border-l-transparent"
+                              ? "bg-overlay/8 border-l-2 border-l-orange-400"
+                              : "hover:bg-overlay/4 border-l-2 border-l-transparent"
                           }`}
                           onClick={() => {
                             setSelectedIncidentId(incident.id);
@@ -304,13 +304,13 @@ export function DisasterPHCommand() {
                                 ? "bg-red-500/15 text-red-400 shadow-[0_0_8px_rgba(255,93,93,0.1)]"
                                 : incident.severity === "warning"
                                   ? "bg-orange-500/15 text-orange-400"
-                                  : "bg-slate-500/12 text-slate-400"
+                                  : "bg-[var(--bg-chip)] text-[var(--text-dim)]"
                             }`}
                           >
                             <Icon className="h-[18px] w-[18px]" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-[14px] font-semibold text-white leading-snug">
+                            <p className="truncate text-[14px] font-semibold text-[var(--text-primary)] leading-snug">
                               {incident.title}
                             </p>
                             <div className="mt-1 flex items-center gap-2">
@@ -325,7 +325,9 @@ export function DisasterPHCommand() {
                               >
                                 {severityLabel[incident.severity]}
                               </span>
-                              <span className="text-white/15">·</span>
+                              <span className="text-[var(--text-dim)] opacity-50">
+                                ·
+                              </span>
                               <span
                                 className="text-[12px] text-[var(--text-dim)]"
                                 suppressHydrationWarning
@@ -354,7 +356,7 @@ export function DisasterPHCommand() {
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
-              className="border-b border-white/10 bg-[var(--bg-panel)] px-4 md:px-5 py-2.5 md:py-3"
+              className="border-b border-overlay/10 bg-[var(--bg-panel)] px-4 md:px-5 py-2.5 md:py-3"
             >
               <div className="flex items-center gap-2 md:gap-3">
                 <div className="hidden md:flex items-center gap-1.5 text-[var(--text-dim)]">
@@ -376,7 +378,7 @@ export function DisasterPHCommand() {
                             ? chip.value === "critical"
                               ? "border-red-500/50 bg-red-500/15 text-red-400 shadow-[0_0_12px_rgba(255,93,93,0.1)]"
                               : "border-orange-500/40 bg-orange-500/12 text-orange-400 shadow-[0_0_12px_rgba(255,140,66,0.08)]"
-                            : "border-white/10 bg-white/4 text-[var(--text-muted)] hover:bg-white/8 hover:text-white hover:border-white/15"
+                            : "border-overlay/10 bg-overlay/4 text-[var(--text-muted)] hover:bg-overlay/8 hover:text-[var(--text-primary)] hover:border-overlay/15"
                         }`}
                         onClick={() =>
                           setActiveFilter(
@@ -395,7 +397,7 @@ export function DisasterPHCommand() {
                               ? chip.value === "critical"
                                 ? "bg-red-500/20 text-red-300"
                                 : "bg-orange-500/15 text-orange-300"
-                              : "bg-white/8 text-[var(--text-dim)]"
+                              : "bg-overlay/8 text-[var(--text-dim)]"
                           }`}
                         >
                           {count}
@@ -410,7 +412,11 @@ export function DisasterPHCommand() {
 
           {/* ── Map section ── */}
           <section
-            className={`relative ${focusMode ? "absolute inset-0 z-30" : "h-[45vh] md:h-auto md:min-h-0 md:flex-1 shrink-0"}`}
+            className={
+              focusMode
+                ? "fixed inset-0 z-[1200] h-[100dvh] w-screen bg-background"
+                : "relative h-[45vh] shrink-0 md:h-auto md:min-h-0 md:flex-1"
+            }
           >
             <CommandMap
               incidents={filteredIncidents}
@@ -470,7 +476,7 @@ export function DisasterPHCommand() {
                         duration: 0.25,
                         ease: [0.25, 0.1, 0.25, 1],
                       }}
-                      className="absolute left-4 top-4 z-40 hidden w-[320px] overflow-hidden rounded-xl border border-white/10 bg-slate-900/92 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.4)] lg:block"
+                      className="absolute left-4 top-4 z-40 hidden w-[320px] overflow-hidden rounded-xl border border-overlay/10 bg-[var(--bg-panel)] backdrop-blur-xl shadow-[var(--shadow-elevated)] lg:block"
                     >
                       {/* Severity accent bar */}
                       <div
@@ -494,7 +500,7 @@ export function DisasterPHCommand() {
                                 ? "bg-red-500/15 text-red-400"
                                 : selectedIncident.severity === "warning"
                                   ? "bg-orange-500/15 text-orange-400"
-                                  : "bg-slate-500/12 text-slate-400"
+                                  : "bg-[var(--bg-chip)] text-[var(--text-dim)]"
                             }`}
                           >
                             <FocusIcon className="h-3.5 w-3.5" />
@@ -510,21 +516,23 @@ export function DisasterPHCommand() {
                           <button
                             type="button"
                             onClick={() => setSheetOpen(false)}
-                            className="ml-auto flex h-6 w-6 items-center justify-center rounded-md text-[var(--text-dim)] transition hover:bg-white/8 hover:text-white"
+                            className="ml-auto flex h-6 w-6 items-center justify-center rounded-md text-[var(--text-dim)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
                         </div>
 
                         {/* Title */}
-                        <h3 className="mt-2.5 text-[15px] font-bold leading-snug text-white">
+                        <h3 className="mt-2.5 text-[15px] font-bold leading-snug text-[var(--text-primary)]">
                           {selectedIncident.title}
                         </h3>
 
                         {/* Location + time */}
                         <div className="mt-1.5 flex items-center gap-3 text-[12px] text-[var(--text-muted)]">
                           <span>{selectedIncident.region}</span>
-                          <span className="text-white/15">·</span>
+                          <span className="text-[var(--text-dim)] opacity-50">
+                            ·
+                          </span>
                           <span suppressHydrationWarning>
                             {relativeTime(selectedIncident.updated_at)}
                           </span>
@@ -536,7 +544,7 @@ export function DisasterPHCommand() {
                             {pills.map((pill) => (
                               <span
                                 key={pill}
-                                className="rounded-md border border-white/12 bg-white/[0.05] px-2 py-0.5 font-mono text-[11px] font-medium text-[var(--text-muted)]"
+                                className="rounded-md border border-overlay/12 bg-overlay/[0.05] px-2 py-0.5 font-mono text-[11px] font-medium text-[var(--text-muted)]"
                               >
                                 {pill}
                               </span>
@@ -546,7 +554,7 @@ export function DisasterPHCommand() {
 
                         {/* What to do (compact) */}
                         {topTips.length > 0 && (
-                          <div className="mt-3 border-t border-white/6 pt-3">
+                          <div className="mt-3 border-t border-overlay/6 pt-3">
                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)] mb-1.5">
                               What to do
                             </p>
@@ -567,7 +575,7 @@ export function DisasterPHCommand() {
                         {/* View full detail link */}
                         <Link
                           href={`/pulse/${encodeURIComponent(selectedIncident.id)}`}
-                          className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-white/8 hover:border-white/15"
+                          className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-overlay/10 bg-overlay/[0.04] px-3 py-2 text-[12px] font-semibold text-[var(--text-primary)] transition hover:bg-overlay/8 hover:border-overlay/15"
                         >
                           View full detail
                           <ArrowUpRight className="h-3.5 w-3.5" />
@@ -581,9 +589,9 @@ export function DisasterPHCommand() {
 
           {/* ── Detail Feed (below map) ── */}
           {!focusMode && (
-            <section className="flex-1 md:flex-none md:shrink-0 border-t border-white/10 bg-[var(--bg-panel)] overflow-y-auto">
+            <section className="flex-1 md:flex-none md:shrink-0 border-t border-overlay/10 bg-[var(--bg-panel)] overflow-y-auto">
               {/* Section heading */}
-              <div className="sticky top-0 z-10 flex items-center gap-2 md:gap-3 border-b border-white/8 px-4 md:px-5 py-2.5 md:py-3 bg-[var(--bg-panel)]">
+              <div className="sticky top-0 z-10 flex items-center gap-2 md:gap-3 border-b border-overlay/8 px-4 md:px-5 py-2.5 md:py-3 bg-[var(--bg-panel)]">
                 <div className="flex items-center gap-1.5 text-[var(--text-dim)]">
                   <Activity className="h-4 w-4" />
                   <span className="text-[12px] font-bold uppercase tracking-[0.15em]">
@@ -607,7 +615,7 @@ export function DisasterPHCommand() {
                         className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-wider transition ${
                           active
                             ? "bg-orange-500/15 text-orange-400"
-                            : "text-[var(--text-dim)] hover:bg-white/6 hover:text-white"
+                            : "text-[var(--text-dim)] hover:bg-overlay/6 hover:text-[var(--text-primary)]"
                         }`}
                         onClick={() =>
                           setActiveFilter(t as IncidentEventType | "all")
@@ -650,7 +658,7 @@ export function DisasterPHCommand() {
                         >
                           <Link
                             href={`/pulse/${encodeURIComponent(incident.id)}`}
-                            className={`group flex items-start gap-3 md:gap-4 border-b border-white/5 px-4 md:px-5 py-3.5 md:py-4 transition-all active:bg-white/[0.06] hover:bg-white/[0.04] border-l-3 ${sv.accent} ${
+                            className={`group flex items-start gap-3 md:gap-4 border-b border-overlay/5 px-4 md:px-5 py-3.5 md:py-4 transition-all active:bg-overlay/[0.06] hover:bg-overlay/[0.04] border-l-3 ${sv.accent} ${
                               incident.severity === "critical"
                                 ? "card-glow-critical"
                                 : ""
@@ -678,18 +686,20 @@ export function DisasterPHCommand() {
                                   {eventTypeLabel[incident.event_type]}
                                 </span>
                               </div>
-                              <p className="mt-1.5 text-[16px] font-semibold leading-snug text-white group-hover:text-orange-200 transition-colors">
+                              <p className="mt-1.5 text-[16px] font-semibold leading-snug text-[var(--text-primary)] group-hover:text-orange-500 transition-colors">
                                 {incident.title}
                               </p>
                               <div className="mt-1.5 flex items-center gap-3 text-[13px] text-[var(--text-muted)]">
                                 <span>{incident.region}</span>
-                                <span className="text-white/15">·</span>
+                                <span className="text-[var(--text-dim)] opacity-50">
+                                  ·
+                                </span>
                                 <span suppressHydrationWarning>
                                   {relativeTime(incident.updated_at)}
                                 </span>
                               </div>
                             </div>
-                            <ArrowUpRight className="mt-3 h-5 w-5 shrink-0 text-[var(--text-dim)] transition group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                            <ArrowUpRight className="mt-3 h-5 w-5 shrink-0 text-[var(--text-dim)] transition group-hover:text-[var(--text-primary)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                           </Link>
                         </motion.div>
                       );

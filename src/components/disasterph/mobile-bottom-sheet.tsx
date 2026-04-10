@@ -35,7 +35,7 @@ export function MobileBottomSheet({
           <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--text-dim)]">
             Incident Sheet
           </p>
-          <p className="mt-1 text-sm font-medium text-white">
+          <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">
             {incident.title}
           </p>
         </div>
@@ -59,16 +59,16 @@ export function MobileBottomSheet({
           open ? "translate-y-0" : "translate-y-[calc(100%-84px)]"
         }`}
       >
-        <div className="mx-auto mb-3 h-1.5 w-16 rounded-full bg-white/20" />
+        <div className="mx-auto mb-3 h-1.5 w-16 rounded-full bg-overlay/20" />
         <div className="grid h-[calc(100%-1.25rem)] grid-rows-[auto_minmax(0,1fr)] gap-3">
           <div className="flex items-center justify-between px-1">
             <div>
-              <h2 className="text-sm font-medium text-white">
+              <h2 className="text-sm font-medium text-[var(--text-primary)]">
                 Incident Detail
               </h2>
             </div>
             <button
-              className="rounded-full border border-white/10 px-3 py-1 text-xs text-[var(--text-muted)]"
+              className="rounded-full border border-overlay/10 px-3 py-1 text-xs text-[var(--text-muted)]"
               onClick={() => onOpenChange(false)}
               type="button"
             >

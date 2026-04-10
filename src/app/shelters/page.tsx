@@ -220,15 +220,15 @@ export default function SheltersPage() {
         {/* ══════════════════════════════════════════
             LEFT PANEL: Shelter List
         ══════════════════════════════════════════ */}
-        <aside className="flex flex-1 lg:flex-none w-full lg:max-w-sm flex-col border-r border-white/10 bg-[var(--bg-panel-strong)] overflow-y-auto">
+        <aside className="flex flex-1 lg:flex-none w-full lg:max-w-sm flex-col border-r border-overlay/10 bg-[var(--bg-panel-strong)] overflow-y-auto">
           {/* Title */}
-          <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
+          <div className="flex items-center justify-between border-b border-overlay/8 px-5 py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-500/30 bg-orange-500/10">
                 <Building2 className="h-[18px] w-[18px] text-orange-400" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white tracking-tight">
+                <h1 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
                   Sanctuary
                 </h1>
                 <p className="text-[11px] font-medium text-[var(--text-dim)] uppercase tracking-wider mt-0.5">
@@ -236,7 +236,7 @@ export default function SheltersPage() {
                 </p>
               </div>
             </div>
-            <span className="rounded-lg bg-white/6 px-2.5 py-1 text-[13px] font-semibold text-[var(--text-muted)]">
+            <span className="rounded-lg bg-overlay/6 px-2.5 py-1 text-[13px] font-semibold text-[var(--text-muted)]">
               {filtered.length}
             </span>
           </div>
@@ -249,7 +249,7 @@ export default function SheltersPage() {
               placeholder="Search shelters..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-[var(--bg-panel)] py-3 pl-10 pr-4 text-[14px] text-white placeholder-[var(--text-dim)] outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/15"
+              className="w-full rounded-xl border border-overlay/10 bg-[var(--bg-panel)] py-3 pl-10 pr-4 text-[14px] text-[var(--text-primary)] placeholder-[var(--text-dim)] outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/15"
             />
           </div>
 
@@ -264,7 +264,7 @@ export default function SheltersPage() {
                 className={`shrink-0 rounded-lg border px-3 py-2 md:py-1.5 text-[11px] font-semibold uppercase tracking-wider transition ${
                   statusFilter === f.value
                     ? "bg-orange-500/15 text-orange-400 border-orange-500/30"
-                    : "text-[var(--text-dim)] border-transparent hover:bg-white/6 hover:text-white"
+                    : "text-[var(--text-dim)] border-transparent hover:bg-overlay/6 hover:text-[var(--text-primary)]"
                 }`}
               >
                 {f.label}
@@ -316,7 +316,7 @@ export default function SheltersPage() {
               className="flex flex-1 flex-col overflow-hidden"
             >
               {/* ── Detail Header ── */}
-              <div className="border-b border-white/10 bg-[var(--bg-panel)] px-8 py-6">
+              <div className="border-b border-overlay/10 bg-[var(--bg-panel)] px-8 py-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
@@ -332,7 +332,7 @@ export default function SheltersPage() {
                         Evacuation Center
                       </span>
                     </div>
-                    <h2 className="mt-3 text-2xl font-bold text-white tracking-tight">
+                    <h2 className="mt-3 text-2xl font-bold text-[var(--text-primary)] tracking-tight">
                       {selected.name}
                     </h2>
                     <div className="mt-2 flex items-center gap-1.5 text-[14px] text-[var(--text-muted)]">
@@ -344,7 +344,7 @@ export default function SheltersPage() {
                   {/* Capacity widget */}
                   <div className="ml-8 flex flex-col items-end">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-white">
+                      <span className="text-3xl font-bold text-[var(--text-primary)]">
                         {selectedPct}
                       </span>
                       <span className="text-lg text-[var(--text-dim)]">%</span>
@@ -352,7 +352,7 @@ export default function SheltersPage() {
                     <p className="text-[12px] font-medium text-[var(--text-dim)] uppercase tracking-wider mt-0.5">
                       Capacity
                     </p>
-                    <div className="mt-2 h-2 w-36 overflow-hidden rounded-full bg-white/10">
+                    <div className="mt-2 h-2 w-36 overflow-hidden rounded-full bg-overlay/10">
                       <motion.div
                         className={`h-full rounded-full ${occupancyBarColor(selectedPct)}`}
                         initial={{ width: 0 }}
@@ -361,7 +361,7 @@ export default function SheltersPage() {
                       />
                     </div>
                     <p className="mt-1.5 text-[13px] text-[var(--text-muted)]">
-                      <span className="font-semibold text-white">
+                      <span className="font-semibold text-[var(--text-primary)]">
                         {selected.occupancy.toLocaleString()}
                       </span>
                       {" / "}
@@ -373,17 +373,17 @@ export default function SheltersPage() {
                 {/* ── Detail Grid ── */}
                 <div className="mt-6 grid grid-cols-3 gap-4">
                   {/* Operator */}
-                  <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                  <div className="rounded-xl border border-overlay/8 bg-overlay/[0.03] px-4 py-3">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
                       Managing Office
                     </p>
-                    <p className="mt-1.5 text-[15px] font-semibold text-white">
+                    <p className="mt-1.5 text-[15px] font-semibold text-[var(--text-primary)]">
                       {selected.operator}
                     </p>
                   </div>
 
                   {/* Hotline */}
-                  <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                  <div className="rounded-xl border border-overlay/8 bg-overlay/[0.03] px-4 py-3">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
                       Hotline
                     </p>
@@ -397,7 +397,7 @@ export default function SheltersPage() {
                   </div>
 
                   {/* Amenities */}
-                  <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                  <div className="rounded-xl border border-overlay/8 bg-overlay/[0.03] px-4 py-3">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
                       Services
                     </p>
@@ -407,7 +407,7 @@ export default function SheltersPage() {
                         return (
                           <span
                             key={amenity}
-                            className="flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium text-[var(--text-muted)]"
+                            className="flex items-center gap-1 rounded-md border border-overlay/10 bg-overlay/[0.04] px-2 py-0.5 text-[11px] font-medium text-[var(--text-muted)]"
                           >
                             {AIcon && <AIcon className="h-3 w-3" />}
                             {AMENITY_LABELS[amenity] ?? amenity}
@@ -420,7 +420,7 @@ export default function SheltersPage() {
               </div>
 
               {/* ── Tabs ── */}
-              <div className="border-b border-white/8 bg-[var(--bg-panel)]">
+              <div className="border-b border-overlay/8 bg-[var(--bg-panel)]">
                 <div className="flex gap-0 px-8">
                   {(
                     [
@@ -450,7 +450,7 @@ export default function SheltersPage() {
                         className={`relative flex items-center gap-2 px-5 py-3.5 text-[13px] font-semibold transition ${
                           active
                             ? "text-orange-400"
-                            : "text-[var(--text-dim)] hover:text-white"
+                            : "text-[var(--text-dim)] hover:text-[var(--text-primary)]"
                         }`}
                       >
                         <tab.icon className="h-4 w-4" />
@@ -484,8 +484,8 @@ export default function SheltersPage() {
                       transition={{ duration: 0.2 }}
                       className="p-8"
                     >
-                      <div className="rounded-xl border border-white/10 bg-[var(--bg-panel)] p-6">
-                        <h3 className="text-[16px] font-bold text-white">
+                      <div className="rounded-xl border border-overlay/10 bg-[var(--bg-panel)] p-6">
+                        <h3 className="text-[16px] font-bold text-[var(--text-primary)]">
                           Facility Overview
                         </h3>
                         <p className="mt-3 text-[14px] leading-relaxed text-[var(--text-muted)]">
@@ -503,7 +503,7 @@ export default function SheltersPage() {
                         </p>
 
                         {/* Occupancy breakdown visual */}
-                        <div className="mt-6 rounded-xl border border-white/8 bg-white/[0.02] p-5">
+                        <div className="mt-6 rounded-xl border border-overlay/8 bg-overlay/[0.02] p-5">
                           <div className="flex items-center justify-between">
                             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
                               Occupancy Breakdown
@@ -512,7 +512,7 @@ export default function SheltersPage() {
                           </div>
                           <div className="mt-4 grid grid-cols-3 gap-4">
                             <div className="text-center">
-                              <p className="text-2xl font-bold text-white">
+                              <p className="text-2xl font-bold text-[var(--text-primary)]">
                                 {selected.occupancy.toLocaleString()}
                               </p>
                               <p className="text-[11px] text-[var(--text-dim)] mt-1">
@@ -538,7 +538,7 @@ export default function SheltersPage() {
                               </p>
                             </div>
                           </div>
-                          <div className="mt-5 h-3 w-full overflow-hidden rounded-full bg-white/10">
+                          <div className="mt-5 h-3 w-full overflow-hidden rounded-full bg-overlay/10">
                             <motion.div
                               className={`h-full rounded-full ${occupancyBarColor(selectedPct)}`}
                               initial={{ width: 0 }}
@@ -582,12 +582,12 @@ export default function SheltersPage() {
                         </div>
                       </div>
 
-                      <div className="rounded-xl border border-white/10 bg-[var(--bg-panel)] p-6 opacity-50 pointer-events-none select-none">
+                      <div className="rounded-xl border border-overlay/10 bg-[var(--bg-panel)] p-6 opacity-50 pointer-events-none select-none">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-[16px] font-bold text-white">
+                          <h3 className="text-[16px] font-bold text-[var(--text-primary)]">
                             Guest Registry
                           </h3>
-                          <span className="flex items-center gap-1.5 rounded-lg bg-white/6 px-2.5 py-1 text-[12px] font-semibold text-[var(--text-dim)]">
+                          <span className="flex items-center gap-1.5 rounded-lg bg-overlay/6 px-2.5 py-1 text-[12px] font-semibold text-[var(--text-dim)]">
                             <Lock className="h-3 w-3" />
                             Admin Only
                           </span>
@@ -600,13 +600,13 @@ export default function SheltersPage() {
                             type="text"
                             placeholder="Search guest name..."
                             disabled
-                            className="w-full rounded-xl border border-white/10 bg-[var(--bg-base)] py-3 pl-10 pr-4 text-[14px] text-white/30 placeholder-[var(--text-dim)] outline-none cursor-not-allowed"
+                            className="w-full rounded-xl border border-overlay/10 bg-[var(--bg-base)] py-3 pl-10 pr-4 text-[14px] text-overlay/30 placeholder-[var(--text-dim)] outline-none cursor-not-allowed"
                           />
                         </div>
 
                         {/* Locked state */}
                         <div className="mt-8 flex flex-col items-center py-8 text-center">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.03]">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-overlay/8 bg-overlay/[0.03]">
                             <Lock className="h-7 w-7 text-[var(--text-dim)]" />
                           </div>
                           <p className="mt-4 text-[15px] font-medium text-[var(--text-muted)]">
@@ -650,8 +650,8 @@ export default function SheltersPage() {
                         </div>
                       </div>
 
-                      <div className="rounded-xl border border-white/10 bg-[var(--bg-panel)] p-6 opacity-50 pointer-events-none select-none">
-                        <h3 className="text-[16px] font-bold text-white">
+                      <div className="rounded-xl border border-overlay/10 bg-[var(--bg-panel)] p-6 opacity-50 pointer-events-none select-none">
+                        <h3 className="text-[16px] font-bold text-[var(--text-primary)]">
                           Notice Board
                         </h3>
                         <p className="mt-2 text-[13px] text-[var(--text-dim)]">
@@ -661,7 +661,7 @@ export default function SheltersPage() {
 
                         {/* Placeholder state */}
                         <div className="mt-8 flex flex-col items-center py-8 text-center">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.03]">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-overlay/8 bg-overlay/[0.03]">
                             <Lock className="h-7 w-7 text-[var(--text-dim)]" />
                           </div>
                           <p className="mt-4 text-[15px] font-medium text-[var(--text-muted)]">
@@ -700,16 +700,16 @@ export default function SheltersPage() {
                 className="fixed inset-y-0 right-0 z-50 w-full max-w-md flex-col overflow-y-auto bg-[var(--bg-base)] lg:hidden flex"
               >
                 {/* Mobile detail header */}
-                <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-white/10 bg-[var(--bg-panel)] px-4 py-3">
+                <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-overlay/10 bg-[var(--bg-panel)] px-4 py-3">
                   <button
                     type="button"
                     onClick={() => setMobileDetailOpen(false)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] text-[var(--text-primary)]"
                   >
                     <ChevronRight className="h-5 w-5 rotate-180" />
                   </button>
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-[15px] font-bold text-white truncate">
+                    <h2 className="text-[15px] font-bold text-[var(--text-primary)] truncate">
                       {selected.name}
                     </h2>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -729,15 +729,15 @@ export default function SheltersPage() {
                 </div>
 
                 {/* Capacity bar */}
-                <div className="px-4 py-4 border-b border-white/8 bg-[var(--bg-panel)]">
+                <div className="px-4 py-4 border-b border-overlay/8 bg-[var(--bg-panel)]">
                   <div className="flex items-center justify-between text-[13px] mb-2">
                     <span className="text-[var(--text-muted)]">
                       {selected.occupancy.toLocaleString()} /{" "}
                       {selected.capacity.toLocaleString()} evacuees
                     </span>
-                    <span className="font-bold text-white">{selectedPct}%</span>
+                    <span className="font-bold text-[var(--text-primary)]">{selectedPct}%</span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-overlay/10">
                     <motion.div
                       className={`h-full rounded-full ${occupancyBarColor(selectedPct)}`}
                       initial={{ width: 0 }}
@@ -748,7 +748,7 @@ export default function SheltersPage() {
                 </div>
 
                 {/* Info grid */}
-                <div className="px-4 py-3 border-b border-white/8 bg-[var(--bg-panel)] space-y-3">
+                <div className="px-4 py-3 border-b border-overlay/8 bg-[var(--bg-panel)] space-y-3">
                   <div className="flex items-start gap-2.5">
                     <MapPin className="h-4 w-4 shrink-0 text-[var(--text-dim)] mt-0.5" />
                     <span className="text-[13px] text-[var(--text-muted)]">
@@ -777,7 +777,7 @@ export default function SheltersPage() {
                         return (
                           <span
                             key={amenity}
-                            className="flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[11px] text-[var(--text-muted)]"
+                            className="flex items-center gap-1 rounded-md border border-overlay/10 bg-overlay/[0.04] px-2 py-1 text-[11px] text-[var(--text-muted)]"
                           >
                             {AIcon && <AIcon className="h-3 w-3" />}
                             {AMENITY_LABELS[amenity] ?? amenity}
@@ -789,7 +789,7 @@ export default function SheltersPage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="border-b border-white/8 bg-[var(--bg-panel)]">
+                <div className="border-b border-overlay/8 bg-[var(--bg-panel)]">
                   <div className="flex px-4">
                     {(
                       [
@@ -852,8 +852,8 @@ export default function SheltersPage() {
                         exit={{ opacity: 0 }}
                         className="p-4"
                       >
-                        <div className="rounded-xl border border-white/10 bg-[var(--bg-panel)] p-4">
-                          <h3 className="text-[15px] font-bold text-white">
+                        <div className="rounded-xl border border-overlay/10 bg-[var(--bg-panel)] p-4">
+                          <h3 className="text-[15px] font-bold text-[var(--text-primary)]">
                             Facility Overview
                           </h3>
                           <p className="mt-2 text-[13px] leading-relaxed text-[var(--text-muted)]">
@@ -892,7 +892,7 @@ export default function SheltersPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="rounded-xl border border-white/10 bg-[var(--bg-panel)] p-4 opacity-50 pointer-events-none">
+                        <div className="rounded-xl border border-overlay/10 bg-[var(--bg-panel)] p-4 opacity-50 pointer-events-none">
                           <div className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)]">
                             <Lock className="h-3 w-3" /> Admin Only
                           </div>
@@ -961,7 +961,7 @@ function ShelterListCard({
       className={`w-full text-left rounded-xl border p-4 transition-all ${
         isSelected
           ? "border-orange-500/40 bg-orange-500/8 shadow-[0_0_16px_rgba(255,140,66,0.08)]"
-          : "border-white/8 bg-[var(--bg-panel)] hover:border-white/15 hover:bg-[var(--bg-card-hover)]"
+          : "border-overlay/8 bg-[var(--bg-panel)] hover:border-overlay/15 hover:bg-[var(--bg-card-hover)]"
       }`}
     >
       {/* Status + capacity row */}
@@ -979,7 +979,7 @@ function ShelterListCard({
       </div>
 
       {/* Name + address */}
-      <h3 className="mt-2 text-[15px] font-bold text-white leading-snug">
+      <h3 className="mt-2 text-[15px] font-bold text-[var(--text-primary)] leading-snug">
         {shelter.name}
       </h3>
       <div className="mt-1.5 flex items-center gap-1.5 text-[12px] text-[var(--text-muted)]">
@@ -995,7 +995,7 @@ function ShelterListCard({
             {shelter.capacity.toLocaleString()}
           </span>
         </div>
-        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-overlay/10">
           <div
             className={`h-full rounded-full transition-all ${occupancyBarColor(pct)}`}
             style={{ width: `${Math.min(pct, 100)}%` }}
@@ -1011,7 +1011,7 @@ function ShelterListCard({
             return (
               <span
                 key={amenity}
-                className="flex items-center gap-1 rounded-md border border-white/8 bg-white/[0.03] px-2 py-0.5 text-[10px] text-[var(--text-dim)]"
+                className="flex items-center gap-1 rounded-md border border-overlay/8 bg-overlay/[0.03] px-2 py-0.5 text-[10px] text-[var(--text-dim)]"
                 title={AMENITY_LABELS[amenity] ?? amenity}
               >
                 {AIcon && <AIcon className="h-2.5 w-2.5" />}

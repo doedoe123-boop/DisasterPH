@@ -16,7 +16,7 @@ export function ArchiveSearchBar({ value, onChange }: ArchiveSearchBarProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search by event name or region…"
-        className="w-full rounded-xl border border-white/12 bg-[var(--bg-panel)] py-3 pl-12 pr-5 text-[14px] text-white placeholder-[var(--text-dim)] outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/15"
+        className="w-full rounded-xl border border-overlay/12 bg-[var(--bg-panel)] py-3 pl-12 pr-5 text-[14px] text-[var(--text-primary)] placeholder-[var(--text-dim)] outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/15"
       />
     </div>
   );

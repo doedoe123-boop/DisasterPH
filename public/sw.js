@@ -1,10 +1,18 @@
 /// <reference lib="webworker" />
 
-const SHELL_CACHE = "disasterph-shell-v2";
-const ASSET_CACHE = "disasterph-assets-v1";
-const API_CACHE = "disasterph-api-v1";
+const SHELL_CACHE = "disasterph-shell-v3";
+const ASSET_CACHE = "disasterph-assets-v2";
+const API_CACHE = "disasterph-api-v2";
 
-const SHELL_URLS = ["/", "/manifest.json"];
+const OFFLINE_URL = "/offline.html";
+const SHELL_URLS = [
+  "/",
+  "/pulse",
+  "/shelters",
+  "/manifest.json",
+  "/icon.svg",
+  OFFLINE_URL,
+];
 
 // Max age for cached API responses (10 minutes)
 const API_MAX_AGE_MS = 10 * 60 * 1000;
@@ -34,15 +42,9 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Navigation — network first, fallback to cached shell
+  // Navigation — network first, fallback to the last cached page or app shell.
   if (event.request.mode === "navigate") {
-    event.respondWith(
-      fetch(event.request).catch(() =>
-        caches
-          .match("/")
-          .then((c) => c || new Response("Offline", { status: 503 })),
-      ),
-    );
+    event.respondWith(networkFirstNavigation(event.request));
     return;
   }
 
@@ -58,6 +60,28 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 });
+
+async function networkFirstNavigation(request) {
+  const cache = await caches.open(SHELL_CACHE);
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return (
+      (await cache.match(request)) ||
+      (await cache.match("/")) ||
+      (await cache.match(OFFLINE_URL)) ||
+      new Response("DisasterPH is offline.", {
+        status: 503,
+        headers: { "Content-Type": "text/plain" },
+      })
+    );
+  }
+}
 
 function isStaticAsset(url) {
   return (
@@ -95,6 +119,7 @@ async function networkFirstAPI(request) {
       // Clone and store with a timestamp header
       const headers = new Headers(response.headers);
       headers.set("sw-cached-at", new Date().toISOString());
+      headers.set("x-disasterph-cache-state", "fresh");
       const body = await response.clone().arrayBuffer();
       const cachedResponse = new Response(body, {
         status: response.status,
@@ -117,12 +142,28 @@ async function networkFirstAPI(request) {
           // The app will label it as stale via its own cache freshness logic
         }
       }
-      return cached;
+      const headers = new Headers(cached.headers);
+      headers.set("x-disasterph-cache-state", "last-known");
+      return new Response(await cached.clone().arrayBuffer(), {
+        status: cached.status,
+        statusText: cached.statusText,
+        headers,
+      });
     }
-    return new Response(JSON.stringify({ error: "offline" }), {
+    return new Response(
+      JSON.stringify({
+        error: "offline",
+        message:
+          "No cached DisasterPH data is available yet. Open the app once while online to save last-known alerts.",
+      }),
+      {
       status: 503,
-      headers: { "Content-Type": "application/json" },
-    });
+        headers: {
+          "Content-Type": "application/json",
+          "x-disasterph-cache-state": "offline-empty",
+        },
+      },
+    );
   }
 }
 
@@ -143,8 +184,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
+      icon: "/icon.svg",
+      badge: "/icon.svg",
       tag: data.url || "disasterph-alert",
       data: { url: data.url },
       vibrate: [200, 100, 200],

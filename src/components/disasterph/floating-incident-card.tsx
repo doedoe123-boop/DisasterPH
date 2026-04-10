@@ -36,7 +36,7 @@ const severityBadge: Record<string, string> = {
   advisory: "text-cyan-200 border-cyan-300/20 bg-cyan-300/10",
   watch: "text-amber-200 border-amber-300/20 bg-amber-300/10",
   warning: "text-orange-200 border-orange-300/20 bg-orange-300/10",
-  critical: "text-white border-red-500 bg-red-600 font-bold shadow-[inset_0_4px_24px_rgba(239,68,68,0.15)]",
+  critical: "text-[var(--text-primary)] border-red-500 bg-red-600 font-bold shadow-[inset_0_4px_24px_rgba(239,68,68,0.15)]",
 };
 
 const severityAccent: Record<string, string> = {
@@ -124,10 +124,10 @@ export function FloatingIncidentCard({
   /* ── Compact card ── */
   if (!isExpanded) {
     return (
-      <div className="absolute bottom-4 left-4 z-20 hidden w-72 rounded-lg border border-white/10 bg-[rgba(6,14,22,0.96)] shadow-[0_4px_16px_rgba(0,0,0,0.4)] lg:block">
+      <div className="absolute bottom-4 left-4 z-20 hidden w-72 rounded-lg border border-overlay/10 bg-[var(--bg-panel)] shadow-[0_4px_16px_rgba(0,0,0,0.4)] lg:block">
         <div className="p-3">
           <div className="flex items-center gap-1.5">
-            <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+            <span className="rounded border border-overlay/10 bg-overlay/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
               {eventTypeLabel[incident.event_type]}
             </span>
             <span
@@ -139,7 +139,7 @@ export function FloatingIncidentCard({
               {incident.source}
             </span>
           </div>
-          <h3 className="mt-1.5 text-sm font-semibold leading-5 text-white">
+          <h3 className="mt-1.5 text-sm font-semibold leading-5 text-[var(--text-primary)]">
             {incident.title}
           </h3>
           <div className="mt-1 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
@@ -150,7 +150,7 @@ export function FloatingIncidentCard({
         </div>
 
         {/* Expand + quick actions */}
-        <div className="flex items-center gap-1 border-t border-white/8 px-2 py-1.5">
+        <div className="flex items-center gap-1 border-t border-overlay/8 px-2 py-1.5">
           <button
             className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] text-cyan-300/80 transition hover:bg-cyan-400/10 hover:text-cyan-200"
             onClick={() => setExpanded(true)}
@@ -159,11 +159,11 @@ export function FloatingIncidentCard({
             <Maximize2 className="h-3 w-3" />
             Expand
           </button>
-          <div className="mx-1 h-3 w-px bg-white/8" />
+          <div className="mx-1 h-3 w-px bg-overlay/8" />
           {quickActions.map((action) => (
             <button
               key={action.id}
-              className="flex flex-1 items-center justify-center gap-1 rounded-lg py-1 text-[10px] text-[var(--text-muted)] transition hover:bg-white/[0.06] hover:text-white"
+              className="flex flex-1 items-center justify-center gap-1 rounded-lg py-1 text-[10px] text-[var(--text-muted)] transition hover:bg-overlay/[0.06] hover:text-[var(--text-primary)]"
               onClick={() => handleAction(action)}
               title={action.label}
               type="button"
@@ -183,15 +183,15 @@ export function FloatingIncidentCard({
   /* ── Expanded card ── */
   return (
     <div
-      className={`absolute bottom-4 left-4 z-20 hidden w-[380px] max-h-[calc(100%-5rem)] rounded-lg border border-white/12 border-l-2 ${severityAccent[incident.severity]} bg-[rgba(6,14,22,0.97)] shadow-[0_4px_20px_rgba(0,0,0,0.45)] lg:flex lg:flex-col`}
+      className={`absolute bottom-4 left-4 z-20 hidden w-[380px] max-h-[calc(100%-5rem)] rounded-lg border border-overlay/12 border-l-2 ${severityAccent[incident.severity]} bg-[var(--bg-panel)] shadow-[0_4px_20px_rgba(0,0,0,0.45)] lg:flex lg:flex-col`}
     >
       {/* ── Header bar ── */}
-      <div className="flex items-center justify-between border-b border-white/8 px-3 py-2 shrink-0">
+      <div className="flex items-center justify-between border-b border-overlay/8 px-3 py-2 shrink-0">
         <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--text-dim)]">
           Incident Detail
         </span>
         <button
-          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-[var(--text-dim)] transition hover:bg-white/[0.06] hover:text-white"
+          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-[var(--text-dim)] transition hover:bg-overlay/[0.06] hover:text-[var(--text-primary)]"
           onClick={() => setExpanded(false)}
           type="button"
         >
@@ -205,7 +205,7 @@ export function FloatingIncidentCard({
         {/* ── Section: Situation ── */}
         <div className="p-3 pb-2">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+            <span className="rounded border border-overlay/10 bg-overlay/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
               {eventTypeLabel[incident.event_type]}
             </span>
             <span
@@ -223,7 +223,7 @@ export function FloatingIncidentCard({
             </span>
           </div>
 
-          <h3 className="mt-2 text-[15px] font-semibold leading-6 text-white">
+          <h3 className="mt-2 text-[15px] font-semibold leading-6 text-[var(--text-primary)]">
             {incident.title}
           </h3>
 
@@ -243,7 +243,7 @@ export function FloatingIncidentCard({
 
         {/* ── Section: Risk to My Places ── */}
         {affectedPlaces.length > 0 && (
-          <div className="border-t border-white/6 px-3 py-2">
+          <div className="border-t border-overlay/6 px-3 py-2">
             <p className="text-[9px] uppercase tracking-[0.22em] text-[var(--text-dim)] mb-1.5">
               Risk to My Places
             </p>
@@ -253,7 +253,7 @@ export function FloatingIncidentCard({
                 return (
                   <div
                     key={r.place.id}
-                    className="flex items-center gap-2 rounded-lg bg-white/[0.02] px-2 py-1.5"
+                    className="flex items-center gap-2 rounded-lg bg-overlay/[0.02] px-2 py-1.5"
                   >
                     <span
                       className={`h-2 w-2 shrink-0 rounded-full ${
@@ -266,7 +266,7 @@ export function FloatingIncidentCard({
                               : "bg-emerald-400"
                       }`}
                     />
-                    <span className="text-[12px] font-medium text-white truncate">
+                    <span className="text-[12px] font-medium text-[var(--text-primary)] truncate">
                       {r.place.label}
                     </span>
                     <span className="ml-auto text-[10px] text-[var(--text-dim)] shrink-0">
@@ -281,7 +281,7 @@ export function FloatingIncidentCard({
 
         {/* ── Section: What To Do ── */}
         {prepTips.length > 0 && (
-          <div className="border-t border-white/6 px-3 py-2">
+          <div className="border-t border-overlay/6 px-3 py-2">
             <p className="text-[9px] uppercase tracking-[0.22em] text-[var(--text-dim)] mb-1.5">
               What to Do
             </p>
@@ -298,7 +298,7 @@ export function FloatingIncidentCard({
                         : "·"}
                   </span>
                   <div className="min-w-0">
-                    <span className="text-[11px] font-medium leading-tight text-white">
+                    <span className="text-[11px] font-medium leading-tight text-[var(--text-primary)]">
                       {tip.title}
                     </span>
                     <p className="text-[10px] leading-tight text-[var(--text-dim)] mt-0.5">
@@ -313,7 +313,7 @@ export function FloatingIncidentCard({
 
         {/* ── Section: Help Actions ── */}
         {helpActions.length > 0 && (
-          <div className="border-t border-white/6 px-3 py-2">
+          <div className="border-t border-overlay/6 px-3 py-2">
             <p className="text-[9px] uppercase tracking-[0.22em] text-[var(--text-dim)] mb-1.5">
               Help & Safety
             </p>
@@ -321,7 +321,7 @@ export function FloatingIncidentCard({
               {helpActions.slice(0, 6).map((action) => (
                 <button
                   key={action.id}
-                  className="flex flex-col items-center gap-1 rounded-lg border border-white/8 bg-white/[0.02] px-2 py-2 text-center transition hover:bg-white/[0.05]"
+                  className="flex flex-col items-center gap-1 rounded-lg border border-overlay/8 bg-overlay/[0.02] px-2 py-2 text-center transition hover:bg-overlay/[0.05]"
                   onClick={() => handleAction(action)}
                   type="button"
                 >
@@ -333,7 +333,7 @@ export function FloatingIncidentCard({
                       />
                     );
                   })()}
-                  <span className="text-[10px] font-medium text-white leading-tight">
+                  <span className="text-[10px] font-medium text-[var(--text-primary)] leading-tight">
                     {action.label}
                   </span>
                 </button>
@@ -344,11 +344,11 @@ export function FloatingIncidentCard({
 
         {/* ── Section: Official Source ── */}
         {relatedAdvisory && (
-          <div className="border-t border-white/6 px-3 py-2">
+          <div className="border-t border-overlay/6 px-3 py-2">
             <p className="text-[9px] uppercase tracking-[0.22em] text-[var(--text-dim)] mb-1.5">
               Official Source
             </p>
-            <div className="rounded-lg border border-white/8 bg-white/[0.02] p-2">
+            <div className="rounded-lg border border-overlay/8 bg-overlay/[0.02] p-2">
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
                   {relatedAdvisory.source}
@@ -357,7 +357,7 @@ export function FloatingIncidentCard({
                   {formatShortTime(relatedAdvisory.issued_at)}
                 </span>
               </div>
-              <p className="mt-1 text-[12px] font-medium text-white leading-tight">
+              <p className="mt-1 text-[12px] font-medium text-[var(--text-primary)] leading-tight">
                 {relatedAdvisory.title}
               </p>
               {relatedAdvisory.summary && (
@@ -382,7 +382,7 @@ export function FloatingIncidentCard({
 
         {/* ── Section: Details (metadata) ── */}
         {Object.keys(incident.metadata).length > 0 && (
-          <div className="border-t border-white/6 px-3 py-3">
+          <div className="border-t border-overlay/6 px-3 py-3">
             <div className="flex flex-wrap gap-1.5 overflow-hidden">
               {Object.entries(incident.metadata).map(([key, value]) => (
                 <span
@@ -390,7 +390,7 @@ export function FloatingIncidentCard({
                   className={`max-w-full truncate rounded-full border px-2 py-1 text-[11px] ${
                     incident.severity === 'critical'
                       ? 'border-red-500/30 bg-red-500/20 text-red-200 font-medium'
-                      : 'border-white/8 bg-white/[0.03] text-[var(--text-muted)]'
+                      : 'border-overlay/8 bg-overlay/[0.03] text-[var(--text-muted)]'
                   }`}
                 >
                   {key}: {String(value)}

@@ -16,7 +16,7 @@ export function SourceStrip({ sources }: SourceStripProps) {
     <div
       className={`flex items-center gap-3 px-3 py-1 border-b text-[10px] ${
         allHealthy
-          ? "border-white/5 bg-transparent"
+          ? "border-overlay/5 bg-transparent"
           : "border-amber-400/10 bg-amber-950/20"
       }`}
     >

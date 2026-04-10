@@ -93,8 +93,8 @@ export function showAlertNotification(alert: AlertEvent): void {
 
   new Notification(alert.incidentTitle, {
     body: alert.message,
-    icon: "/icons/icon-192.png",
-    badge: "/icons/icon-192.png",
+    icon: "/icon.svg",
+    badge: "/icon.svg",
     tag,
     data: { incidentId: alert.incidentId, url },
     requireInteraction: alert.incidentSeverity === "critical",

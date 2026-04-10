@@ -33,12 +33,12 @@ function ContactCard({ contact }: { contact: EmergencyContact }) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02, y: -1 }}
       whileTap={{ scale: 0.98 }}
-      className="block rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 md:px-4 md:py-3.5 transition-colors hover:border-cyan-400/25 hover:bg-white/[0.06] active:bg-white/[0.06]"
+      className="block rounded-xl border border-overlay/10 bg-overlay/[0.03] px-3 py-3 md:px-4 md:py-3.5 transition-colors hover:border-cyan-400/25 hover:bg-overlay/[0.06] active:bg-overlay/[0.06]"
     >
       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-dim)]">
         National
       </p>
-      <p className="mt-1 md:mt-1.5 text-[14px] md:text-[16px] font-bold leading-snug text-white">
+      <p className="mt-1 md:mt-1.5 text-[14px] md:text-[16px] font-bold leading-snug text-[var(--text-primary)]">
         {contact.name}
       </p>
       <p className="mt-1 flex items-center gap-1.5 text-[13px] md:text-[15px] font-semibold text-cyan-400">
@@ -63,7 +63,7 @@ export function EmergencyContacts() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-white/8 bg-slate-900/98 backdrop-blur-md max-h-[60vh] overflow-y-auto"
+              className="overflow-hidden border-t border-overlay/8 bg-[var(--bg-panel)] backdrop-blur-md max-h-[60vh] overflow-y-auto"
             >
               <div className="px-4 py-4 md:px-5 md:py-5">
                 <div className="grid grid-cols-2 gap-2.5 md:gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -77,13 +77,13 @@ export function EmergencyContacts() {
         </AnimatePresence>
 
         <button
-          className="flex w-full items-center justify-between border-t border-white/10 bg-slate-900/95 backdrop-blur-sm px-4 py-3 md:px-5 text-left transition hover:bg-slate-800/95 active:bg-slate-800/95"
+          className="flex w-full items-center justify-between border-t border-overlay/10 bg-[var(--bg-panel)] backdrop-blur-sm px-4 py-3 md:px-5 text-left transition hover:bg-[var(--bg-panel-elevated)] active:bg-[var(--bg-panel-elevated)]"
           onClick={() => setOpen(!open)}
           type="button"
         >
           <div className="flex items-center gap-2.5">
             <Phone className="h-[18px] w-[18px] text-amber-400" />
-            <span className="text-[12px] md:text-[13px] font-bold uppercase tracking-[0.18em] text-white">
+            <span className="text-[12px] md:text-[13px] font-bold uppercase tracking-[0.18em] text-[var(--text-primary)]">
               Emergency Hotlines
             </span>
           </div>

@@ -562,7 +562,7 @@ export default function MapLibreMapComponent({
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
       {!mapReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#061420]">
+        <div className="absolute inset-0 flex items-center justify-center bg-background">
           <div className="text-center">
             <div className="loading-shimmer mx-auto h-3 w-24 rounded-full" />
             <p className="mt-3 text-xs text-[var(--text-dim)]">Loading map…</p>

@@ -12,7 +12,7 @@ import type { CommunityReport, Incident } from "@/types/incident";
 const MapboxMap = dynamic(() => import("./mapbox-map"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-[#061420]">
+    <div className="flex h-full w-full items-center justify-center bg-background">
       <div className="text-center">
         <div className="loading-shimmer mx-auto h-3 w-24 rounded-full" />
         <p className="mt-3 text-xs text-[var(--text-dim)]">
@@ -52,7 +52,7 @@ export function CommandMap({
   const sidebarWidth = focusMode ? 0 : sidebarExpanded ? 320 : 48;
 
   return (
-    <div className="relative h-full overflow-hidden bg-[#040d16]">
+    <div className="relative h-full overflow-hidden bg-background">
       <MapboxMap
         incidents={incidents}
         communityReports={communityReports}
@@ -64,10 +64,29 @@ export function CommandMap({
       />
 
       {/* Map controls */}
+      <div className="absolute right-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-20 flex flex-col gap-1.5 lg:hidden">
+        <button
+          className={`flex h-10 w-10 items-center justify-center rounded-xl border bg-[var(--bg-panel)] backdrop-blur transition active:scale-95 ${
+            focusMode
+              ? "border-cyan-400/30 text-cyan-300"
+              : "border-overlay/10 text-[var(--text-dim)]"
+          }`}
+          onClick={onToggleFocus}
+          title={focusMode ? "Exit full map" : "Open full map"}
+          type="button"
+        >
+          {focusMode ? (
+            <Minimize2 className="h-4 w-4" />
+          ) : (
+            <Maximize2 className="h-4 w-4" />
+          )}
+        </button>
+      </div>
+
       <div className="absolute right-3 top-3 z-20 hidden flex-col gap-1.5 lg:flex">
         {!focusMode && (
           <button
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-[rgba(6,14,22,0.95)] text-[var(--text-dim)] transition hover:border-white/20 hover:text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-overlay/10 bg-[var(--bg-panel)] text-[var(--text-dim)] transition hover:border-overlay/20 hover:text-[var(--text-primary)]"
             onClick={onToggleSidebar}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
             type="button"
@@ -80,10 +99,10 @@ export function CommandMap({
           </button>
         )}
         <button
-          className={`flex h-8 w-8 items-center justify-center rounded-lg border bg-[rgba(6,14,22,0.95)] transition hover:border-white/20 hover:text-white ${
+          className={`flex h-8 w-8 items-center justify-center rounded-lg border bg-[var(--bg-panel)] transition hover:border-overlay/20 hover:text-[var(--text-primary)] ${
             focusMode
               ? "border-cyan-400/30 text-cyan-300"
-              : "border-white/10 text-[var(--text-dim)]"
+              : "border-overlay/10 text-[var(--text-dim)]"
           }`}
           onClick={onToggleFocus}
           title={focusMode ? "Exit focus mode (Esc)" : "Focus mode (F)"}

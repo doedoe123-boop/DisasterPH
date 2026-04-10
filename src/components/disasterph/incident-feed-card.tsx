@@ -32,8 +32,8 @@ export function IncidentFeedCard({
           ? "border-l-cyan-400/70 bg-cyan-400/8"
           : hovered
             ? "border-l-cyan-400/30 bg-cyan-400/[0.04]"
-            : `${severityVisual.accent} hover:bg-white/[0.04]`
-      } ${isCritical ? "p-4 border-b border-white/[0.06]" : "px-3.5 py-3 border-b border-white/[0.04]"}`}
+            : `${severityVisual.accent} hover:bg-overlay/[0.04]`
+      } ${isCritical ? "p-4 border-b border-overlay/[0.06]" : "px-3.5 py-3 border-b border-overlay/[0.04]"}`}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -62,7 +62,7 @@ export function IncidentFeedCard({
         </span>
       </div>
       <p
-        className={`mt-2 truncate font-semibold leading-relaxed text-white ${isCritical ? "text-[15px]" : "text-[14px]"}`}
+        className={`mt-2 truncate font-semibold leading-relaxed text-[var(--text-primary)] ${isCritical ? "text-[15px]" : "text-[14px]"}`}
       >
         {incident.title}
       </p>

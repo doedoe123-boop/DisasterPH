@@ -54,11 +54,11 @@ function EarthquakeStats({ metadata }: { metadata: Incident["metadata"] }) {
         </div>
       )}
       {depth != null && (
-        <div className="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1.5">
+        <div className="rounded-lg border border-overlay/8 bg-overlay/[0.03] px-2.5 py-1.5">
           <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--text-dim)]">
             Depth
           </p>
-          <p className="text-[18px] font-bold leading-6 tabular-nums text-white">
+          <p className="text-[18px] font-bold leading-6 tabular-nums text-[var(--text-primary)]">
             {Number(depth).toFixed(0)}
             <span className="ml-0.5 text-[11px] font-normal text-[var(--text-dim)]">
               km
@@ -67,21 +67,21 @@ function EarthquakeStats({ metadata }: { metadata: Incident["metadata"] }) {
         </div>
       )}
       {mmi != null && (
-        <div className="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1.5">
+        <div className="rounded-lg border border-overlay/8 bg-overlay/[0.03] px-2.5 py-1.5">
           <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--text-dim)]">
             Intensity (MMI)
           </p>
-          <p className="text-[14px] font-semibold leading-5 text-white">
+          <p className="text-[14px] font-semibold leading-5 text-[var(--text-primary)]">
             {mmiToRoman(Number(mmi))}
           </p>
         </div>
       )}
       {felt != null && (
-        <div className="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1.5">
+        <div className="rounded-lg border border-overlay/8 bg-overlay/[0.03] px-2.5 py-1.5">
           <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--text-dim)]">
             Felt reports
           </p>
-          <p className="text-[14px] font-semibold leading-5 text-white">
+          <p className="text-[14px] font-semibold leading-5 text-[var(--text-primary)]">
             {felt}
           </p>
         </div>
@@ -152,11 +152,11 @@ function TyphoonStats({ metadata }: { metadata: Incident["metadata"] }) {
         </div>
       )}
       {windSpeed != null && (
-        <div className="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1.5">
+        <div className="rounded-lg border border-overlay/8 bg-overlay/[0.03] px-2.5 py-1.5">
           <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--text-dim)]">
             Wind Speed
           </p>
-          <p className="text-[14px] font-semibold leading-5 text-white">
+          <p className="text-[14px] font-semibold leading-5 text-[var(--text-primary)]">
             {windSpeed}
             <span className="ml-0.5 text-[11px] font-normal text-[var(--text-dim)]">
               kph
@@ -165,11 +165,11 @@ function TyphoonStats({ metadata }: { metadata: Incident["metadata"] }) {
         </div>
       )}
       {movement && (
-        <div className="col-span-2 rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1.5">
+        <div className="col-span-2 rounded-lg border border-overlay/8 bg-overlay/[0.03] px-2.5 py-1.5">
           <p className="text-[9px] uppercase tracking-[0.2em] text-[var(--text-dim)]">
             Movement
           </p>
-          <p className="text-[12px] leading-4 text-white">{movement}</p>
+          <p className="text-[12px] leading-4 text-[var(--text-primary)]">{movement}</p>
         </div>
       )}
       {trackCount > 1 && (
@@ -214,10 +214,10 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
 
   return (
     <section
-      className={`shrink-0 rounded-lg border border-white/10 border-l-2 bg-[var(--bg-panel-strong)] p-3 ${severityVisual.accent}`}
+      className={`shrink-0 rounded-lg border border-overlay/10 border-l-2 bg-[var(--bg-panel-strong)] p-3 ${severityVisual.accent}`}
     >
       <div className="flex items-center gap-1.5">
-        <span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+        <span className="rounded border border-overlay/10 bg-overlay/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
           {eventTypeLabel[incident.event_type]}
         </span>
         <span
@@ -230,7 +230,7 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
         </span>
       </div>
 
-      <h3 className="mt-2 text-[15px] font-semibold leading-6 text-white">
+      <h3 className="mt-2 text-[15px] font-semibold leading-6 text-[var(--text-primary)]">
         {incident.title}
       </h3>
 
@@ -254,7 +254,7 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
         <TyphoonStats metadata={incident.metadata} />
       )}
 
-      <div className="mt-2.5 border-t border-white/6 pt-3">
+      <div className="mt-2.5 border-t border-overlay/6 pt-3">
         <p className="text-[12px] leading-[1.6] text-[var(--text-muted)]">
           {incident.description}
         </p>
@@ -266,7 +266,7 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
                 className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
                   incident.severity === "critical"
                     ? "border-red-500/30 bg-red-500/20 text-red-200"
-                    : "border-white/8 bg-white/[0.03] text-[var(--text-muted)]"
+                    : "border-overlay/8 bg-overlay/[0.03] text-[var(--text-muted)]"
                 }`}
               >
                 {key}: {String(value)}
