@@ -169,7 +169,7 @@ export function DisasterPHDashboard() {
   if (isLoading && incidents.length === 0) {
     return (
       <main className="flex h-screen items-center justify-center bg-[var(--bg-base)] text-[var(--text-primary)]">
-        <div className="rounded-lg border border-white/10 bg-[var(--bg-panel)] p-6 text-center">
+        <div className="rounded-lg border border-overlay/10 bg-[var(--bg-panel)] p-6 text-center">
           <div className="loading-shimmer mx-auto h-3 w-28 rounded-full" />
           <div className="loading-shimmer mt-3 h-6 w-36 rounded-xl mx-auto" />
           <p className="mt-4 text-xs text-[var(--text-dim)]">
@@ -193,14 +193,14 @@ export function DisasterPHDashboard() {
   return (
     <main className="h-screen overflow-hidden bg-[var(--bg-base)] text-[var(--text-primary)]">
       <div
-        className={`flex h-full flex-col bg-[rgba(6,14,22,0.95)] transition-all duration-300 ${
+        className={`flex h-full flex-col bg-[var(--bg-panel)] transition-all duration-300 ${
           focusMode ? "gap-0" : "gap-0"
         }`}
       >
         <div
           className={`transition-all duration-300 overflow-hidden ${focusMode ? "h-0 opacity-0" : "opacity-100"}`}
         >
-          <div className="rounded-lg border border-white/8 bg-[var(--bg-panel)] overflow-hidden">
+          <div className="rounded-lg border border-overlay/8 bg-[var(--bg-panel)] overflow-hidden">
             <ThreatHeadlineBar
               threat={threat}
               onClickIncident={(id) => {
@@ -256,7 +256,7 @@ export function DisasterPHDashboard() {
         <div className={`grid min-h-0 flex-1 gap-2 ${gridCols}`}>
           <section
             className={`relative min-h-0 overflow-hidden ${
-              focusMode ? "rounded-none" : "rounded-lg border border-white/8"
+              focusMode ? "rounded-none" : "rounded-lg border border-overlay/8"
             }`}
           >
             <CommandMap
@@ -277,7 +277,7 @@ export function DisasterPHDashboard() {
 
             {isBooting && (
               <div className="absolute inset-0 flex items-center justify-center bg-[rgba(3,8,14,0.7)]">
-                <div className="rounded-lg border border-white/10 bg-[var(--bg-panel)] p-4">
+                <div className="rounded-lg border border-overlay/10 bg-[var(--bg-panel)] p-4">
                   <div className="loading-shimmer mx-auto h-3 w-24 rounded-full" />
                   <div className="loading-shimmer mt-3 h-6 w-32 rounded-lg" />
                 </div>
@@ -400,7 +400,7 @@ export function DisasterPHDashboard() {
               {/* ── Priority Feed (always visible, collapsible) ── */}
               <div className="shrink-0">
                 <button
-                  className="flex w-full items-center justify-between rounded-lg border border-white/8 bg-[var(--bg-panel)] px-3 py-2 text-left"
+                  className="flex w-full items-center justify-between rounded-lg border border-overlay/8 bg-[var(--bg-panel)] px-3 py-2 text-left"
                   onClick={() => setFeedOpen(!feedOpen)}
                   type="button"
                 >
@@ -417,7 +417,7 @@ export function DisasterPHDashboard() {
                   </div>
                 </button>
                 {feedOpen && (
-                  <div className="mt-1 max-h-60 overflow-y-auto rounded-lg border border-white/8 bg-[var(--bg-panel)]">
+                  <div className="mt-1 max-h-60 overflow-y-auto rounded-lg border border-overlay/8 bg-[var(--bg-panel)]">
                     <AlertFeed
                       incidents={incidents}
                       places={places}
@@ -439,25 +439,25 @@ export function DisasterPHDashboard() {
               </div>
 
               {/* Compact system status */}
-              <div className="mt-auto flex shrink-0 items-center gap-2 rounded-lg border border-white/8 bg-[var(--bg-panel)] px-2.5 py-1.5 text-[10px] text-[var(--text-dim)]">
+              <div className="mt-auto flex shrink-0 items-center gap-2 rounded-lg border border-overlay/8 bg-[var(--bg-panel)] px-2.5 py-1.5 text-[10px] text-[var(--text-dim)]">
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${
                     hasSourceProblems ? "bg-amber-400" : "bg-emerald-400"
                   }`}
                 />
                 <span>{stats.sourcesOnline} sources</span>
-                <span className="text-white/10">·</span>
+                <span className="text-overlay/10">·</span>
                 <span>{stats.activeAlerts} active</span>
-                <span className="text-white/10">·</span>
+                <span className="text-overlay/10">·</span>
                 <span>{stats.regionsTracked} regions</span>
               </div>
             </aside>
           )}
 
           {effectiveSidebar === "collapsed" && (
-            <aside className="hidden flex-col items-center gap-3 rounded-lg border border-white/8 bg-[var(--bg-panel)] py-2 lg:flex">
+            <aside className="hidden flex-col items-center gap-3 rounded-lg border border-overlay/8 bg-[var(--bg-panel)] py-2 lg:flex">
               <button
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-dim)] transition hover:bg-white/5 hover:text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-dim)] transition hover:bg-overlay/5 hover:text-[var(--text-primary)]"
                 onClick={() => setSidebarExpanded(true)}
                 title="Expand sidebar"
                 type="button"
@@ -465,7 +465,7 @@ export function DisasterPHDashboard() {
                 <ChevronsLeft className="h-3.5 w-3.5" />
               </button>
 
-              <div className="mx-auto h-px w-6 bg-white/8" />
+              <div className="mx-auto h-px w-6 bg-overlay/8" />
 
               <div className="flex flex-col items-center gap-2">
                 {incidents.slice(0, 10).map((incident) => (

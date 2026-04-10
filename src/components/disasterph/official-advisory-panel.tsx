@@ -42,9 +42,9 @@ export function OfficialAdvisoryPanel({
   }
 
   return (
-    <section className="rounded-lg border border-white/8 bg-[var(--bg-panel)]">
+    <section className="rounded-lg border border-overlay/8 bg-[var(--bg-panel)]">
       <button
-        className="flex w-full items-center justify-between border-b border-white/8 px-3 py-2 text-left"
+        className="flex w-full items-center justify-between border-b border-overlay/8 px-3 py-2 text-left"
         onClick={() => setExpanded(!expanded)}
         type="button"
       >
@@ -65,7 +65,7 @@ export function OfficialAdvisoryPanel({
         {visible.map((advisory) => (
           <div
             key={advisory.id}
-            className={`rounded-lg border-l-2 p-2.5 transition hover:bg-white/[0.03] ${severityBorder[advisory.severity]}`}
+            className={`rounded-lg border-l-2 p-2.5 transition hover:bg-overlay/[0.03] ${severityBorder[advisory.severity]}`}
           >
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-dim)]">
@@ -78,7 +78,7 @@ export function OfficialAdvisoryPanel({
                 {formatShortTime(advisory.issued_at)}
               </span>
             </div>
-            <p className="mt-1 text-[13px] font-medium leading-5 text-white">
+            <p className="mt-1 text-[13px] font-medium leading-5 text-[var(--text-primary)]">
               {advisory.title}
             </p>
             <p className="mt-1 text-[12px] leading-[1.5] text-[var(--text-muted)]">
@@ -90,7 +90,7 @@ export function OfficialAdvisoryPanel({
 
       {!expanded && remaining > 0 && (
         <button
-          className="w-full border-t border-white/8 py-2 text-center text-[11px] text-[var(--text-muted)] transition hover:text-white"
+          className="w-full border-t border-overlay/8 py-2 text-center text-[11px] text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
           onClick={() => setExpanded(true)}
           type="button"
         >

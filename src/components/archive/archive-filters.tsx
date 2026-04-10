@@ -29,7 +29,7 @@ export function ArchiveFilters({
             className={`shrink-0 text-[10px] font-mono uppercase tracking-wider px-3 py-1.5 rounded-full border transition-all ${
               hazard === f.value
                 ? "bg-orange-500/15 text-orange-400 border-orange-500/30"
-                : "border-white/10 text-[var(--text-dim)] hover:text-white hover:border-white/20"
+                : "border-overlay/10 text-[var(--text-dim)] hover:text-[var(--text-primary)] hover:border-overlay/20"
             }`}
           >
             {f.label}
@@ -48,7 +48,7 @@ export function ArchiveFilters({
             className={`shrink-0 text-[10px] font-mono px-2.5 py-1 rounded border transition-all ${
               year === y
                 ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-400"
-                : "border-white/8 text-[var(--text-dim)] hover:text-white hover:border-white/15"
+                : "border-overlay/8 text-[var(--text-dim)] hover:text-[var(--text-primary)] hover:border-overlay/15"
             }`}
           >
             {y === "all" ? "All Years" : y}

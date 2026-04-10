@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, Tv, Radio, Landmark } from "lucide-react";
+import { Shield, Tv, Radio, Landmark, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 
 const NAV_ITEMS = [
   { label: "Live", sub: "Live Monitoring", href: "/", icon: Tv },
@@ -14,18 +15,19 @@ const NAV_ITEMS = [
 
 export function AppHeader() {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
 
   return (
     <>
       {/* ── Desktop Header ── */}
-      <header className="hidden md:flex items-center justify-between border-b border-white/10 bg-[var(--bg-base)] px-5 py-1.5">
+      <header className="hidden md:flex items-center justify-between border-b border-overlay/10 bg-[var(--bg-base)] px-5 py-1.5">
         {/* Left: Logo */}
         <Link href="/" className="flex items-center gap-3 group">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-orange-500/40 bg-orange-500/15 shadow-[0_0_12px_rgba(255,140,66,0.15)] transition group-hover:shadow-[0_0_18px_rgba(255,140,66,0.25)]">
             <Shield className="h-[18px] w-[18px] text-orange-400" />
           </div>
           <div className="leading-none">
-            <span className="text-[15px] font-extrabold tracking-tight text-white uppercase">
+            <span className="text-[15px] font-extrabold tracking-tight text-[var(--text-primary)] uppercase">
               Disaster<span className="text-orange-400"> PH</span>
             </span>
             <p className="text-[10px] font-medium tracking-[0.18em] text-[var(--text-dim)] uppercase mt-0.5">
@@ -50,7 +52,7 @@ export function AppHeader() {
                 className={`relative flex items-center gap-2.5 rounded-lg px-5 py-2.5 text-sm transition-all duration-200 ${
                   active
                     ? "bg-orange-500/12 text-orange-300"
-                    : "text-[var(--text-muted)] hover:bg-white/6 hover:text-white"
+                    : "text-[var(--text-muted)] hover:bg-overlay/6 hover:text-[var(--text-primary)]"
                 }`}
               >
                 {active && (
@@ -82,6 +84,18 @@ export function AppHeader() {
 
         {/* Right: LIVE indicator */}
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setTheme(theme === "day" ? "night" : "day")}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-overlay/10 bg-overlay/[0.04] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
+            title={`Switch to ${theme === "day" ? "night" : "day"} mode`}
+          >
+            {theme === "day" ? (
+              <Moon className="h-[18px] w-[18px]" />
+            ) : (
+              <Sun className="h-[18px] w-[18px]" />
+            )}
+          </button>
           <div className="flex items-center gap-2.5 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-4 py-1.5 shadow-[0_0_12px_rgba(57,217,138,0.08)]">
             <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
@@ -95,12 +109,12 @@ export function AppHeader() {
       </header>
 
       {/* ── Mobile Header (compact) ── */}
-      <header className="flex md:hidden items-center justify-between border-b border-white/10 bg-[var(--bg-base)] px-4 py-2.5">
+      <header className="flex md:hidden items-center justify-between border-b border-overlay/10 bg-[var(--bg-base)] px-4 py-2.5">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-orange-500/40 bg-orange-500/15">
             <Shield className="h-4 w-4 text-orange-400" />
           </div>
-          <span className="text-[14px] font-extrabold tracking-tight text-white uppercase">
+          <span className="text-[14px] font-extrabold tracking-tight text-[var(--text-primary)] uppercase">
             Disaster<span className="text-orange-400"> PH</span>
           </span>
         </Link>
@@ -113,10 +127,22 @@ export function AppHeader() {
             Live
           </span>
         </div>
+        <button
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
+          onClick={() => setTheme(theme === "day" ? "night" : "day")}
+          title={`Switch to ${theme === "day" ? "night" : "day"} mode`}
+          type="button"
+        >
+          {theme === "day" ? (
+            <Moon className="h-4 w-4" />
+          ) : (
+            <Sun className="h-4 w-4" />
+          )}
+        </button>
       </header>
 
       {/* ── Mobile Bottom Tab Bar ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-[998] flex md:hidden border-t border-white/10 bg-slate-900/95 backdrop-blur-md safe-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 z-[998] flex md:hidden border-t border-overlay/10 bg-[var(--bg-panel)] backdrop-blur-md safe-bottom">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active =

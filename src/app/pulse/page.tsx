@@ -163,7 +163,7 @@ export default function PulseFeedPage() {
               <Activity className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+              <h1 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] tracking-tight">
                 Pulse Feed
               </h1>
               <p className="text-[12px] md:text-[13px] text-[var(--text-dim)] mt-0.5 hidden sm:block">
@@ -189,7 +189,7 @@ export default function PulseFeedPage() {
             placeholder="Search events..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-white/12 bg-[var(--bg-panel)] py-3 md:py-3 pl-12 pr-5 text-[14px] md:text-[15px] text-white placeholder-[var(--text-dim)] outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/15 shadow-[var(--shadow-card)]"
+            className="w-full rounded-xl border border-overlay/12 bg-[var(--bg-panel)] py-3 md:py-3 pl-12 pr-5 text-[14px] md:text-[15px] text-[var(--text-primary)] placeholder-[var(--text-dim)] outline-none transition focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/15 shadow-[var(--shadow-card)]"
           />
         </motion.div>
 
@@ -211,7 +211,7 @@ export default function PulseFeedPage() {
               className={`shrink-0 rounded-full px-3 md:px-3.5 py-2 md:py-1.5 text-[12px] font-semibold uppercase tracking-wider transition border ${
                 typeFilter === f.value
                   ? "bg-orange-500/15 text-orange-400 border-orange-500/30"
-                  : "text-[var(--text-dim)] border-transparent hover:bg-white/6 hover:text-white"
+                  : "text-[var(--text-dim)] border-transparent hover:bg-overlay/6 hover:text-[var(--text-primary)]"
               }`}
             >
               {f.label}
@@ -219,7 +219,7 @@ export default function PulseFeedPage() {
           ))}
 
           {/* Divider */}
-          <div className="mx-0.5 md:mx-1 h-5 w-px shrink-0 bg-white/12" />
+          <div className="mx-0.5 md:mx-1 h-5 w-px shrink-0 bg-overlay/12" />
 
           {/* Severity filters */}
           {SEVERITY_FILTERS.map((f) => (
@@ -234,7 +234,7 @@ export default function PulseFeedPage() {
                     : f.value === "warning"
                       ? "bg-orange-500/15 text-orange-400 border-orange-500/30"
                       : "bg-orange-500/15 text-orange-400 border-orange-500/30"
-                  : "text-[var(--text-dim)] border-transparent hover:bg-white/6 hover:text-white"
+                  : "text-[var(--text-dim)] border-transparent hover:bg-overlay/6 hover:text-[var(--text-primary)]"
               }`}
             >
               {f.label}
@@ -294,12 +294,12 @@ function EventCard({ incident }: { incident: Incident }) {
     <motion.div variants={cardVariants} whileTap={{ scale: 0.98 }}>
       <Link
         href={`/pulse/${encodeURIComponent(incident.id)}`}
-        className={`group block rounded-xl border bg-[var(--bg-panel)] p-4 md:p-5 transition-all duration-200 border-l-3 ${sv.accent} ${glowClass} active:bg-white/[0.06] hover:bg-[var(--bg-card-hover)] hover:border-white/20 hover:shadow-[var(--shadow-elevated)] ${
+        className={`group block rounded-xl border bg-[var(--bg-panel)] p-4 md:p-5 transition-all duration-200 border-l-3 ${sv.accent} ${glowClass} active:bg-overlay/[0.06] hover:bg-[var(--bg-card-hover)] hover:border-overlay/20 hover:shadow-[var(--shadow-elevated)] ${
           incident.severity === "critical"
             ? "border-red-500/25"
             : incident.severity === "warning"
               ? "border-orange-500/20"
-              : "border-white/10"
+              : "border-overlay/10"
         }`}
       >
         {/* Top row: icon + badges */}
@@ -330,7 +330,7 @@ function EventCard({ incident }: { incident: Incident }) {
             </div>
 
             {/* Title */}
-            <h3 className="mt-2 text-[16px] font-bold leading-snug text-white transition group-hover:text-orange-200">
+            <h3 className="mt-2 text-[16px] font-bold leading-snug text-[var(--text-primary)] transition group-hover:text-orange-200">
               {incident.title}
             </h3>
 
@@ -357,7 +357,7 @@ function EventCard({ incident }: { incident: Incident }) {
             {pills.map((pill) => (
               <span
                 key={pill}
-                className="rounded-md border border-white/12 bg-white/[0.05] px-2.5 py-1 font-mono text-[11px] font-medium text-[var(--text-muted)]"
+                className="rounded-md border border-overlay/12 bg-overlay/[0.05] px-2.5 py-1 font-mono text-[11px] font-medium text-[var(--text-muted)]"
               >
                 {pill}
               </span>

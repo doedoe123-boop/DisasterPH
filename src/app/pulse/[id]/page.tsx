@@ -7,14 +7,7 @@ import {
   ArrowLeft,
   MapPin,
   Clock,
-  CircleCheckBig,
   ExternalLink,
-  Waves,
-  Wind,
-  Droplets,
-  Mountain,
-  TriangleAlert,
-  AlertTriangle,
   Share2,
   Copy,
   Phone,
@@ -26,6 +19,7 @@ import { severityLabel, visualFromSeverity } from "@/lib/severity";
 import { getPrepTips } from "@/lib/prep-guidance";
 import type { Incident } from "@/types/incident";
 import { AppHeader } from "@/components/disasterph/header";
+import { PrepGuidance } from "@/components/disasterph/prep-guidance";
 
 /** Map source to display label */
 function sourceLabel(incident: Incident): string {
@@ -228,13 +222,15 @@ export default function PulseDetailPage() {
         <AppHeader />
         <main className="flex flex-1 items-center justify-center">
           <div className="text-center">
-            <h1 className="text-xl font-bold text-white">Event Not Found</h1>
+            <h1 className="text-xl font-bold text-[var(--text-primary)]">
+              Event Not Found
+            </h1>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
               This incident may have expired or is no longer active.
             </p>
             <Link
               href="/pulse"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-[var(--bg-panel)] px-4 py-2 text-sm text-white transition hover:bg-white/[0.06]"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-overlay/10 bg-[var(--bg-panel)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:bg-overlay/[0.06]"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Pulse Feed
@@ -259,7 +255,7 @@ export default function PulseDetailPage() {
           <div className="px-4 pt-4 pb-2 sm:px-6 lg:px-8">
             <Link
               href="/pulse"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-[var(--bg-panel)] px-3 py-1.5 text-sm text-white transition hover:bg-white/[0.06]"
+              className="inline-flex items-center gap-2 rounded-lg border border-overlay/10 bg-[var(--bg-panel)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:bg-overlay/[0.06]"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
@@ -293,7 +289,7 @@ export default function PulseDetailPage() {
               </div>
 
               {/* Title */}
-              <h1 className="mt-3 text-2xl font-bold leading-tight text-white sm:text-3xl">
+              <h1 className="mt-3 text-2xl font-bold leading-tight text-[var(--text-primary)] sm:text-3xl">
                 {incident.title}
               </h1>
 
@@ -330,7 +326,7 @@ export default function PulseDetailPage() {
               {/* Left column */}
               <div className="space-y-6">
                 {/* Data confidence bar */}
-                <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-5">
+                <div className="rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-5">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)]">
                       Data Confidence
@@ -339,7 +335,7 @@ export default function PulseDetailPage() {
                       {confidence.pct}% — {confidence.label}
                     </span>
                   </div>
-                  <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-white/10">
+                  <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-overlay/10">
                     <motion.div
                       className="h-full rounded-full bg-orange-400"
                       initial={{ width: 0 }}
@@ -354,7 +350,7 @@ export default function PulseDetailPage() {
                 </div>
 
                 {/* Description box */}
-                <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-5">
+                <div className="rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-5">
                   <p className="text-sm leading-relaxed text-[var(--text-primary)]">
                     {incident.description ||
                       "No detailed description available for this event."}
@@ -363,21 +359,11 @@ export default function PulseDetailPage() {
 
                 {/* What to do */}
                 {prepTips.length > 0 && (
-                  <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-5">
-                    <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)]">
-                      What to Do
-                    </h2>
-                    <div className="mt-3 space-y-2.5">
-                      {prepTips.map((tip) => (
-                        <div key={tip.id} className="flex items-start gap-2.5">
-                          <CircleCheckBig className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
-                          <span className="text-sm text-white">
-                            {tip.title}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <PrepGuidance
+                    tips={prepTips}
+                    title="What To Do Now"
+                    subtitle="Short, practical steps based on the current hazard and severity."
+                  />
                 )}
               </div>
 
@@ -385,7 +371,7 @@ export default function PulseDetailPage() {
               <aside className="space-y-6">
                 {/* Technical data — 2-column grid */}
                 {techData.length > 0 && (
-                  <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-5">
+                  <div className="rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-5">
                     <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)]">
                       Technical Data
                     </h2>
@@ -395,7 +381,7 @@ export default function PulseDetailPage() {
                           <p className="text-[11px] uppercase tracking-wider text-[var(--text-dim)]">
                             {row.label}
                           </p>
-                          <p className="mt-1 font-mono text-lg font-bold text-white">
+                          <p className="mt-1 font-mono text-lg font-bold text-[var(--text-primary)]">
                             {row.value}
                           </p>
                         </div>
@@ -405,18 +391,18 @@ export default function PulseDetailPage() {
                 )}
 
                 {/* Emergency Contacts */}
-                <div className="rounded-xl border border-white/8 bg-[var(--bg-panel)] p-5">
+                <div className="rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-5">
                   <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)]">
                     Emergency Contacts
                   </h2>
                   <div className="mt-3 space-y-3">
                     <a
                       href="tel:+6328911-1406"
-                      className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/[0.02] p-3 transition hover:bg-white/[0.05]"
+                      className="flex items-center gap-3 rounded-lg border border-overlay/5 bg-overlay/[0.02] p-3 transition hover:bg-overlay/[0.05]"
                     >
                       <Phone className="h-4 w-4 shrink-0 text-cyan-400" />
                       <div>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">
                           NDRRMC
                         </p>
                         <p className="text-xs text-[var(--text-dim)]">
@@ -426,11 +412,11 @@ export default function PulseDetailPage() {
                     </a>
                     <a
                       href="tel:143"
-                      className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/[0.02] p-3 transition hover:bg-white/[0.05]"
+                      className="flex items-center gap-3 rounded-lg border border-overlay/5 bg-overlay/[0.02] p-3 transition hover:bg-overlay/[0.05]"
                     >
                       <Phone className="h-4 w-4 shrink-0 text-cyan-400" />
                       <div>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">
                           Red Cross PH
                         </p>
                         <p className="text-xs text-[var(--text-dim)]">143</p>
@@ -450,11 +436,11 @@ export default function PulseDetailPage() {
                   }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-xl border border-white/8 bg-[var(--bg-panel)] p-4 transition hover:bg-white/[0.04]"
+                  className="flex items-center gap-3 rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-4 transition hover:bg-overlay/[0.04]"
                 >
                   <ExternalLink className="h-5 w-5 shrink-0 text-cyan-400" />
                   <div>
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">
                       Official Bulletin
                     </p>
                     <p className="text-[11px] text-[var(--text-dim)]">
@@ -468,7 +454,7 @@ export default function PulseDetailPage() {
             {/* ── Affected Areas (full width) ── */}
             {affectedAreas.length > 0 && (
               <motion.div
-                className="mt-6 rounded-xl border border-white/8 bg-[var(--bg-panel)] p-5"
+                className="mt-6 rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-5"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.25 }}
@@ -480,7 +466,7 @@ export default function PulseDetailPage() {
                   {affectedAreas.map((area) => (
                     <span
                       key={area}
-                      className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-sm text-white"
+                      className="rounded-full border border-overlay/10 bg-overlay/[0.04] px-3 py-1 text-sm text-[var(--text-primary)]"
                     >
                       {area}
                     </span>
@@ -507,15 +493,14 @@ function ShareDropdownContext({
 }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
-  const getShareUrl = useCallback(
-    () =>
-      typeof window !== "undefined"
-        ? `${window.location.origin}/pulse/${encodeURIComponent(incident.id)}`
-        : "",
-    [incident.id],
-  );
+  useEffect(() => {
+    setShareUrl(
+      `${window.location.origin}/pulse/${encodeURIComponent(incident.id)}`,
+    );
+  }, [incident.id]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -529,7 +514,7 @@ function ShareDropdownContext({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(getShareUrl());
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -544,7 +529,7 @@ function ShareDropdownContext({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-[var(--bg-panel)] px-3 py-1.5 text-sm text-white transition hover:bg-white/[0.06]"
+        className="inline-flex items-center gap-2 rounded-lg border border-overlay/10 bg-[var(--bg-panel)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:bg-overlay/[0.06]"
       >
         <Share2 className="h-4 w-4" />
         Share
@@ -556,30 +541,30 @@ function ShareDropdownContext({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 z-50 mt-2 w-52 origin-top-right overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-panel-strong)] shadow-xl"
+            className="absolute right-0 z-50 mt-2 w-52 origin-top-right overflow-hidden rounded-xl border border-overlay/10 bg-[var(--bg-panel-strong)] shadow-xl"
           >
             <button
               type="button"
               onClick={handleCopy}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-white transition hover:bg-white/[0.06]"
+              className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[var(--text-primary)] transition hover:bg-overlay/[0.06]"
             >
               <Copy className="h-4 w-4 text-[var(--text-dim)]" />
               {copied ? "Copied!" : "Copy link"}
             </button>
             <a
-              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(getShareUrl())}`}
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-white transition hover:bg-white/[0.06]"
+              className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[var(--text-primary)] transition hover:bg-overlay/[0.06]"
             >
               <Globe className="h-4 w-4 text-[var(--text-dim)]" />
               Post to X
             </a>
             <a
-              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`}
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-white transition hover:bg-white/[0.06]"
+              className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[var(--text-primary)] transition hover:bg-overlay/[0.06]"
             >
               <Globe className="h-4 w-4 text-[var(--text-dim)]" />
               Share on Facebook

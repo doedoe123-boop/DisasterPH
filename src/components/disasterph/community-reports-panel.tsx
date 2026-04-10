@@ -127,7 +127,7 @@ function ReportForm({
 
       {/* Reporter name */}
       <input
-        className="w-full rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-cyan-400/30 focus:outline-none"
+        className="w-full rounded-md border border-overlay/10 bg-overlay/5 px-2.5 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-overlay/30 focus:border-cyan-400/30 focus:outline-none"
         placeholder="Your name (internal)"
         value={reporterName}
         onChange={(e) => setReporterName(e.target.value)}
@@ -151,7 +151,7 @@ function ReportForm({
               className={`flex flex-col items-center gap-0.5 rounded-md border px-1 py-1.5 text-center transition ${
                 active
                   ? "border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
-                  : "border-white/6 bg-white/[0.02] text-[var(--text-dim)] hover:bg-white/5"
+                  : "border-overlay/6 bg-overlay/[0.02] text-[var(--text-dim)] hover:bg-overlay/5"
               }`}
               onClick={() => setCategory(key)}
             >
@@ -164,7 +164,7 @@ function ReportForm({
 
       {/* Title */}
       <input
-        className="w-full rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-cyan-400/30 focus:outline-none"
+        className="w-full rounded-md border border-overlay/10 bg-overlay/5 px-2.5 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-overlay/30 focus:border-cyan-400/30 focus:outline-none"
         placeholder="Brief title (e.g. Road flooded near market)"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
@@ -173,7 +173,7 @@ function ReportForm({
 
       {/* Description */}
       <textarea
-        className="w-full rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-cyan-400/30 focus:outline-none"
+        className="w-full rounded-md border border-overlay/10 bg-overlay/5 px-2.5 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-overlay/30 focus:border-cyan-400/30 focus:outline-none"
         placeholder="Details (optional)"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
@@ -191,7 +191,7 @@ function ReportForm({
       <div className="flex items-center justify-end gap-2 pt-1">
         <button
           type="button"
-          className="rounded-md px-2.5 py-1 text-[10px] text-[var(--text-dim)] transition hover:text-white"
+          className="rounded-md px-2.5 py-1 text-[10px] text-[var(--text-dim)] transition hover:text-[var(--text-primary)]"
           onClick={onCancel}
         >
           Cancel
@@ -232,7 +232,7 @@ function ReportCard({
   const CatIcon = meta.icon;
 
   return (
-    <div className="rounded-md border border-white/6 bg-white/[0.02]">
+    <div className="rounded-md border border-overlay/6 bg-overlay/[0.02]">
       {/* Header — always visible */}
       <button
         type="button"
@@ -242,16 +242,16 @@ function ReportCard({
         <CatIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--text-dim)]" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <span className="truncate text-[12px] text-white">
+            <span className="truncate text-[12px] text-[var(--text-primary)]">
               {report.title}
             </span>
             <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${vis.dot}`} />
           </div>
           <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-[var(--text-dim)]">
             <span>{meta.label}</span>
-            <span className="text-white/10">·</span>
+            <span className="text-overlay/10">·</span>
             <span>{report.locationLabel}</span>
-            <span className="text-white/10">·</span>
+            <span className="text-overlay/10">·</span>
             <span suppressHydrationWarning>
               {formatShortTime(report.createdAt)}
             </span>
@@ -264,7 +264,7 @@ function ReportCard({
 
       {/* Expanded detail + moderation */}
       {expanded && (
-        <div className="border-t border-white/6 px-2.5 py-2 space-y-2">
+        <div className="border-t border-overlay/6 px-2.5 py-2 space-y-2">
           {/* Status + reporter */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -286,10 +286,10 @@ function ReportCard({
           {/* Moderation outcome (if already moderated) */}
           {report.moderatedAt && (
             <div
-              className="rounded-md border border-white/6 bg-white/[0.02] px-2 py-1.5 text-[10px] text-[var(--text-dim)]"
+              className="rounded-md border border-overlay/6 bg-overlay/[0.02] px-2 py-1.5 text-[10px] text-[var(--text-dim)]"
               suppressHydrationWarning
             >
-              <span className="font-medium text-white/70">
+              <span className="font-medium text-overlay/70">
                 {report.status === "approved" ? "Approved" : "Rejected"}
               </span>{" "}
               by {report.moderatedBy} · {formatShortTime(report.moderatedAt)}
@@ -303,7 +303,7 @@ function ReportCard({
           {report.status === "pending" && (
             <div className="space-y-1.5">
               <input
-                className="w-full rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-white placeholder:text-white/30 focus:border-cyan-400/30 focus:outline-none"
+                className="w-full rounded-md border border-overlay/10 bg-overlay/5 px-2 py-1 text-[10px] text-[var(--text-primary)] placeholder:text-overlay/30 focus:border-cyan-400/30 focus:outline-none"
                 placeholder="Reason (optional)"
                 value={moderationReason}
                 onChange={(e) => setModerationReason(e.target.value)}
@@ -374,7 +374,7 @@ export function CommunityReportsPanel({
     <div className="shrink-0">
       {/* Collapsible header */}
       <button
-        className="flex w-full items-center justify-between rounded-lg border border-white/8 bg-[var(--bg-panel)] px-3 py-2 text-left"
+        className="flex w-full items-center justify-between rounded-lg border border-overlay/8 bg-[var(--bg-panel)] px-3 py-2 text-left"
         onClick={() => setOpen(!open)}
         type="button"
       >
@@ -397,7 +397,7 @@ export function CommunityReportsPanel({
       </button>
 
       {open && (
-        <div className="mt-1 max-h-80 overflow-y-auto rounded-lg border border-white/8 bg-[var(--bg-panel)] p-2">
+        <div className="mt-1 max-h-80 overflow-y-auto rounded-lg border border-overlay/8 bg-[var(--bg-panel)] p-2">
           {/* Internal prototype badge */}
           <div className="mb-2 flex items-center justify-between">
             <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[8px] uppercase tracking-wider text-amber-300">

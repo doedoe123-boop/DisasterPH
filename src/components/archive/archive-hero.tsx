@@ -5,8 +5,8 @@ import { BookOpen } from "lucide-react";
 
 export function ArchiveHero() {
   return (
-    <div className="relative border-b border-white/8 py-10 px-4 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-base)] via-[var(--bg-base)] to-white/[0.02] pointer-events-none" />
+    <div className="relative border-b border-overlay/8 py-10 px-4 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-base)] via-[var(--bg-base)] to-overlay/[0.02] pointer-events-none" />
       <div
         className="absolute inset-0 opacity-[0.03] pointer-events-none"
         style={{
@@ -30,7 +30,7 @@ export function ArchiveHero() {
             {"// Historical Intelligence"}
           </span>
         </div>
-        <h1 className="text-3xl lg:text-4xl font-extrabold text-white tracking-tight mb-2">
+        <h1 className="text-3xl lg:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight mb-2">
           Event History
         </h1>
         <p className="text-sm text-[var(--text-muted)] max-w-lg leading-relaxed">

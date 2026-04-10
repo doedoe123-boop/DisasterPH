@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
 import { ServiceWorkerRegistrar } from "@/components/disasterph/sw-registrar";
+import { THEME_KEY, type Theme } from "@/lib/theme";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -44,16 +46,36 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+function normalizeTheme(value: string | undefined): Theme {
+  return value === "day" || value === "night" ? value : "night";
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const theme = normalizeTheme(
+    (await cookies()).get(THEME_KEY)?.value,
+  );
+  const themeScript = `(function(){try{var serverTheme='${theme}';var key='${THEME_KEY}';var stored=localStorage.getItem(key);var storedTheme=stored==='day'||stored==='night'?stored:null;var cookieMatch=document.cookie.match(/(?:^|; )disasterph-theme=(day|night)/);var cookieTheme=cookieMatch?cookieMatch[1]:null;var theme=cookieTheme||serverTheme;if(!cookieTheme&&storedTheme){document.cookie=key+'='+storedTheme+'; path=/; max-age=31536000; SameSite=Lax';}if(cookieTheme){localStorage.setItem(key,cookieTheme);}document.documentElement.setAttribute('data-theme',theme);document.documentElement.style.colorScheme=theme==='day'?'light':'dark';}catch(e){document.documentElement.setAttribute('data-theme','${theme}');document.documentElement.style.colorScheme='${theme}'==='day'?'light':'dark';}})();`;
+
   return (
-    <html lang="en" className="h-full antialiased">
+    <html
+      lang="en"
+      className="h-full antialiased"
+      data-theme={theme}
+      style={{ colorScheme: theme === "day" ? "light" : "dark" }}
+      suppressHydrationWarning
+    >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: themeScript,
+          }}
+        />
         <meta name="theme-color" content="#040d16" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="apple-touch-icon" href="/icon.svg" />
       </head>
       <body className="min-h-full bg-[var(--bg-base)] text-[var(--text-primary)]">
         {children}

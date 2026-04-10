@@ -30,8 +30,8 @@ export function AlertCenterPanel({
   }
 
   return (
-    <section className="rounded-lg border border-white/8 bg-[var(--bg-panel)]">
-      <div className="flex items-center justify-between border-b border-white/8 px-3 py-2">
+    <section className="rounded-lg border border-overlay/8 bg-[var(--bg-panel)]">
+      <div className="flex items-center justify-between border-b border-overlay/8 px-3 py-2">
         <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
           Eligible Alerts
         </span>
@@ -46,7 +46,7 @@ export function AlertCenterPanel({
           return (
             <button
               key={alert.id}
-              className={`flex w-full items-start gap-2.5 rounded-lg border-l-2 px-2.5 py-2 text-left transition hover:bg-white/[0.04] ${severityVisual.accent}`}
+              className={`flex w-full items-start gap-2.5 rounded-lg border-l-2 px-2.5 py-2 text-left transition hover:bg-overlay/[0.04] ${severityVisual.accent}`}
               onClick={() => onSelectIncident(alert.incidentId)}
               type="button"
             >
@@ -70,7 +70,7 @@ export function AlertCenterPanel({
                     {formatShortTime(alert.updatedAt)}
                   </span>
                 </div>
-                <p className="mt-1 truncate text-[12px] font-medium text-white">
+                <p className="mt-1 truncate text-[12px] font-medium text-[var(--text-primary)]">
                   {alert.incidentTitle}
                 </p>
                 <p className="mt-0.5 text-[11px] leading-5 text-[var(--text-muted)]">

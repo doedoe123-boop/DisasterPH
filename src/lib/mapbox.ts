@@ -20,9 +20,16 @@ export const DEFAULT_CAMERA = {
 /** Zoom level when flying to an incident */
 export const INCIDENT_ZOOM = 8.5;
 
-/** MapLibre style — free dark tile style (no token required) */
-export const MAP_STYLE =
-  "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+/** MapLibre night tile style */
+export const MAP_STYLE_NIGHT = "https://tiles.openfreemap.org/styles/dark";
+/** MapLibre day tile style */
+export const MAP_STYLE_DAY = "https://tiles.openfreemap.org/styles/bright";
+/** Returns the correct tile style URL based on the current theme */
+export const getMapStyle = () =>
+  typeof document !== "undefined" &&
+  document.documentElement.dataset.theme === "day"
+    ? MAP_STYLE_DAY
+    : MAP_STYLE_NIGHT;
 
 /** Color per hazard type */
 export const HAZARD_COLORS: Record<IncidentEventType, string> = {

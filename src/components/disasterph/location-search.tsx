@@ -132,9 +132,9 @@ export function LocationSearch({ selected, onSelect }: LocationSearchProps) {
       {!selected && (
         <>
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-white/30" />
+            <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-overlay/30" />
             <input
-              className="w-full rounded-md border border-white/10 bg-white/5 py-1.5 pl-7 pr-7 text-xs text-white placeholder:text-white/30 focus:border-cyan-400/30 focus:outline-none"
+              className="w-full rounded-md border border-overlay/10 bg-overlay/5 py-1.5 pl-7 pr-7 text-xs text-[var(--text-primary)] placeholder:text-overlay/30 focus:border-cyan-400/30 focus:outline-none"
               placeholder="Search any place in the Philippines…"
               value={query}
               onChange={(e) => {
@@ -150,12 +150,12 @@ export function LocationSearch({ selected, onSelect }: LocationSearchProps) {
 
           {/* Results dropdown */}
           {showDropdown && results.length > 0 && (
-            <div className="absolute z-50 mt-1 w-full rounded-md border border-white/10 bg-[var(--bg-panel)] shadow-lg">
+            <div className="absolute z-50 mt-1 w-full rounded-md border border-overlay/10 bg-[var(--bg-panel)] shadow-lg">
               {results.map((result, i) => (
                 <button
                   key={`${result.latitude}-${result.longitude}-${i}`}
                   type="button"
-                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-[11px] text-white/80 transition first:rounded-t-md last:rounded-b-md hover:bg-white/5 hover:text-white"
+                  className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-[11px] text-overlay/80 transition first:rounded-t-md last:rounded-b-md hover:bg-overlay/5 hover:text-[var(--text-primary)]"
                   onClick={() => {
                     onSelect(result);
                     setQuery("");
@@ -174,7 +174,7 @@ export function LocationSearch({ selected, onSelect }: LocationSearchProps) {
             query.length >= 2 &&
             !loading &&
             results.length === 0 && (
-              <div className="absolute z-50 mt-1 w-full rounded-md border border-white/10 bg-[var(--bg-panel)] px-2.5 py-2 text-center text-[10px] text-[var(--text-dim)]">
+              <div className="absolute z-50 mt-1 w-full rounded-md border border-overlay/10 bg-[var(--bg-panel)] px-2.5 py-2 text-center text-[10px] text-[var(--text-dim)]">
                 No places found. Try a different search.
               </div>
             )}

@@ -23,7 +23,9 @@ export function ArchiveLessonsPanel({ lessons }: ArchiveLessonsPanelProps) {
             transition={{ delay: i * 0.06 }}
           >
             <Lightbulb className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
-            <p className="text-sm text-white/90 leading-relaxed">{lesson}</p>
+            <p className="text-sm text-[var(--text-primary)] leading-relaxed">
+              {lesson}
+            </p>
           </motion.div>
         ))}
       </div>

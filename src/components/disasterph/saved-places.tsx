@@ -78,13 +78,13 @@ export function SavedPlaces({
   const [showAdd, setShowAdd] = useState(false);
 
   return (
-    <section className="rounded-lg border border-white/8 bg-[var(--bg-panel)]">
-      <div className="flex items-center justify-between border-b border-white/8 px-3 py-2">
+    <section className="rounded-lg border border-overlay/8 bg-[var(--bg-panel)]">
+      <div className="flex items-center justify-between border-b border-overlay/8 px-3 py-2">
         <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
           My Places
         </span>
         <button
-          className="flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] text-[var(--text-muted)] transition hover:bg-white/[0.08] hover:text-white"
+          className="flex items-center gap-1 rounded-md border border-overlay/10 bg-overlay/[0.03] px-2 py-0.5 text-[10px] text-[var(--text-muted)] transition hover:bg-overlay/[0.08] hover:text-[var(--text-primary)]"
           onClick={() => setShowAdd(!showAdd)}
           type="button"
         >
@@ -94,7 +94,7 @@ export function SavedPlaces({
       </div>
 
       {showAdd && (
-        <div className="border-b border-white/8 p-3 bg-black/20">
+        <div className="border-b border-overlay/8 p-3 bg-black/20">
           <div className="text-left">
             <p className="mb-1.5 px-1 text-[10px] text-[var(--text-dim)] tracking-wide uppercase">
               Quick Add Location:
@@ -103,7 +103,7 @@ export function SavedPlaces({
               {PRESET_PLACES.map((preset) => (
                 <button
                   key={preset.label}
-                  className="flex items-center gap-1.5 rounded border border-white/8 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-white transition hover:bg-white/[0.08]"
+                  className="flex items-center gap-1.5 rounded border border-overlay/8 bg-overlay/[0.04] px-2.5 py-1 text-[11px] font-medium text-[var(--text-primary)] transition hover:bg-overlay/[0.08]"
                   onClick={() => {
                     onAddPlace({
                       label: preset.label,
@@ -144,7 +144,7 @@ export function SavedPlaces({
               key={risk.place.id}
               role="button"
               tabIndex={0}
-              className={`group flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-l-2 p-2 text-left transition hover:bg-white/[0.04] ${
+              className={`group flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-l-2 p-2 text-left transition hover:bg-overlay/[0.04] ${
                 selectedPlaceId === risk.place.id
                   ? "bg-cyan-400/8 border-l-cyan-400/70"
                   : visualFromRiskLevel(risk.riskLevel).accent
@@ -165,7 +165,7 @@ export function SavedPlaces({
               })()}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="truncate text-[13px] font-medium text-white">
+                  <span className="truncate text-[13px] font-medium text-[var(--text-primary)]">
                     {risk.place.label}
                   </span>
                   <span
@@ -193,13 +193,13 @@ export function SavedPlaces({
                   <span>{riskLabel[risk.riskLevel]}</span>
                   {risk.nearestDistanceKm !== null && (
                     <>
-                      <span className="text-white/10">·</span>
+                      <span className="text-overlay/10">·</span>
                       <span>{Math.round(risk.nearestDistanceKm)} km away</span>
                     </>
                   )}
                   {risk.nearbyIncidents.length > 0 && (
                     <>
-                      <span className="text-white/10">·</span>
+                      <span className="text-overlay/10">·</span>
                       <span>
                         {risk.nearbyIncidents.length} event
                         {risk.nearbyIncidents.length > 1 ? "s" : ""}

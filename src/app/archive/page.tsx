@@ -88,7 +88,7 @@ export default function ArchivePage() {
             <h2 className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-dim)]">
               {filtered.length} {filtered.length === 1 ? "Event" : "Events"}
             </h2>
-            <div className="flex-1 h-px bg-white/8" />
+            <div className="flex-1 h-px bg-overlay/8" />
           </div>
 
           {filtered.length === 0 ? (

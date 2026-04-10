@@ -6,7 +6,9 @@ import {
   PH_BOUNDS,
   DEFAULT_CAMERA,
   INCIDENT_ZOOM,
-  MAP_STYLE,
+  MAP_STYLE_NIGHT,
+  MAP_STYLE_DAY,
+  getMapStyle,
   HAZARD_COLORS,
   SEVERITY_RING,
 } from "@/lib/mapbox";
@@ -46,11 +48,14 @@ export default function MapLibreMapComponent({
   const popupRef = useRef<MlPopup | null>(null);
   const initialSidebarWidthRef = useRef(sidebarWidth);
   const [mapReady, setMapReady] = useState(false);
+  const incidentsRef = useRef(incidents);
+  incidentsRef.current = incidents;
 
   // ── Initialize map (runtime-only import) ──
   useEffect(() => {
     if (!containerRef.current) return;
     let cancelled = false;
+    let themeHandler: ((e: Event) => void) | null = null;
     const markers = markersRef.current;
     const communityMarkers = communityMarkersRef.current;
 
@@ -63,7 +68,7 @@ export default function MapLibreMapComponent({
 
       const map = new maplibregl.Map({
         container: containerRef.current,
-        style: MAP_STYLE,
+        style: getMapStyle(),
         center: DEFAULT_CAMERA.center,
         zoom: DEFAULT_CAMERA.zoom,
         pitch: DEFAULT_CAMERA.pitch,
@@ -93,15 +98,8 @@ export default function MapLibreMapComponent({
       map.on("load", () => {
         if (cancelled) return;
 
-        // Dark sky atmosphere
-        map.setSky({
-          "sky-color": "#040d16",
-          "horizon-color": "#0a1e30",
-          "fog-color": "#061420",
-          "fog-ground-blend": 0.5,
-          "horizon-fog-blend": 0.1,
-          "sky-horizon-blend": 0.3,
-        });
+        // Theme-aware sky atmosphere
+        applySky(map);
 
         // Fit to Philippines bounds with padding that accounts for sidebar
         map.fitBounds(PH_BOUNDS, {
@@ -120,6 +118,16 @@ export default function MapLibreMapComponent({
       });
 
       mapRef.current = map;
+
+      themeHandler = (e: Event) => {
+        const theme = (e as CustomEvent).detail.theme;
+        map.setStyle(theme === "day" ? MAP_STYLE_DAY : MAP_STYLE_NIGHT);
+        map.once("styledata", () => {
+          applySky(map);
+          addAllSourcesAndLayers(map, incidentsRef.current);
+        });
+      };
+      window.addEventListener("themechange", themeHandler);
     }
 
     init();
@@ -131,6 +139,7 @@ export default function MapLibreMapComponent({
       communityMarkers.forEach((marker) => marker.remove());
       communityMarkers.clear();
       popupRef.current?.remove();
+      if (themeHandler) window.removeEventListener("themechange", themeHandler);
       mapRef.current?.remove();
       mapRef.current = null;
       mlRef.current = null;
@@ -210,241 +219,14 @@ export default function MapLibreMapComponent({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
-
-    const ZONE_SOURCE = "hazard-zones";
-    const ZONE_FILL = "hazard-zones-fill";
-    const ZONE_STROKE = "hazard-zones-stroke";
-
-    const features = incidents
-      .filter(
-        (i) => i.event_type === "earthquake" || i.event_type === "volcano",
-      )
-      .map((i) => {
-        const radiusKm =
-          i.event_type === "earthquake"
-            ? earthquakeImpactRadiusKm(i)
-            : volcanoExclusionRadiusKm(i);
-        if (radiusKm <= 0) return null;
-
-        const color =
-          i.event_type === "earthquake"
-            ? HAZARD_COLORS.earthquake
-            : HAZARD_COLORS.volcano;
-
-        return {
-          type: "Feature" as const,
-          properties: {
-            color,
-            id: i.id,
-          },
-          geometry: {
-            type: "Polygon" as const,
-            coordinates: [circlePolygon(i.longitude, i.latitude, radiusKm)],
-          },
-        };
-      })
-      .filter(Boolean);
-
-    const geojson = {
-      type: "FeatureCollection" as const,
-      features,
-    };
-
-    if (map.getSource(ZONE_SOURCE)) {
-      (
-        map.getSource(ZONE_SOURCE) as import("maplibre-gl").GeoJSONSource
-      ).setData(geojson as GeoJSON.FeatureCollection);
-    } else {
-      map.addSource(ZONE_SOURCE, {
-        type: "geojson",
-        data: geojson as GeoJSON.FeatureCollection,
-      });
-      map.addLayer({
-        id: ZONE_FILL,
-        type: "fill",
-        source: ZONE_SOURCE,
-        paint: {
-          "fill-color": ["get", "color"],
-          "fill-opacity": 0.08,
-        },
-      });
-      map.addLayer({
-        id: ZONE_STROKE,
-        type: "line",
-        source: ZONE_SOURCE,
-        paint: {
-          "line-color": ["get", "color"],
-          "line-opacity": 0.3,
-          "line-width": 1.5,
-          "line-dasharray": [4, 3],
-        },
-      });
-    }
+    syncHazardZones(map, incidents);
   }, [incidents, mapReady]);
 
   // ── Typhoon track lines + wind radius circles ──
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
-
-    const TRACK_SOURCE = "typhoon-tracks";
-    const TRACK_LINE_OBSERVED = "typhoon-track-observed";
-    const TRACK_LINE_FORECAST = "typhoon-track-forecast";
-    const WIND_SOURCE = "typhoon-wind";
-    const WIND_FILL = "typhoon-wind-fill";
-    const WIND_STROKE = "typhoon-wind-stroke";
-
-    const trackFeatures: GeoJSON.Feature[] = [];
-    const windFeatures: GeoJSON.Feature[] = [];
-
-    for (const incident of incidents) {
-      if (incident.event_type !== "typhoon") continue;
-
-      const trackJson = incident.metadata?.track_points;
-      if (typeof trackJson !== "string") continue;
-
-      let points: Array<{
-        lat: number;
-        lon: number;
-        time: string;
-        forecast: boolean;
-        windSpeedKph?: number;
-      }>;
-      try {
-        points = JSON.parse(trackJson);
-      } catch {
-        continue;
-      }
-      if (!Array.isArray(points) || points.length < 2) continue;
-
-      const observed = points.filter((p) => !p.forecast);
-      const forecast = points.filter((p) => p.forecast);
-
-      // Observed track line
-      if (observed.length >= 2) {
-        trackFeatures.push({
-          type: "Feature",
-          properties: { type: "observed" },
-          geometry: {
-            type: "LineString",
-            coordinates: observed.map((p) => [p.lon, p.lat]),
-          },
-        });
-      }
-
-      // Forecast track line (dashed)
-      if (forecast.length >= 2) {
-        trackFeatures.push({
-          type: "Feature",
-          properties: { type: "forecast" },
-          geometry: {
-            type: "LineString",
-            coordinates: forecast.map((p) => [p.lon, p.lat]),
-          },
-        });
-      }
-
-      // Connect observed tail to forecast head
-      if (observed.length > 0 && forecast.length > 0) {
-        const tail = observed[observed.length - 1];
-        const head = forecast[0];
-        trackFeatures.push({
-          type: "Feature",
-          properties: { type: "forecast" },
-          geometry: {
-            type: "LineString",
-            coordinates: [
-              [tail.lon, tail.lat],
-              [head.lon, head.lat],
-            ],
-          },
-        });
-      }
-
-      // Wind radius circle at current position
-      const windKph = Number(incident.metadata?.wind_speed_kph ?? 0);
-      if (windKph > 30) {
-        const radiusKm = windKph * 0.8; // rough approximation
-        windFeatures.push({
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "Polygon",
-            coordinates: [
-              circlePolygon(incident.longitude, incident.latitude, radiusKm),
-            ],
-          },
-        });
-      }
-    }
-
-    const trackGeoJson: GeoJSON.FeatureCollection = {
-      type: "FeatureCollection",
-      features: trackFeatures,
-    };
-    const windGeoJson: GeoJSON.FeatureCollection = {
-      type: "FeatureCollection",
-      features: windFeatures,
-    };
-
-    // Track lines
-    if (map.getSource(TRACK_SOURCE)) {
-      (
-        map.getSource(TRACK_SOURCE) as import("maplibre-gl").GeoJSONSource
-      ).setData(trackGeoJson);
-    } else {
-      map.addSource(TRACK_SOURCE, { type: "geojson", data: trackGeoJson });
-      map.addLayer({
-        id: TRACK_LINE_OBSERVED,
-        type: "line",
-        source: TRACK_SOURCE,
-        filter: ["==", ["get", "type"], "observed"],
-        paint: {
-          "line-color": "#39d0ff",
-          "line-width": 2.5,
-          "line-opacity": 0.7,
-        },
-        layout: { "line-cap": "round", "line-join": "round" },
-      });
-      map.addLayer({
-        id: TRACK_LINE_FORECAST,
-        type: "line",
-        source: TRACK_SOURCE,
-        filter: ["==", ["get", "type"], "forecast"],
-        paint: {
-          "line-color": "#39d0ff",
-          "line-width": 2,
-          "line-opacity": 0.4,
-          "line-dasharray": [4, 4],
-        },
-        layout: { "line-cap": "round", "line-join": "round" },
-      });
-    }
-
-    // Wind radius
-    if (map.getSource(WIND_SOURCE)) {
-      (
-        map.getSource(WIND_SOURCE) as import("maplibre-gl").GeoJSONSource
-      ).setData(windGeoJson);
-    } else {
-      map.addSource(WIND_SOURCE, { type: "geojson", data: windGeoJson });
-      map.addLayer({
-        id: WIND_FILL,
-        type: "fill",
-        source: WIND_SOURCE,
-        paint: { "fill-color": "#39d0ff", "fill-opacity": 0.06 },
-      });
-      map.addLayer({
-        id: WIND_STROKE,
-        type: "line",
-        source: WIND_SOURCE,
-        paint: {
-          "line-color": "#39d0ff",
-          "line-opacity": 0.25,
-          "line-width": 1.5,
-        },
-      });
-    }
+    syncTyphoonTracks(map, incidents);
   }, [incidents, mapReady]);
 
   // ── Update visual states ──
@@ -486,11 +268,11 @@ export default function MapLibreMapComponent({
       const metaLine = buildPopupMeta(incident);
       const html = `<div style="font-family:system-ui,sans-serif;min-width:180px;">
         <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">
-          <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#8899aa;">${eventTypeLabel[incident.event_type]}</span>
+          <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);">${eventTypeLabel[incident.event_type]}</span>
           <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:${SEVERITY_RING[incident.severity]};margin-left:auto;">${incident.severity}</span>
         </div>
-        <div style="font-size:13px;font-weight:600;color:#fff;line-height:1.3;">${incident.title}</div>${metaLine}
-        <div style="font-size:11px;color:#8899aa;margin-top:3px;">${incident.region} · ${formatShortTime(incident.updated_at)}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.3;">${incident.title}</div>${metaLine}
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">${incident.region} · ${formatShortTime(incident.updated_at)}</div>
       </div>`;
 
       popupRef.current?.remove();
@@ -562,7 +344,7 @@ export default function MapLibreMapComponent({
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
       {!mapReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#061420]">
+        <div className="absolute inset-0 flex items-center justify-center bg-background">
           <div className="text-center">
             <div className="loading-shimmer mx-auto h-3 w-24 rounded-full" />
             <p className="mt-3 text-xs text-[var(--text-dim)]">Loading map…</p>
@@ -571,6 +353,260 @@ export default function MapLibreMapComponent({
       )}
     </div>
   );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EXTRACTED MAP HELPERS — called on init AND after style swap
+   ═══════════════════════════════════════════════════════════ */
+
+function applySky(map: MlMap) {
+  const isDayMode = document.documentElement.dataset.theme === "day";
+  map.setSky(
+    isDayMode
+      ? {
+          "sky-color": "#c0d8f0",
+          "horizon-color": "#e8eef5",
+          "fog-color": "#dce4ec",
+          "fog-ground-blend": 0.5,
+          "horizon-fog-blend": 0.1,
+          "sky-horizon-blend": 0.3,
+        }
+      : {
+          "sky-color": "#040d16",
+          "horizon-color": "#0a1e30",
+          "fog-color": "#061420",
+          "fog-ground-blend": 0.5,
+          "horizon-fog-blend": 0.1,
+          "sky-horizon-blend": 0.3,
+        },
+  );
+}
+
+function syncHazardZones(map: MlMap, incidents: Incident[]) {
+  const ZONE_SOURCE = "hazard-zones";
+  const ZONE_FILL = "hazard-zones-fill";
+  const ZONE_STROKE = "hazard-zones-stroke";
+
+  const features = incidents
+    .filter((i) => i.event_type === "earthquake" || i.event_type === "volcano")
+    .map((i) => {
+      const radiusKm =
+        i.event_type === "earthquake"
+          ? earthquakeImpactRadiusKm(i)
+          : volcanoExclusionRadiusKm(i);
+      if (radiusKm <= 0) return null;
+
+      const color =
+        i.event_type === "earthquake"
+          ? HAZARD_COLORS.earthquake
+          : HAZARD_COLORS.volcano;
+
+      return {
+        type: "Feature" as const,
+        properties: { color, id: i.id },
+        geometry: {
+          type: "Polygon" as const,
+          coordinates: [circlePolygon(i.longitude, i.latitude, radiusKm)],
+        },
+      };
+    })
+    .filter(Boolean);
+
+  const geojson = {
+    type: "FeatureCollection" as const,
+    features,
+  };
+
+  if (map.getSource(ZONE_SOURCE)) {
+    (map.getSource(ZONE_SOURCE) as import("maplibre-gl").GeoJSONSource).setData(
+      geojson as GeoJSON.FeatureCollection,
+    );
+  } else {
+    map.addSource(ZONE_SOURCE, {
+      type: "geojson",
+      data: geojson as GeoJSON.FeatureCollection,
+    });
+    map.addLayer({
+      id: ZONE_FILL,
+      type: "fill",
+      source: ZONE_SOURCE,
+      paint: {
+        "fill-color": ["get", "color"],
+        "fill-opacity": 0.08,
+      },
+    });
+    map.addLayer({
+      id: ZONE_STROKE,
+      type: "line",
+      source: ZONE_SOURCE,
+      paint: {
+        "line-color": ["get", "color"],
+        "line-opacity": 0.3,
+        "line-width": 1.5,
+        "line-dasharray": [4, 3],
+      },
+    });
+  }
+}
+
+function syncTyphoonTracks(map: MlMap, incidents: Incident[]) {
+  const TRACK_SOURCE = "typhoon-tracks";
+  const TRACK_LINE_OBSERVED = "typhoon-track-observed";
+  const TRACK_LINE_FORECAST = "typhoon-track-forecast";
+  const WIND_SOURCE = "typhoon-wind";
+  const WIND_FILL = "typhoon-wind-fill";
+  const WIND_STROKE = "typhoon-wind-stroke";
+
+  const trackFeatures: GeoJSON.Feature[] = [];
+  const windFeatures: GeoJSON.Feature[] = [];
+
+  for (const incident of incidents) {
+    if (incident.event_type !== "typhoon") continue;
+
+    const trackJson = incident.metadata?.track_points;
+    if (typeof trackJson !== "string") continue;
+
+    let points: Array<{
+      lat: number;
+      lon: number;
+      time: string;
+      forecast: boolean;
+      windSpeedKph?: number;
+    }>;
+    try {
+      points = JSON.parse(trackJson);
+    } catch {
+      continue;
+    }
+    if (!Array.isArray(points) || points.length < 2) continue;
+
+    const observed = points.filter((p) => !p.forecast);
+    const forecast = points.filter((p) => p.forecast);
+
+    if (observed.length >= 2) {
+      trackFeatures.push({
+        type: "Feature",
+        properties: { type: "observed" },
+        geometry: {
+          type: "LineString",
+          coordinates: observed.map((p) => [p.lon, p.lat]),
+        },
+      });
+    }
+
+    if (forecast.length >= 2) {
+      trackFeatures.push({
+        type: "Feature",
+        properties: { type: "forecast" },
+        geometry: {
+          type: "LineString",
+          coordinates: forecast.map((p) => [p.lon, p.lat]),
+        },
+      });
+    }
+
+    if (observed.length > 0 && forecast.length > 0) {
+      const tail = observed[observed.length - 1];
+      const head = forecast[0];
+      trackFeatures.push({
+        type: "Feature",
+        properties: { type: "forecast" },
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [tail.lon, tail.lat],
+            [head.lon, head.lat],
+          ],
+        },
+      });
+    }
+
+    const windKph = Number(incident.metadata?.wind_speed_kph ?? 0);
+    if (windKph > 30) {
+      const radiusKm = windKph * 0.8;
+      windFeatures.push({
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            circlePolygon(incident.longitude, incident.latitude, radiusKm),
+          ],
+        },
+      });
+    }
+  }
+
+  const trackGeoJson: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: trackFeatures,
+  };
+  const windGeoJson: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: windFeatures,
+  };
+
+  if (map.getSource(TRACK_SOURCE)) {
+    (
+      map.getSource(TRACK_SOURCE) as import("maplibre-gl").GeoJSONSource
+    ).setData(trackGeoJson);
+  } else {
+    map.addSource(TRACK_SOURCE, { type: "geojson", data: trackGeoJson });
+    map.addLayer({
+      id: TRACK_LINE_OBSERVED,
+      type: "line",
+      source: TRACK_SOURCE,
+      filter: ["==", ["get", "type"], "observed"],
+      paint: {
+        "line-color": "#39d0ff",
+        "line-width": 2.5,
+        "line-opacity": 0.7,
+      },
+      layout: { "line-cap": "round", "line-join": "round" },
+    });
+    map.addLayer({
+      id: TRACK_LINE_FORECAST,
+      type: "line",
+      source: TRACK_SOURCE,
+      filter: ["==", ["get", "type"], "forecast"],
+      paint: {
+        "line-color": "#39d0ff",
+        "line-width": 2,
+        "line-opacity": 0.4,
+        "line-dasharray": [4, 4],
+      },
+      layout: { "line-cap": "round", "line-join": "round" },
+    });
+  }
+
+  if (map.getSource(WIND_SOURCE)) {
+    (map.getSource(WIND_SOURCE) as import("maplibre-gl").GeoJSONSource).setData(
+      windGeoJson,
+    );
+  } else {
+    map.addSource(WIND_SOURCE, { type: "geojson", data: windGeoJson });
+    map.addLayer({
+      id: WIND_FILL,
+      type: "fill",
+      source: WIND_SOURCE,
+      paint: { "fill-color": "#39d0ff", "fill-opacity": 0.06 },
+    });
+    map.addLayer({
+      id: WIND_STROKE,
+      type: "line",
+      source: WIND_SOURCE,
+      paint: {
+        "line-color": "#39d0ff",
+        "line-opacity": 0.25,
+        "line-width": 1.5,
+      },
+    });
+  }
+}
+
+function addAllSourcesAndLayers(map: MlMap, incidents: Incident[]) {
+  syncHazardZones(map, incidents);
+  syncTyphoonTracks(map, incidents);
 }
 
 function createMarkerElement(incident: Incident): HTMLDivElement {
@@ -597,7 +633,7 @@ function createMarkerElement(incident: Incident): HTMLDivElement {
   el.innerHTML = `
     <div style="position:absolute;inset:-4px;border-radius:50%;border:1.5px solid ${ringColor};opacity:0.4;animation:marker-ping 2.5s cubic-bezier(0,0,0.2,1) infinite;pointer-events:none;"></div>
     <div class="marker-inner" style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid ${color};box-shadow:0 0 6px ${color}44;display:flex;align-items:center;justify-content:center;transition:transform 0.2s ease,filter 0.2s ease;">
-      <span style="font-size:11px;font-weight:700;color:#000;text-shadow:0 0 2px rgba(255,255,255,0.3);">${getMarkerLabel(incident)}</span>
+      <span style="font-size:11px;font-weight:700;color:#000;text-shadow:0 1px 2px rgba(0,0,0,0.5);">${getMarkerLabel(incident)}</span>
     </div>`;
 
   return el;
@@ -635,7 +671,7 @@ function buildPopupMeta(incident: Incident): string {
   }
 
   if (parts.length === 0) return "";
-  return `\n        <div style="font-size:11px;color:#ffbf47;margin-top:2px;font-weight:500;">${parts.join(" · ")}</div>`;
+  return `\n        <div style="font-size:11px;color:var(--accent-orange);margin-top:2px;font-weight:500;">${parts.join(" · ")}</div>`;
 }
 
 /** Earthquake felt-impact radius based on magnitude (approx) */

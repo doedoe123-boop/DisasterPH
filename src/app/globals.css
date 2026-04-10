@@ -84,6 +84,9 @@
   --accent-emerald: hsl(var(--sentinel-emerald));
   --accent-orange: hsl(var(--sentinel-ignite));
 
+  /* ── UI overlay (white on dark, black on light) ── */
+  --ui-overlay: 255 255 255;
+
   /* ── Severity glows ── */
   --glow-critical: 0 0 20px hsl(0 84% 55% / 0.15), 0 0 4px hsl(0 84% 55% / 0.1);
   --glow-warning:
@@ -98,6 +101,75 @@
 
   font-size: 16px;
   line-height: 1.5;
+}
+
+[data-theme="day"] {
+  /* Core palette */
+  --background: 213 33% 97%;
+  --foreground: 222 26% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 26% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 26% 10%;
+  --primary: 22 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 213 20% 92%;
+  --secondary-foreground: 222 26% 20%;
+  --muted: 213 20% 92%;
+  --muted-foreground: 215 14% 40%;
+  --accent: 162 65% 36%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 213 20% 84%;
+  --input: 213 20% 84%;
+  --ring: 162 65% 36%;
+
+  /* Sentinel brand overrides for day */
+  --sentinel-obsidian: 213 33% 97%;
+  --sentinel-slate: 0 0% 100%;
+  --sentinel-surface: 213 20% 92%;
+
+  /* Sidebar — keep navy in day mode (intentional contrast) */
+  --sidebar-background: 222 30% 18%;
+  --sidebar-foreground: 210 17% 90%;
+  --sidebar-accent: 222 22% 26%;
+  --sidebar-accent-foreground: 210 17% 95%;
+  --sidebar-border: 222 22% 24%;
+
+  /* Backward-compat surface tokens */
+  --bg-base: hsl(213 33% 97%);
+  --bg-panel: hsl(0 0% 100%);
+  --bg-panel-strong: hsl(213 33% 97%);
+  --bg-panel-elevated: hsl(213 20% 92%);
+  --bg-overlay: hsl(213 33% 97% / 0.92);
+  --bg-chip: hsl(213 20% 90%);
+  --bg-card-hover: hsl(213 20% 94% / 0.7);
+
+  /* Border tokens */
+  --line-soft: hsl(213 20% 84% / 0.8);
+  --line-strong: hsl(213 20% 76%);
+  --line-glow: hsl(195 80% 50% / 0.15);
+
+  /* Text tokens */
+  --text-primary: hsl(222 26% 10%);
+  --text-muted: hsl(215 14% 42%);
+  --text-dim: hsl(215 14% 52%);
+
+  /* Shadows — lighter for day */
+  --shadow-panel: 0 2px 16px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 1px 6px rgba(0, 0, 0, 0.07);
+  --shadow-elevated: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+  /* UI overlay */
+  --ui-overlay: 0 0 0;
+
+  /* Severity glows — day versions (subtler) */
+  --glow-critical: 0 0 16px hsl(0 84% 50% / 0.1), 0 0 4px hsl(0 84% 50% / 0.07);
+  --glow-warning:
+    0 0 12px hsl(22 100% 50% / 0.09), 0 0 3px hsl(22 100% 50% / 0.06);
+  --glow-watch: 0 0 10px hsl(195 80% 50% / 0.08);
+  --glow-info: 0 0 6px hsl(215 14% 50% / 0.05);
 }
 
 /* ═══════════════════════════════════════════
@@ -148,6 +220,7 @@
   --color-sentinel-alabaster: hsl(var(--sentinel-alabaster));
   --color-sentinel-surface: hsl(var(--sentinel-surface));
   --color-community: hsl(var(--community));
+  --color-overlay: rgb(var(--ui-overlay));
 
   /* Colors – sidebar */
   --color-sidebar: hsl(var(--sidebar-background));
@@ -217,15 +290,15 @@ select {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(4, 12, 21, 0.5);
+  background: rgb(var(--ui-overlay) / 0.05);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(83, 121, 153, 0.35);
+  background: rgb(var(--ui-overlay) / 0.15);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(83, 121, 153, 0.5);
+  background: rgb(var(--ui-overlay) / 0.25);
 }
 
 /* ═══════════════════════════════════════════
@@ -342,11 +415,11 @@ select {
 .loading-shimmer {
   background: linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.04) 0%,
-      rgba(255, 255, 255, 0.11) 50%,
-      rgba(255, 255, 255, 0.04) 100%
+      rgb(var(--ui-overlay) / 0.04) 0%,
+      rgb(var(--ui-overlay) / 0.11) 50%,
+      rgb(var(--ui-overlay) / 0.04) 100%
     )
-    rgba(255, 255, 255, 0.02);
+    rgb(var(--ui-overlay) / 0.02);
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;
 }
@@ -573,78 +646,101 @@ select {
    MAP OVERRIDES
    ═══════════════════════════════════════════ */
 
-/* MapLibre GL – dark popup */
+/* MapLibre GL – popup */
 .bantay-popup .maplibregl-popup-content {
-  background: rgba(6, 16, 26, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-panel);
+  border: 1px solid rgb(var(--ui-overlay) / 0.1);
   border-radius: 8px;
   padding: 10px 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  color: #fff;
+  box-shadow: var(--shadow-elevated);
+  color: var(--text-primary);
 }
 
 .bantay-popup .maplibregl-popup-tip {
-  border-top-color: rgba(6, 16, 26, 0.96);
+  border-top-color: var(--bg-panel);
 }
 
 .bantay-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
-  border-top-color: rgba(6, 16, 26, 0.96);
+  border-top-color: var(--bg-panel);
 }
 
 .bantay-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip {
-  border-bottom-color: rgba(6, 16, 26, 0.96);
+  border-bottom-color: var(--bg-panel);
 }
 
 .bantay-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip {
-  border-right-color: rgba(6, 16, 26, 0.96);
+  border-right-color: var(--bg-panel);
 }
 
 .bantay-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip {
-  border-left-color: rgba(6, 16, 26, 0.96);
+  border-left-color: var(--bg-panel);
 }
 
 /* MapLibre GL – navigation controls */
 .maplibregl-ctrl-group {
-  background: rgba(6, 16, 26, 0.95) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: var(--bg-panel) !important;
+  border: 1px solid rgb(var(--ui-overlay) / 0.1) !important;
   border-radius: 6px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: var(--shadow-card) !important;
 }
 
 .maplibregl-ctrl-group button {
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgb(var(--ui-overlay) / 0.08) !important;
 }
 
 .maplibregl-ctrl-group button span {
   filter: invert(1) brightness(0.7);
 }
 
-.maplibregl-ctrl-group button:hover span {
-  filter: invert(1) brightness(1);
+[data-theme="day"] .maplibregl-ctrl-group button span {
+  filter: none;
 }
 
-/* Leaflet – dark theme (future) */
+/* Leaflet – theme-aware (future) */
 .leaflet-container {
   background: hsl(var(--sentinel-obsidian)) !important;
   font-family: "Inter", sans-serif !important;
 }
 .leaflet-popup-content-wrapper {
-  background: rgba(30, 35, 45, 0.95) !important;
-  color: #f8f9fa !important;
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
   border-radius: 8px !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgb(var(--ui-overlay) / 0.08) !important;
   backdrop-filter: blur(12px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: var(--shadow-elevated) !important;
 }
 .leaflet-popup-tip {
-  background: rgba(30, 35, 45, 0.95) !important;
+  background: var(--bg-panel) !important;
 }
 .leaflet-popup-close-button {
-  color: #9ca3af !important;
+  color: var(--text-dim) !important;
 }
 
 .mapbox-marker .marker-inner {
   transition:
     transform 0.2s ease,
     filter 0.2s ease;
+}
+
+/* ── Day-mode popup overrides ── */
+[data-theme="day"] .bantay-popup .maplibregl-popup-content {
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: hsl(222 26% 10%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+[data-theme="day"] .bantay-popup .maplibregl-popup-tip {
+  border-top-color: rgba(255, 255, 255, 0.97);
+}
+
+/* ── Day-mode map controls ── */
+[data-theme="day"] .maplibregl-ctrl-group {
+  background: rgba(255, 255, 255, 0.97) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+[data-theme="day"] .maplibregl-ctrl-group button span {
+  filter: none;
+}
+[data-theme="day"] .maplibregl-ctrl-group button:hover span {
+  filter: brightness(0.4);
 }

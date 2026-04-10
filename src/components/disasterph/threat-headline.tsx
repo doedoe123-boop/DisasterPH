@@ -67,7 +67,7 @@ export default function ThreatHeadlineBar({
       {/* Affected place count badge */}
       {threat.affectedPlaceCount > 0 && (
         <span
-          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${levelDot[threat.level]} text-white shrink-0`}
+          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${levelDot[threat.level]} text-[var(--text-primary)] shrink-0`}
         >
           {threat.affectedPlaceCount} place
           {threat.affectedPlaceCount > 1 ? "s" : ""}
