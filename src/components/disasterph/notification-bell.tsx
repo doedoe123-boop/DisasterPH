@@ -110,7 +110,7 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
   const isDenied = state === "denied";
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative shrink-0" ref={ref}>
       {/* Bell button */}
       <button
         type="button"
@@ -149,7 +149,11 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -6 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 z-50 mt-2.5 w-72 origin-top-right overflow-hidden rounded-xl border border-overlay/12 bg-[var(--bg-panel)] shadow-[var(--shadow-elevated)]"
+            className={`absolute z-50 mt-2.5 origin-top-right overflow-hidden rounded-xl border border-overlay/12 bg-[var(--bg-panel)] shadow-[var(--shadow-elevated)] ${
+              compact
+                ? "right-[-3rem] w-[min(18rem,calc(100vw-1.5rem))] sm:right-0"
+                : "right-0 w-72"
+            }`}
           >
             <div className="p-4">
               {/* Close button */}
