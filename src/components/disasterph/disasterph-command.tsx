@@ -411,7 +411,9 @@ export function DisasterPHCommand() {
             className={
               focusMode
                 ? "fixed inset-0 z-[1200] h-[100dvh] w-screen bg-background"
-                : "relative h-[45vh] shrink-0 md:h-auto md:min-h-0 md:flex-1"
+                : lowbarOpen
+                  ? "relative h-[45vh] shrink-0 md:h-auto md:min-h-0 md:flex-1"
+                  : "relative min-h-0 flex-1 md:h-auto md:min-h-0 md:flex-1"
             }
           >
             <CommandMap

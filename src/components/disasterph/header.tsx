@@ -136,8 +136,8 @@ export function AppHeader() {
       </header>
 
       {/* ── Mobile Header (compact) ── */}
-      <header className="command-header flex md:hidden items-center justify-between border-b border-overlay/10 bg-[var(--bg-base)] px-4 py-2.5">
-        <Link href="/" className="flex items-center gap-2.5">
+      <header className="command-header flex md:hidden items-center gap-2 border-b border-overlay/10 bg-[var(--bg-base)] px-4 py-2.5">
+        <Link href="/" className="flex min-w-0 flex-1 items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-orange-500/40 bg-orange-500/15">
             <Shield className="h-4 w-4 text-orange-400" />
           </div>
@@ -145,36 +145,38 @@ export function AppHeader() {
             Disaster<span className="text-orange-400"> PH</span>
           </span>
         </Link>
-        <div className="header-live-pill flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-3 py-1">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-          </span>
-          <span className="text-[10px] font-bold tracking-[0.15em] text-emerald-300 uppercase">
-            {i18n.nav.live}
-          </span>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <div className="header-live-pill flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-3 py-1">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            </span>
+            <span className="text-[10px] font-bold tracking-[0.15em] text-emerald-300 uppercase">
+              {i18n.nav.live}
+            </span>
+          </div>
+          <NotificationBell compact />
+          <button
+            className="header-utility-button flex h-8 min-w-12 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] px-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
+            onClick={() => setLocale(locale === "fil" ? "en" : "fil")}
+            title={`Switch to ${locale === "fil" ? "English" : "Filipino"}`}
+            type="button"
+          >
+            {locale === "fil" ? "Fil" : "Eng"}
+          </button>
+          <button
+            className="header-utility-button flex h-8 w-8 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
+            onClick={() => setTheme(theme === "day" ? "night" : "day")}
+            title={`Switch to ${theme === "day" ? "night" : "day"} mode`}
+            type="button"
+          >
+            {theme === "day" ? (
+              <Moon className="h-4 w-4" />
+            ) : (
+              <Sun className="h-4 w-4" />
+            )}
+          </button>
         </div>
-        <NotificationBell compact />
-        <button
-          className="header-utility-button flex h-8 min-w-12 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] px-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
-          onClick={() => setLocale(locale === "fil" ? "en" : "fil")}
-          title={`Switch to ${locale === "fil" ? "English" : "Filipino"}`}
-          type="button"
-        >
-          {locale === "fil" ? "Fil" : "Eng"}
-        </button>
-        <button
-          className="header-utility-button flex h-8 w-8 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
-          onClick={() => setTheme(theme === "day" ? "night" : "day")}
-          title={`Switch to ${theme === "day" ? "night" : "day"} mode`}
-          type="button"
-        >
-          {theme === "day" ? (
-            <Moon className="h-4 w-4" />
-          ) : (
-            <Sun className="h-4 w-4" />
-          )}
-        </button>
       </header>
 
       {/* ── Mobile Bottom Tab Bar ── */}
