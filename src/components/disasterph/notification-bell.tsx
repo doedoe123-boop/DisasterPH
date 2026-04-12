@@ -11,12 +11,15 @@ import {
   unsubscribeFromPush,
   getNotificationPrefs,
   saveNotificationPrefs,
-  getExistingPushSubscription,
 } from "@/lib/notifications";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/hooks/useLocale";
 
 type PermState = "prompt" | "granted" | "denied" | "unsupported" | "loading";
 
 export function NotificationBell({ compact = false }: { compact?: boolean }) {
+  const { locale } = useLocale();
+  const i18n = t(locale);
   const [state, setState] = useState<PermState>("loading");
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -66,11 +69,11 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
       setState("prompt");
       setOpen(false);
     } catch {
-      setError("Could not disable alerts.");
+      setError(i18n.notification.disabledError);
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [i18n.notification.disabledError]);
 
   const handleEnable = useCallback(async () => {
     setBusy(true);
@@ -88,19 +91,17 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
       setOpen(false);
     } catch (err) {
       const msg =
-        err instanceof Error ? err.message : "Could not enable alerts.";
+        err instanceof Error ? err.message : i18n.notification.enableError;
       if (msg.includes("permission")) {
         setState("denied");
-        setError(
-          "Notifications were blocked. Please enable them in your browser settings.",
-        );
+        setError(i18n.notification.blockedError);
       } else {
         setError(msg);
       }
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [i18n.notification.blockedError, i18n.notification.enableError]);
 
   // Don't render on unsupported browsers
   if (state === "unsupported" || state === "loading") return null;
@@ -125,10 +126,10 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
         }`}
         title={
           isGranted
-            ? "Alert notifications enabled"
+            ? i18n.notification.bellEnabled
             : isDenied
-              ? "Notifications blocked"
-              : "Enable disaster alerts"
+              ? i18n.notification.bellBlocked
+              : i18n.notification.bellPrompt
         }
       >
         {isGranted ? (
@@ -168,11 +169,10 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
                   </div>
                   <div>
                     <p className="text-[13px] font-semibold text-[var(--text-primary)]">
-                      Alerts active
+                      {i18n.notification.enabledTitle}
                     </p>
                     <p className="mt-1 text-[12px] leading-relaxed text-[var(--text-muted)]">
-                      You&rsquo;ll be notified about critical and warning-level
-                      disasters in your region.
+                      {i18n.notification.enabledBody}
                     </p>
                   </div>
                   <button
@@ -181,7 +181,9 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
                     disabled={busy}
                     className="w-full rounded-lg border border-overlay/12 py-2 text-[12px] font-medium text-[var(--text-muted)] transition hover:bg-overlay/6 hover:text-[var(--text-primary)] disabled:opacity-60"
                   >
-                    {busy ? "Disabling…" : "Turn off alerts"}
+                    {busy
+                      ? i18n.notification.disabling
+                      : i18n.notification.disable}
                   </button>
                 </div>
               )}
@@ -194,14 +196,13 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
                   </div>
                   <div>
                     <p className="text-[13px] font-semibold text-[var(--text-primary)]">
-                      Notifications blocked
+                      {i18n.notification.blockedTitle}
                     </p>
                     <p className="mt-1 text-[12px] leading-relaxed text-[var(--text-muted)]">
-                      To receive disaster alerts, allow notifications for this
-                      site in your browser settings.
+                      {i18n.notification.blockedBody}
                     </p>
                     <p className="mt-2 text-[11px] text-[var(--text-dim)]">
-                      On iPhone, add this site to your Home Screen first.
+                      {i18n.notification.blockedIosHint}
                     </p>
                   </div>
                 </div>
@@ -216,12 +217,10 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
                     </div>
                     <div>
                       <p className="text-[13px] font-semibold text-[var(--text-primary)]">
-                        Get disaster alerts
+                        {i18n.notification.promptTitle}
                       </p>
                       <p className="mt-1 text-[12px] leading-relaxed text-[var(--text-muted)]">
-                        Receive instant push notifications when a critical
-                        disaster impacts your region — even when this tab is
-                        closed.
+                        {i18n.notification.promptBody}
                       </p>
                     </div>
                   </div>
@@ -231,11 +230,12 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
                     disabled={busy}
                     className="w-full rounded-lg bg-orange-500 py-2.5 text-[13px] font-semibold text-white transition hover:bg-orange-600 disabled:opacity-60"
                   >
-                    {busy ? "Enabling…" : "Enable push alerts"}
+                    {busy
+                      ? i18n.notification.enabling
+                      : i18n.notification.enable}
                   </button>
                   <p className="text-center text-[11px] text-[var(--text-dim)]">
-                    Your browser will ask for permission. You can change this
-                    anytime.
+                    {i18n.notification.permissionHint}
                   </p>
                 </div>
               )}

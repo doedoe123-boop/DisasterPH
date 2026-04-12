@@ -840,3 +840,50 @@ select {
 [data-theme="day"] .header-mobile-tab:not(.is-active) {
   color: hsl(215 16% 42%);
 }
+
+/* ── Day-mode shelters readability ── */
+[data-theme="day"] .shelter-tab:not(.is-active) {
+  color: hsl(215 18% 36%);
+}
+
+[data-theme="day"] .shelter-tab:not(.is-active):hover {
+  color: hsl(222 26% 12%);
+}
+
+[data-theme="day"] .shelter-tab.is-active {
+  color: hsl(22 95% 38%);
+}
+
+[data-theme="day"] .shelter-amber-panel {
+  border-color: hsl(41 95% 60% / 0.38);
+  background: hsl(41 100% 94%);
+}
+
+[data-theme="day"] .shelter-amber-title {
+  color: hsl(31 88% 34%);
+}
+
+[data-theme="day"] .shelter-amber-copy {
+  color: hsl(31 72% 38%);
+}
+
+[data-theme="day"] .shelter-cyan-panel {
+  border-color: hsl(192 82% 56% / 0.34);
+  background: hsl(192 90% 94%);
+}
+
+[data-theme="day"] .shelter-cyan-title {
+  color: hsl(194 78% 32%);
+}
+
+[data-theme="day"] .shelter-cyan-copy {
+  color: hsl(196 64% 36%);
+}
+
+[data-theme="day"] .shelter-call-link {
+  color: hsl(195 86% 38%);
+}
+
+[data-theme="day"] .shelter-call-link:hover {
+  color: hsl(195 86% 30%);
+}
