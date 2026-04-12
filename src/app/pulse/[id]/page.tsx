@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDateTime } from "@/lib/incidents";
-import { eventLabel, severityText, t } from "@/lib/i18n";
+import { eventLabel, severityText, t, type Locale } from "@/lib/i18n";
 import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { visualFromSeverity } from "@/lib/severity";
 import { getPrepTips } from "@/lib/prep-guidance";
@@ -26,11 +26,11 @@ import { PulseDetailSkeleton } from "@/components/disasterph/page-skeletons";
 import { useLocale } from "@/hooks/useLocale";
 
 /** Map source to display label */
-function sourceLabel(incident: Incident): string {
+function sourceLabel(incident: Incident, locale: Locale): string {
   const labels: Record<string, string> = {
     EONET: "NASA EONET",
     PAGASA: "PAGASA",
-    PHIVOLCS: "USGS/PHIVOLCS",
+    PHIVOLCS: locale === "fil" ? "PHIVOLCS/USGS" : "USGS/PHIVOLCS",
   };
   return labels[incident.source] ?? incident.source;
 }
@@ -38,6 +38,7 @@ function sourceLabel(incident: Incident): string {
 /** Build technical data pairs (2-column grid) from incident metadata */
 function technicalData(
   incident: Incident,
+  locale: Locale,
 ): Array<{ label: string; value: string }> {
   const rows: Array<{ label: string; value: string }> = [];
   const m = incident.metadata;
@@ -45,34 +46,55 @@ function technicalData(
   if (incident.event_type === "earthquake") {
     if (m.magnitude != null)
       rows.push({
-        label: "Magnitude",
+        label: locale === "fil" ? "Lakas" : "Magnitude",
         value: String(Number(m.magnitude).toFixed(1)),
       });
     if (m.depth_km != null)
       rows.push({
-        label: "Depth",
+        label: locale === "fil" ? "Lalim" : "Depth",
         value: `${Number(m.depth_km).toFixed(0)} km`,
       });
     if (m.felt_reports != null)
-      rows.push({ label: "Felt Reports", value: String(m.felt_reports) });
+      rows.push({
+        label: locale === "fil" ? "Mga Ulat ng Naramdaman" : "Felt Reports",
+        value: String(m.felt_reports),
+      });
     rows.push({
       label: "Tsunami",
-      value: m.tsunami_warning ? "Yes" : "No",
+      value: m.tsunami_warning
+        ? locale === "fil"
+          ? "Oo"
+          : "Yes"
+        : locale === "fil"
+          ? "Hindi"
+          : "No",
     });
   } else if (incident.event_type === "typhoon") {
     if (m.signal_number != null)
-      rows.push({ label: "Signal Number", value: String(m.signal_number) });
+      rows.push({
+        label: locale === "fil" ? "Bilang ng Signal" : "Signal Number",
+        value: String(m.signal_number),
+      });
     if (m.wind_speed_kph != null)
-      rows.push({ label: "Wind Speed", value: `${m.wind_speed_kph} kph` });
+      rows.push({
+        label: locale === "fil" ? "Lakas ng Hangin" : "Wind Speed",
+        value: `${m.wind_speed_kph} kph`,
+      });
     if (m.movement != null)
-      rows.push({ label: "Movement", value: String(m.movement) });
+      rows.push({
+        label: locale === "fil" ? "Galaw" : "Movement",
+        value: String(m.movement),
+      });
   } else if (incident.event_type === "volcano") {
     if (m.alert_level)
-      rows.push({ label: "Alert Level", value: String(m.alert_level) });
+      rows.push({
+        label: locale === "fil" ? "Antas ng Alerto" : "Alert Level",
+        value: String(m.alert_level),
+      });
   }
 
   rows.push({ label: "Lat", value: incident.latitude.toFixed(4) });
-  rows.push({ label: "Lng", value: incident.longitude.toFixed(4) });
+  rows.push({ label: locale === "fil" ? "Long" : "Lng", value: incident.longitude.toFixed(4) });
 
   return rows;
 }
@@ -200,8 +222,8 @@ export default function PulseDetailPage() {
   );
 
   const techData = useMemo(
-    () => (incident ? technicalData(incident) : []),
-    [incident],
+    () => (incident ? technicalData(incident, locale) : []),
+    [incident, locale],
   );
 
   // Loading state
@@ -286,7 +308,7 @@ export default function PulseDetailPage() {
                   {eventLabel(incident.event_type, locale)}
                 </span>
                 <span className="text-[11px] text-[var(--text-dim)]">
-                  via {sourceLabel(incident)}
+                  via {sourceLabel(incident, locale)}
                 </span>
               </div>
 
@@ -453,7 +475,7 @@ export default function PulseDetailPage() {
                       {i18n.common.officialBulletin}
                     </p>
                     <p className="text-[11px] text-[var(--text-dim)]">
-                      {i18n.common.viewSourceAt} {sourceLabel(incident)}
+                      {i18n.common.viewSourceAt} {sourceLabel(incident, locale)}
                     </p>
                   </div>
                 </a>

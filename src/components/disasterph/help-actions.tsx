@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import type { HelpAction } from "@/types/incident";
 import type { LucideIcon } from "lucide-react";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/hooks/useLocale";
 
 interface HelpActionsProps {
   actions: HelpAction[];
@@ -48,16 +50,68 @@ const buttonStyle: Record<HelpAction["icon"], string> = {
   copy: "bg-overlay/[0.02] hover:bg-overlay/[0.05] border-overlay/8 hover:border-violet-400/30",
 };
 
-const actionTypeLabel: Record<HelpAction["actionType"], string> = {
-  call: "Call",
-  link: "Open",
-  share: "Share",
-  copy: "Copy",
-  internal: "",
-};
-
 export function HelpActions({ actions, compact = false }: HelpActionsProps) {
+  const { locale } = useLocale();
+  const i18n = t(locale);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function localizeAction(action: HelpAction) {
+    const copy = i18n.help.actions;
+    switch (action.id) {
+      case "ndrrmc":
+      case "ndrrmc-low":
+        return copy.ndrrmc;
+      case "red-cross":
+        return copy.redCross;
+      case "pagasa-advisory":
+        return copy.pagasaAdvisory;
+      case "pagasa-tcws":
+        return copy.windSignalMap;
+      case "pagasa-rainfall":
+        return copy.rainfallAdvisory;
+      case "phivolcs-bulletin":
+        return {
+          label: copy.phivolcsBulletin.label,
+          description:
+            action.description.toLowerCase().includes("volcano")
+              ? copy.phivolcsBulletin.descriptionVolcano
+              : copy.phivolcsBulletin.descriptionEarthquake,
+        };
+      case "share-incident":
+        return copy.shareIncident;
+      case "copy-summary":
+        return copy.copySummary;
+      case "safety-checklist":
+        return {
+          label: copy.safetyTips.label,
+          description:
+            action.description === "Typhoon preparedness steps"
+              ? copy.safetyTips.typhoon
+              : action.description === "Flood safety guidelines"
+                ? copy.safetyTips.flood
+                : action.description === "Earthquake safety: Drop, Cover, Hold"
+                  ? copy.safetyTips.earthquake
+                  : action.description === "Volcanic hazard precautions"
+                    ? copy.safetyTips.volcano
+                    : action.description === "Landslide awareness tips"
+                      ? copy.safetyTips.landslide
+                      : action.description === "Wildfire evacuation guidance"
+                        ? copy.safetyTips.wildfire
+                        : copy.safetyTips.default,
+        };
+      case "pagasa":
+        return copy.pagasa;
+      case "phivolcs":
+        return copy.phivolcs;
+      default:
+        return { label: action.label, description: action.description };
+    }
+  }
+
+  function localizedActionType(type: HelpAction["actionType"]) {
+    if (type === "internal") return "";
+    return i18n.help.actionType[type];
+  }
 
   async function handleAction(action: HelpAction) {
     switch (action.actionType) {
@@ -112,22 +166,27 @@ export function HelpActions({ actions, compact = false }: HelpActionsProps) {
     return (
       <div className="flex gap-1.5">
         {primary.map((action) => (
-          <button
-            key={action.id}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-center transition ${buttonStyle[action.icon]}`}
-            onClick={() => handleAction(action)}
-            type="button"
-          >
-            {(() => {
-              const Icon = iconComponent[action.icon];
-              return (
-                <Icon className={`h-3.5 w-3.5 ${iconColor[action.icon]}`} />
-              );
-            })()}
-            <span className="text-[10px] font-medium text-[var(--text-primary)]">
-              {action.label}
-            </span>
-          </button>
+          (() => {
+            const localized = localizeAction(action);
+            return (
+              <button
+                key={action.id}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-center transition ${buttonStyle[action.icon]}`}
+                onClick={() => handleAction(action)}
+                type="button"
+              >
+                {(() => {
+                  const Icon = iconComponent[action.icon];
+                  return (
+                    <Icon className={`h-3.5 w-3.5 ${iconColor[action.icon]}`} />
+                  );
+                })()}
+                <span className="text-[10px] font-medium text-[var(--text-primary)]">
+                  {localized.label}
+                </span>
+              </button>
+            );
+          })()
         ))}
       </div>
     );
@@ -137,69 +196,75 @@ export function HelpActions({ actions, compact = false }: HelpActionsProps) {
     <section className="rounded-lg border border-overlay/8 bg-[var(--bg-panel)]">
       <div className="border-b border-overlay/8 px-3 py-2">
         <span className="text-[11px] uppercase tracking-[0.24em] text-[var(--text-dim)]">
-          Help & Safety
+          {i18n.help.title}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-1.5 p-2">
-        {primary.map((action) => (
-          <button
-            key={action.id}
-            className={`group flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition ${buttonStyle[action.icon]}`}
-            onClick={() => handleAction(action)}
-            type="button"
-          >
-            {(() => {
-              const Icon = iconComponent[action.icon];
-              return <Icon className={`h-5 w-5 ${iconColor[action.icon]}`} />;
-            })()}
-            <span className={`text-[11px] font-medium ${action.icon === 'phone' || action.icon === 'alert' ? 'text-[var(--text-primary)]' : 'text-[var(--text-primary)]'}`}>
-              {action.label}
-            </span>
-            <span className={`text-[10px] leading-tight ${action.icon === 'phone' || action.icon === 'alert' ? 'text-overlay/80' : 'text-[var(--text-dim)]'}`}>
-              {copiedId === action.id ? "Copied!" : action.description}
-            </span>
-            {actionTypeLabel[action.actionType] && (
-              <span className="text-[9px] uppercase tracking-wider text-[var(--text-dim)] opacity-0 transition group-hover:opacity-100">
-                {actionTypeLabel[action.actionType]}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {secondary.length > 0 && (
-        <div className="space-y-0.5 border-t border-overlay/6 px-2 py-1.5">
-          {secondary.map((action) => (
+        {primary.map((action) => {
+          const localized = localizeAction(action);
+          return (
             <button
               key={action.id}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition hover:bg-overlay/[0.04]"
+              className={`group flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition ${buttonStyle[action.icon]}`}
               onClick={() => handleAction(action)}
               type="button"
             >
               {(() => {
                 const Icon = iconComponent[action.icon];
-                return (
-                  <Icon
-                    className={`h-4 w-4 shrink-0 ${iconColor[action.icon]}`}
-                  />
-                );
+                return <Icon className={`h-5 w-5 ${iconColor[action.icon]}`} />;
               })()}
-              <div className="min-w-0 flex-1">
-                <span className="text-[12px] font-medium text-[var(--text-primary)]">
-                  {action.label}
-                </span>
-                <span className="ml-1.5 text-[11px] text-[var(--text-dim)]">
-                  {copiedId === action.id ? "Copied!" : action.description}
-                </span>
-              </div>
-              {action.actionType !== "internal" && (
-                <span className="shrink-0 text-[9px] uppercase tracking-wider text-[var(--text-dim)]">
-                  {actionTypeLabel[action.actionType]}
+              <span className="text-[11px] font-medium text-[var(--text-primary)]">
+                {localized.label}
+              </span>
+              <span className={`text-[10px] leading-tight ${action.icon === 'phone' || action.icon === 'alert' ? 'text-overlay/80' : 'text-[var(--text-dim)]'}`}>
+                {copiedId === action.id ? i18n.help.copied : localized.description}
+              </span>
+              {localizedActionType(action.actionType) && (
+                <span className="text-[9px] uppercase tracking-wider text-[var(--text-dim)] opacity-0 transition group-hover:opacity-100">
+                  {localizedActionType(action.actionType)}
                 </span>
               )}
             </button>
-          ))}
+          );
+        })}
+      </div>
+
+      {secondary.length > 0 && (
+        <div className="space-y-0.5 border-t border-overlay/6 px-2 py-1.5">
+          {secondary.map((action) => {
+            const localized = localizeAction(action);
+            return (
+              <button
+                key={action.id}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition hover:bg-overlay/[0.04]"
+                onClick={() => handleAction(action)}
+                type="button"
+              >
+                {(() => {
+                  const Icon = iconComponent[action.icon];
+                  return (
+                    <Icon
+                      className={`h-4 w-4 shrink-0 ${iconColor[action.icon]}`}
+                    />
+                  );
+                })()}
+                <div className="min-w-0 flex-1">
+                  <span className="text-[12px] font-medium text-[var(--text-primary)]">
+                    {localized.label}
+                  </span>
+                  <span className="ml-1.5 text-[11px] text-[var(--text-dim)]">
+                    {copiedId === action.id ? i18n.help.copied : localized.description}
+                  </span>
+                </div>
+                {action.actionType !== "internal" && (
+                  <span className="shrink-0 text-[9px] uppercase tracking-wider text-[var(--text-dim)]">
+                    {localizedActionType(action.actionType)}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </section>
