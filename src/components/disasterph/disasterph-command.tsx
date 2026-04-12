@@ -29,6 +29,7 @@ import { useLocale } from "@/hooks/useLocale";
 import { AppHeader } from "./header";
 import { CommandMap } from "./command-map";
 import { EmergencyContacts } from "./emergency-contacts";
+import { CommandCenterSkeleton } from "./page-skeletons";
 
 import { getPrepTips, localizePrepTip } from "@/lib/prep-guidance";
 
@@ -83,6 +84,7 @@ export function DisasterPHCommand() {
   );
   const [focusMode, setFocusMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [lowbarOpen, setLowbarOpen] = useState(true);
 
   // ── Live data hooks ──
   const { incidents, stats, isLoading, generatedAt } = useIncidents();
@@ -176,24 +178,7 @@ export function DisasterPHCommand() {
 
   // ── Loading screen ──
   if (isLoading && incidents.length === 0) {
-    return (
-      <main className="flex h-screen items-center justify-center bg-background text-foreground">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="rounded-xl border border-overlay/10 bg-[var(--bg-panel)] p-8 text-center shadow-[var(--shadow-elevated)]"
-        >
-          <div className="loading-shimmer mx-auto h-3 w-32 rounded-full" />
-          <div className="loading-shimmer mt-4 h-7 w-44 rounded-xl mx-auto" />
-          <p className="mt-5 text-sm text-[var(--text-dim)]">
-            {locale === "fil"
-              ? "Kinukuha ang live data mula sa PAGASA, PHIVOLCS, at EONET…"
-              : "Fetching live data from PAGASA, PHIVOLCS, and EONET…"}
-          </p>
-        </motion.div>
-      </main>
-    );
+    return <CommandCenterSkeleton />;
   }
 
   return (
@@ -443,6 +428,8 @@ export function DisasterPHCommand() {
               onToggleFocus={() => setFocusMode((f) => !f)}
               sidebarExpanded={sidebarOpen}
               onToggleSidebar={() => setSidebarOpen((s) => !s)}
+              lowbarExpanded={lowbarOpen}
+              onToggleLowbar={() => setLowbarOpen((s) => !s)}
             />
 
             {/* ── Focus Mode: Compact Incident Card ── */}
@@ -603,7 +590,7 @@ export function DisasterPHCommand() {
           </section>
 
           {/* ── Detail Feed (below map) ── */}
-          {!focusMode && (
+          {!focusMode && lowbarOpen && (
             <section className="flex-1 md:flex-none md:shrink-0 border-t border-overlay/10 bg-[var(--bg-panel)] overflow-y-auto">
               {/* Section heading */}
               <div className="sticky top-0 z-10 flex items-center gap-2 md:gap-3 border-b border-overlay/8 px-4 md:px-5 py-2.5 md:py-3 bg-[var(--bg-panel)]">
@@ -646,6 +633,14 @@ export function DisasterPHCommand() {
                 <span className="ml-auto text-[13px] font-medium text-[var(--text-dim)]">
                   {filteredIncidents.length} {i18n.common.active.toLowerCase()}
                 </span>
+                <button
+                  type="button"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-dim)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
+                  onClick={() => setLowbarOpen(false)}
+                  title="Close feed"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
 
               {/* Incident cards */}

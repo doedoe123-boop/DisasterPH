@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import {
+  ChevronUp,
   ChevronsLeft,
   ChevronsRight,
   Maximize2,
@@ -34,6 +35,8 @@ interface CommandMapProps {
   onToggleFocus: () => void;
   sidebarExpanded: boolean;
   onToggleSidebar: () => void;
+  lowbarExpanded?: boolean;
+  onToggleLowbar?: () => void;
 }
 
 export function CommandMap({
@@ -47,6 +50,8 @@ export function CommandMap({
   onToggleFocus,
   sidebarExpanded,
   onToggleSidebar,
+  lowbarExpanded = true,
+  onToggleLowbar = () => {},
 }: CommandMapProps) {
   // Compute effective sidebar width for map padding offset
   const sidebarWidth = focusMode ? 0 : sidebarExpanded ? 320 : 48;
@@ -115,6 +120,20 @@ export function CommandMap({
           )}
         </button>
       </div>
+
+      {!focusMode && !lowbarExpanded && (
+        <div className="absolute bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-[3.75rem] z-20 md:bottom-12 md:right-3">
+          <button
+            className="flex h-9 items-center gap-1.5 rounded-xl border border-overlay/10 bg-[var(--bg-panel)] px-3 text-[13px] font-medium text-[var(--text-primary)] shadow-[var(--shadow-card)] backdrop-blur transition hover:border-overlay/20 hover:bg-overlay/8 active:scale-[0.98]"
+            onClick={onToggleLowbar}
+            title="Show incident feed"
+            type="button"
+          >
+            <ChevronUp className="h-3.5 w-3.5" />
+            <span>Show feed</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

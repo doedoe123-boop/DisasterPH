@@ -28,6 +28,7 @@ import type {
 import { useIncidents } from "@/hooks/use-incidents";
 import { useLocale } from "@/hooks/useLocale";
 import { AppHeader } from "@/components/disasterph/header";
+import { PulseFeedSkeleton } from "@/components/disasterph/page-skeletons";
 
 /* ── Icons per hazard type ── */
 const HAZARD_ICON: Record<string, typeof Waves> = {
@@ -175,6 +176,10 @@ export default function PulseFeedPage() {
     return result;
   }, [incidents, typeFilter, severityFilter, search]);
 
+  if (isLoading && incidents.length === 0) {
+    return <PulseFeedSkeleton />;
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg-base)] text-[var(--text-primary)]">
       <AppHeader />
@@ -274,16 +279,6 @@ export default function PulseFeedPage() {
           ))}
         </motion.div>
 
-        {/* ── Loading ── */}
-        {isLoading && incidents.length === 0 && (
-          <div className="mt-16 text-center">
-            <div className="loading-shimmer mx-auto h-5 w-48 rounded-full" />
-            <p className="mt-4 text-sm text-[var(--text-dim)]">
-              {i18n.common.loadingEvents}
-            </p>
-          </div>
-        )}
-
         {/* ── Event cards grid ── */}
         {filtered.length > 0 && (
           <motion.div
@@ -324,10 +319,10 @@ function EventCard({ incident }: { incident: Incident }) {
   const glowClass = SEVERITY_GLOW[incident.severity] ?? "";
 
   return (
-    <motion.div variants={cardVariants} whileTap={{ scale: 0.98 }}>
+    <motion.div variants={cardVariants} whileTap={{ scale: 0.98 }} className="h-full">
       <Link
         href={`/pulse/${encodeURIComponent(incident.id)}`}
-        className={`group block rounded-xl border bg-[var(--bg-panel)] p-4 md:p-5 transition-all duration-200 border-l-3 ${sv.accent} ${glowClass} active:bg-overlay/[0.06] hover:bg-[var(--bg-card-hover)] hover:border-overlay/20 hover:shadow-[var(--shadow-elevated)] ${
+        className={`group flex h-full flex-col rounded-xl border bg-[var(--bg-panel)] p-4 md:p-5 transition-all duration-200 border-l-3 ${sv.accent} ${glowClass} active:bg-overlay/[0.06] hover:bg-[var(--bg-card-hover)] hover:border-overlay/20 hover:shadow-[var(--shadow-elevated)] ${
           incident.severity === "critical"
             ? "border-red-500/25"
             : incident.severity === "warning"
@@ -336,7 +331,7 @@ function EventCard({ incident }: { incident: Incident }) {
         }`}
       >
         {/* Top row: icon + badges */}
-        <div className="flex items-start gap-3">
+        <div className="flex flex-1 items-start gap-3">
           <div
             className={`flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-xl ${
               incident.severity === "critical"

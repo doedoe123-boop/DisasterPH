@@ -7,6 +7,7 @@ import { Shield, Tv, Radio, Landmark, Sun, Moon } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
 import { useTheme } from "@/hooks/useTheme";
+import { NotificationBell } from "@/components/disasterph/notification-bell";
 
 const NAV_ITEMS = [
   { labelKey: "live", subKey: "liveSub", href: "/", icon: Tv },
@@ -29,7 +30,7 @@ export function AppHeader() {
   return (
     <>
       {/* ── Desktop Header ── */}
-      <header className="hidden md:flex items-center justify-between border-b border-overlay/10 bg-[var(--bg-base)] px-5 py-1.5">
+      <header className="command-header hidden md:flex items-center justify-between border-b border-overlay/10 bg-[var(--bg-base)] px-5 py-1.5">
         {/* Left: Logo */}
         <Link href="/" className="flex items-center gap-3 group">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-orange-500/40 bg-orange-500/15 shadow-[0_0_12px_rgba(255,140,66,0.15)] transition group-hover:shadow-[0_0_18px_rgba(255,140,66,0.25)]">
@@ -58,11 +59,11 @@ export function AppHeader() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex items-center gap-2.5 rounded-lg px-5 py-2.5 text-sm transition-all duration-200 ${
+                className={`header-nav-link relative flex items-center gap-2.5 rounded-lg px-5 py-2.5 text-sm transition-all duration-200 ${
                   active
                     ? "bg-orange-500/12 text-orange-300"
                     : "text-[var(--text-muted)] hover:bg-overlay/6 hover:text-[var(--text-primary)]"
-                }`}
+                } ${active ? "is-active" : ""}`}
               >
                 {active && (
                   <motion.div
@@ -81,7 +82,7 @@ export function AppHeader() {
                     >
                       {i18n.nav[item.labelKey]}
                     </span>
-                    <p className="text-sm font-medium text-[var(--text-dim)] tracking-wide">
+                    <p className="header-nav-subtitle text-sm font-medium text-[var(--text-dim)] tracking-wide">
                       {i18n.nav[item.subKey]}
                     </p>
                   </div>
@@ -93,15 +94,15 @@ export function AppHeader() {
 
         {/* Right: LIVE indicator */}
         <div className="flex items-center gap-3">
-          <div className="flex h-9 items-center rounded-full border border-overlay/10 bg-overlay/[0.04] p-1">
+          <div className="header-locale-toggle flex h-9 items-center rounded-full border border-overlay/10 bg-overlay/[0.04] p-1">
             {(["en", "fil"] as const).map((mode) => (
               <button
                 key={mode}
-                className={`h-7 rounded-full px-3 text-[11px] font-bold uppercase tracking-[0.14em] transition ${
+                className={`header-locale-button h-7 rounded-full px-3 text-[11px] font-bold uppercase tracking-[0.14em] transition ${
                   locale === mode
                     ? "bg-cyan-500/15 text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.1)]"
                     : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                }`}
+                } ${locale === mode ? "is-active" : ""}`}
                 onClick={() => setLocale(mode)}
                 type="button"
               >
@@ -109,10 +110,11 @@ export function AppHeader() {
               </button>
             ))}
           </div>
+          <NotificationBell />
           <button
             type="button"
             onClick={() => setTheme(theme === "day" ? "night" : "day")}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-overlay/10 bg-overlay/[0.04] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
+            className="header-utility-button flex h-9 w-9 items-center justify-center rounded-full border border-overlay/10 bg-overlay/[0.04] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
             title={`Switch to ${theme === "day" ? "night" : "day"} mode`}
           >
             {theme === "day" ? (
@@ -121,7 +123,7 @@ export function AppHeader() {
               <Sun className="h-[18px] w-[18px]" />
             )}
           </button>
-          <div className="flex items-center gap-2.5 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-4 py-1.5 shadow-[0_0_12px_rgba(57,217,138,0.08)]">
+          <div className="header-live-pill flex items-center gap-2.5 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-4 py-1.5 shadow-[0_0_12px_rgba(57,217,138,0.08)]">
             <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(57,217,138,0.5)]" />
@@ -134,7 +136,7 @@ export function AppHeader() {
       </header>
 
       {/* ── Mobile Header (compact) ── */}
-      <header className="flex md:hidden items-center justify-between border-b border-overlay/10 bg-[var(--bg-base)] px-4 py-2.5">
+      <header className="command-header flex md:hidden items-center justify-between border-b border-overlay/10 bg-[var(--bg-base)] px-4 py-2.5">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-orange-500/40 bg-orange-500/15">
             <Shield className="h-4 w-4 text-orange-400" />
@@ -143,7 +145,7 @@ export function AppHeader() {
             Disaster<span className="text-orange-400"> PH</span>
           </span>
         </Link>
-        <div className="flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-3 py-1">
+        <div className="header-live-pill flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-3 py-1">
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
@@ -152,8 +154,9 @@ export function AppHeader() {
             {i18n.nav.live}
           </span>
         </div>
+        <NotificationBell compact />
         <button
-          className="flex h-8 min-w-12 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] px-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
+          className="header-utility-button flex h-8 min-w-12 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] px-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
           onClick={() => setLocale(locale === "fil" ? "en" : "fil")}
           title={`Switch to ${locale === "fil" ? "English" : "Filipino"}`}
           type="button"
@@ -161,7 +164,7 @@ export function AppHeader() {
           {locale === "fil" ? "Fil" : "Eng"}
         </button>
         <button
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
+          className="header-utility-button flex h-8 w-8 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
           onClick={() => setTheme(theme === "day" ? "night" : "day")}
           title={`Switch to ${theme === "day" ? "night" : "day"} mode`}
           type="button"
@@ -175,7 +178,7 @@ export function AppHeader() {
       </header>
 
       {/* ── Mobile Bottom Tab Bar ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-[998] flex md:hidden border-t border-overlay/10 bg-[var(--bg-panel)] backdrop-blur-md safe-bottom">
+      <nav className="header-mobile-nav fixed bottom-0 left-0 right-0 z-[998] flex md:hidden border-t border-overlay/10 bg-[var(--bg-panel)] backdrop-blur-md safe-bottom">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active =
@@ -187,9 +190,9 @@ export function AppHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-1 flex-col items-center gap-1 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] transition-colors ${
+              className={`header-mobile-tab flex flex-1 flex-col items-center gap-1 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] transition-colors ${
                 active ? "text-orange-400" : "text-[var(--text-dim)]"
-              }`}
+              } ${active ? "is-active" : ""}`}
             >
               <Icon className="h-5 w-5" />
               <span className="text-[10px] font-bold uppercase tracking-wider">

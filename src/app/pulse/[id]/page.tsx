@@ -22,6 +22,7 @@ import { getPrepTips } from "@/lib/prep-guidance";
 import type { Incident } from "@/types/incident";
 import { AppHeader } from "@/components/disasterph/header";
 import { PrepGuidance } from "@/components/disasterph/prep-guidance";
+import { PulseDetailSkeleton } from "@/components/disasterph/page-skeletons";
 import { useLocale } from "@/hooks/useLocale";
 
 /** Map source to display label */
@@ -205,19 +206,7 @@ export default function PulseDetailPage() {
 
   // Loading state
   if (isLoading && !incident) {
-    return (
-      <div className="flex min-h-screen flex-col bg-[var(--bg-base)] text-[var(--text-primary)]">
-        <AppHeader />
-        <main className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <div className="loading-shimmer mx-auto h-4 w-48 rounded-full" />
-            <p className="mt-3 text-xs text-[var(--text-dim)]">
-              {i18n.common.loadingDetails}
-            </p>
-          </div>
-        </main>
-      </div>
-    );
+    return <PulseDetailSkeleton />;
   }
 
   // Not found
