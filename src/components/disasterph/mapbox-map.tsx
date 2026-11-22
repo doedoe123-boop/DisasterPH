@@ -92,6 +92,10 @@ export default function MapLibreMapComponent({
           minZoom: 4,
           maxZoom: 16,
           attributionControl: false,
+          // MapLibre control labels (tooltips and accessible names). They can
+          // only be set when the map is created, so the map is re-created
+          // when the language changes.
+          ...(locale === "fil" && { locale: MAPLIBRE_FIL_LOCALE }),
         });
       } catch (error) {
         if (!cancelled) {
@@ -167,7 +171,7 @@ export default function MapLibreMapComponent({
       mlRef.current = null;
       setMapReady(false);
     };
-  }, [mapAttempt]);
+  }, [mapAttempt, locale]);
 
   // ── Resize observer ──
   useEffect(() => {
@@ -396,6 +400,18 @@ export default function MapLibreMapComponent({
     </div>
   );
 }
+
+/** Filipino labels for MapLibre's built-in controls (English uses defaults). */
+const MAPLIBRE_FIL_LOCALE: Record<string, string> = {
+  "NavigationControl.ZoomIn": "Palakihin",
+  "NavigationControl.ZoomOut": "Paliitin",
+  "NavigationControl.ResetBearing": "Ibalik sa hilaga",
+  "AttributionControl.ToggleAttribution": "Ipakita o itago ang attribution",
+  "AttributionControl.MapFeedback": "Feedback sa mapa",
+  "FullscreenControl.Enter": "Buong screen",
+  "FullscreenControl.Exit": "Lumabas sa buong screen",
+  "Map.Title": "Mapa",
+};
 
 /* ═══════════════════════════════════════════════════════════
    EXTRACTED MAP HELPERS — called on init AND after style swap
