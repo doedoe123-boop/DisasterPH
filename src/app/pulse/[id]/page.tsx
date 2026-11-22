@@ -1,5 +1,6 @@
 "use client";
 
+import { displayRegion } from "@/lib/geo/ph-regions";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -299,7 +300,7 @@ export default function PulseDetailPage() {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-muted)]">
                   <span className="flex items-center gap-1.5">
                     <MapPin className="h-4 w-4" />
-                    {incident.region}
+                    {displayRegion(incident.region, locale)}
                   </span>
                   <span
                     className="flex items-center gap-1.5"
@@ -542,7 +543,7 @@ function ShareDropdownContext({
     }
   };
 
-  const shareText = `${incident.title} — ${incident.region}`;
+  const shareText = `${incident.title} — ${displayRegion(incident.region, locale)}`;
 
   const dropdown = (
     <div className="relative" ref={ref}>

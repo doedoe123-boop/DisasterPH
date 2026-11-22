@@ -1,3 +1,5 @@
+import { displayRegion } from "@/lib/geo/ph-regions";
+import { useLocale } from "@/hooks/useLocale";
 import { MapPin } from "lucide-react";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
 import { severityLabel, visualFromSeverity } from "@/lib/severity";
@@ -215,6 +217,7 @@ function mmiToRoman(mmi: number): string {
 }
 
 export function IncidentDetails({ incident }: IncidentDetailsProps) {
+  const { locale } = useLocale();
   const severityVisual = visualFromSeverity(incident.severity);
 
   // Filter out structured/hidden keys for the generic tag list
@@ -247,7 +250,7 @@ export function IncidentDetails({ incident }: IncidentDetailsProps) {
 
       <div className="mt-1.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
         <MapPin className="h-3 w-3 shrink-0 text-[var(--text-dim)]" />
-        <span>{incident.region}</span>
+        <span>{displayRegion(incident.region, locale)}</span>
         <span className="text-[var(--text-dim)]">·</span>
         <span suppressHydrationWarning>
           {formatShortTime(incident.updated_at)}

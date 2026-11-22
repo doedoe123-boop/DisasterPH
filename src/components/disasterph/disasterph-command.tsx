@@ -1,5 +1,6 @@
 "use client";
 
+import { displayRegion } from "@/lib/geo/ph-regions";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -542,7 +543,7 @@ export function DisasterPHCommand() {
 
                         {/* Location + time */}
                         <div className="mt-1.5 flex items-center gap-3 text-[12px] text-[var(--text-muted)]">
-                          <span>{selectedIncident.region}</span>
+                          <span>{displayRegion(selectedIncident.region, locale)}</span>
                           <span className="text-[var(--text-dim)] opacity-50">
                             ·
                           </span>
@@ -721,7 +722,7 @@ export function DisasterPHCommand() {
                                 {plainAlertInterpretation(incident, locale)}
                               </p>
                               <div className="mt-1.5 flex items-center gap-3 text-[13px] text-[var(--text-muted)]">
-                                <span>{incident.region}</span>
+                                <span>{displayRegion(incident.region, locale)}</span>
                                 <span className="text-[var(--text-dim)] opacity-50">
                                   ·
                                 </span>

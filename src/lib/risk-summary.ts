@@ -5,7 +5,7 @@ import type {
   SavedPlace,
 } from "@/types/incident";
 import { severityRank } from "@/lib/severity";
-import { estimateRegion } from "@/lib/ingest/regions";
+import { regionForMatching } from "@/lib/ingest/regions";
 
 /** Haversine distance in km between two lat/lng points */
 export function haversineKm(
@@ -82,14 +82,18 @@ function effectiveRadiusForIncident(incident: Incident): number {
 export type MatchReason = "region" | "proximity" | "both";
 
 function incidentMatchesPlace(place: SavedPlace, incident: Incident) {
-  const placeRegion = estimateRegion(place.latitude, place.longitude);
+  const placeRegion = regionForMatching(place.latitude, place.longitude);
   const distanceKm = haversineKm(
     place.latitude,
     place.longitude,
     incident.latitude,
     incident.longitude,
   );
-  const sameRegion = placeRegion === incident.region;
+  // Offshore incidents carry their nearest region in metadata.near_region.
+  const sameRegion =
+    placeRegion === incident.region ||
+    (typeof incident.metadata?.near_region === "string" &&
+      placeRegion === incident.metadata.near_region);
   const withinRadius = distanceKm <= effectiveRadiusForIncident(incident);
 
   // For advisory-level incidents, require proximity — region-only match is too broad
@@ -160,7 +164,7 @@ export function computePlaceRisk(
   place: SavedPlace,
   incidents: Incident[],
 ): PlaceRiskSummary {
-  const placeRegion = estimateRegion(place.latitude, place.longitude);
+  const placeRegion = regionForMatching(place.latitude, place.longitude);
   const withDistance = incidents.map((inc) => ({
     incident: inc,
     ...incidentMatchesPlace(place, inc),
