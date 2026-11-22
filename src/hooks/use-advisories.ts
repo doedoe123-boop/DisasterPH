@@ -19,6 +19,8 @@ export function useAdvisories(): UseAdvisoriesResult {
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Latest fetchData for the retry timer (a callback cannot reference itself).
+  const fetchRef = useRef<() => void>(() => {});
 
   const hydrateFromCache = useCallback(() => {
     if (typeof window === "undefined") return false;
@@ -54,7 +56,7 @@ export function useAdvisories(): UseAdvisoriesResult {
         err instanceof Error ? err.message : "Failed to fetch advisories",
       );
       if (typeof window !== "undefined") {
-        retryTimerRef.current = setTimeout(fetchData, RETRY_MS);
+        retryTimerRef.current = setTimeout(() => fetchRef.current(), RETRY_MS);
       }
     } finally {
       setIsLoading(false);
@@ -62,9 +64,18 @@ export function useAdvisories(): UseAdvisoriesResult {
   }, [hydrateFromCache]);
 
   useEffect(() => {
-    fetchData();
+    fetchRef.current = () => void fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    // First fetch on the next microtask rather than synchronously in the effect body.
+    queueMicrotask(() => {
+      if (!cancelled) void fetchData();
+    });
     const id = setInterval(fetchData, POLL_MS);
     return () => {
+      cancelled = true;
       clearInterval(id);
       abortRef.current?.abort();
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);

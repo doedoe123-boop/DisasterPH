@@ -18,7 +18,9 @@ const DEBOUNCE_MS = 400;
 
 export function LocationSearch({ selected, onSelect }: LocationSearchProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<GeocodingResult[]>([]);
+  const [searchResults, setResults] = useState<GeocodingResult[]>([]);
+  // Results from an older, longer query are not shown once the query is too short.
+  const results = query.length < 2 ? [] : searchResults;
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -80,10 +82,8 @@ export function LocationSearch({ selected, onSelect }: LocationSearchProps) {
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    if (query.length < 2) {
-      setResults([]);
-      return;
-    }
+    // Short queries: nothing to search (results are hidden at render time).
+    if (query.length < 2) return;
     timerRef.current = setTimeout(() => search(query), DEBOUNCE_MS);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);

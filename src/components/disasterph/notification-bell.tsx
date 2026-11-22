@@ -25,25 +25,15 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Resolve permission state on mount
+  // Resolve permission state on mount (browser-only, so not during render).
   useEffect(() => {
-    if (!notificationsSupported()) {
-      setState("unsupported");
-      return;
-    }
-    const perm = getPermissionState();
-    if (perm === "unsupported") {
-      setState("unsupported");
-    } else if (perm === "granted") {
-      // Browser says granted — check if user has actually enabled in our app
-      const prefs = getNotificationPrefs();
-      setState(prefs.enabled ? "granted" : "prompt");
-    } else if (perm === "denied") {
-      setState("denied");
-    } else {
-      // "default" → prompt
-      setState("prompt");
-    }
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setState(resolvePermState());
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Close on outside click
@@ -248,4 +238,14 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
       </AnimatePresence>
     </div>
   );
+}
+
+function resolvePermState(): PermState {
+  if (!notificationsSupported()) return "unsupported";
+  const perm = getPermissionState();
+  if (perm === "unsupported") return "unsupported";
+  // Browser says granted: check whether the user enabled alerts in the app.
+  if (perm === "granted") return getNotificationPrefs().enabled ? "granted" : "prompt";
+  if (perm === "denied") return "denied";
+  return "prompt"; // "default"
 }
