@@ -55,20 +55,28 @@ export function createModeratorSession(now = Date.now()): string | null {
   return `${expiresAt}.${sign(token, expiresAt)}`;
 }
 
+/** Expiry (unix seconds) of a valid session, or null if invalid/expired. */
+export function moderatorSessionExpiresAt(
+  value: string | undefined,
+  now = Date.now(),
+): number | null {
+  const token = configuredToken();
+  if (!token || !value) return null;
+
+  const match = /^(\d{1,12})\.([A-Za-z0-9_-]{43})$/.exec(value);
+  if (!match) return null;
+
+  const expiresAt = Number(match[1]);
+  if (expiresAt <= Math.floor(now / 1000)) return null;
+
+  return safeEqual(match[2], sign(token, expiresAt)) ? expiresAt : null;
+}
+
 export function verifyModeratorSession(
   value: string | undefined,
   now = Date.now(),
 ): boolean {
-  const token = configuredToken();
-  if (!token || !value) return false;
-
-  const match = /^(\d{1,12})\.([A-Za-z0-9_-]{43})$/.exec(value);
-  if (!match) return false;
-
-  const expiresAt = Number(match[1]);
-  if (expiresAt <= Math.floor(now / 1000)) return false;
-
-  return safeEqual(match[2], sign(token, expiresAt));
+  return moderatorSessionExpiresAt(value, now) !== null;
 }
 
 /**

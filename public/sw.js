@@ -2,7 +2,15 @@
 
 const SHELL_CACHE = "disasterph-shell-v3";
 const ASSET_CACHE = "disasterph-assets-v2";
-const API_CACHE = "disasterph-api-v2";
+// v3: drop any API entries cached before private endpoints were excluded.
+const API_CACHE = "disasterph-api-v3";
+
+// Session-bound or private API responses are never cached or served offline.
+const PRIVATE_API_PREFIXES = [
+  "/api/reports/moderation",
+  "/api/moderator/",
+  "/api/push/",
+];
 
 const OFFLINE_URL = "/offline.html";
 const SHELL_URLS = [
@@ -56,6 +64,9 @@ self.addEventListener("fetch", (event) => {
 
   // API responses — network first, fallback to cached response
   if (url.pathname.startsWith("/api/")) {
+    if (PRIVATE_API_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
+      return; // straight to the network, never cached
+    }
     event.respondWith(networkFirstAPI(event.request));
     return;
   }
@@ -115,7 +126,8 @@ async function networkFirstAPI(request) {
 
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    const cacheControl = response.headers.get("cache-control") || "";
+    if (response.ok && !/no-store|private/i.test(cacheControl)) {
       // Clone and store with a timestamp header
       const headers = new Headers(response.headers);
       headers.set("sw-cached-at", new Date().toISOString());

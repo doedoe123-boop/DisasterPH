@@ -22,5 +22,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Could not load reports" }, { status: 500 });
   }
 
-  return NextResponse.json({ data });
+  return NextResponse.json(
+    { data },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }

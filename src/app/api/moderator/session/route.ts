@@ -7,17 +7,21 @@ import {
   isSameOrigin,
   moderationConfigured,
   setModeratorCookie,
+  moderatorSessionExpiresAt,
   verifyAdminToken,
-  verifyModeratorSession,
 } from "@/lib/moderator-auth";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/moderator/session — is the caller a signed-in moderator?
+// GET /api/moderator/session — is the caller a signed-in moderator, and until when?
+// expiresAt (unix seconds) lets the browser drop private data the moment the
+// session ends instead of waiting for the next 401.
 export async function GET(request: NextRequest) {
-  return NextResponse.json({
-    moderator: verifyModeratorSession(request.cookies.get(MODERATOR_COOKIE)?.value),
-  });
+  const expiresAt = moderatorSessionExpiresAt(request.cookies.get(MODERATOR_COOKIE)?.value);
+  return NextResponse.json(
+    { moderator: expiresAt !== null, expiresAt },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
 
 // POST /api/moderator/session — exchange ADMIN_TOKEN for an HttpOnly session
@@ -57,7 +61,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid moderator token" }, { status: 401 });
   }
 
-  const response = NextResponse.json({ moderator: true });
+  const response = NextResponse.json(
+    { moderator: true, expiresAt: Number(session.split(".")[0]) },
+    { headers: { "Cache-Control": "no-store" } },
+  );
   setModeratorCookie(response, session);
   return response;
 }
