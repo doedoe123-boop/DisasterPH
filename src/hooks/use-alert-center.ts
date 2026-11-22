@@ -26,17 +26,10 @@ type AlertCenterAction = {
 };
 
 const STORAGE_KEY = "disasterph-alert-center";
-const PUSH_DISPATCH_ENDPOINT = "/api/push/dispatch";
 
-function dispatchWebPush(alert: AlertEvent): void {
-  fetch(PUSH_DISPATCH_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ alert }),
-  }).catch(() => {
-    // Push dispatch is best-effort from the browser MVP path.
-  });
-}
+// Web Push fan-out is server-to-server only (/api/push/dispatch requires
+// PUSH_DISPATCH_SECRET). Browsers show local notifications for open tabs and
+// never trigger delivery to other subscribers.
 
 function initState(): AlertCenterState {
   if (typeof window === "undefined") {
@@ -76,9 +69,6 @@ function reducer(
   for (const event of result.events) {
     if (alertPassesPrefs(event, prefs)) {
       showAlertNotification(event);
-      if (prefs.webPushEnabled) {
-        dispatchWebPush(event);
-      }
     }
   }
 

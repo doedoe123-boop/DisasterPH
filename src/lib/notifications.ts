@@ -144,15 +144,19 @@ export async function savePushSubscription(
   });
 }
 
+/**
+ * Ask the server to forget this browser's subscription. Ownership is proven
+ * with the subscription's own endpoint + keys.auth secret, which only this
+ * browser and the server know.
+ */
 export async function deletePushSubscription(
   subscription: PushSubscription,
 ): Promise<void> {
+  const { endpoint, keys } = serializePushSubscription(subscription);
   await fetch(PUSH_ENDPOINT, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      endpoint: subscription.endpoint,
-    }),
+    body: JSON.stringify({ subscription: { endpoint, keys: { auth: keys.auth } } }),
   });
 }
 
@@ -190,8 +194,48 @@ export async function unsubscribeFromPush(): Promise<void> {
   const subscription = await getExistingPushSubscription();
   if (!subscription) return;
 
-  await deletePushSubscription(subscription);
+  try {
+    await deletePushSubscription(subscription);
+  } catch {
+    // Offline or server error: still unsubscribe locally below.
+  }
+  // Unsubscribing at the browser invalidates the endpoint with the push
+  // service, so the user stops receiving pushes even if the server record
+  // could not be removed (it is cleaned up on the next 404/410 from delivery).
   await subscription.unsubscribe();
+}
+
+/**
+ * Background (closed-tab) Web Push is paused: /api/push/dispatch requires a
+ * server secret and no trusted server-side dispatcher exists yet. While
+ * false, the UI offers open-tab alerts only and does not create new push
+ * subscriptions.
+ */
+export const BACKGROUND_PUSH_AVAILABLE = false;
+
+/**
+ * Turn alerts on. With background push paused this only requests notification
+ * permission and sets `enabled`; any existing push subscription and the stored
+ * `webPushEnabled` preference are left as they are.
+ */
+export async function enableAlerts(
+  prefs: NotificationPrefs,
+): Promise<NotificationPrefs> {
+  if (BACKGROUND_PUSH_AVAILABLE && pushSupported() && getVapidPublicKey()) {
+    const next = { ...prefs, enabled: true, webPushEnabled: true };
+    await subscribeToPush(next);
+    saveNotificationPrefs(next);
+    return next;
+  }
+
+  const permission = await requestPermission();
+  if (permission !== "granted") {
+    throw new Error("Notification permission was not granted.");
+  }
+
+  const next = { ...prefs, enabled: true };
+  saveNotificationPrefs(next);
+  return next;
 }
 
 /** Check if an alert passes the user's notification preferences */

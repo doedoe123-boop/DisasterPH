@@ -168,7 +168,8 @@ export interface CommunityReport {
   longitude: number;
   locationLabel: string;
   status: ReportStatus;
-  reporterName: string;
+  /** Submitted by the reporter; only returned to moderators, never public. */
+  reporterName?: string;
   createdAt: string;
   updatedAt: string;
   moderatedAt?: string;

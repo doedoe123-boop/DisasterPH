@@ -68,14 +68,17 @@ const STATUS_VISUAL: Record<
 
 interface CommunityReportsProps {
   reports: CommunityReport[];
+  isModerator: boolean;
   onAddReport: (
     report: Omit<CommunityReport, "id" | "createdAt" | "updatedAt" | "status">,
-  ) => void;
+  ) => Promise<"submitted" | "failed">;
   onModerate: (
     id: string,
-    decision: { status: ReportStatus; reason: string; moderator: string },
+    decision: { status: ReportStatus; reason: string },
   ) => void;
   onRemove: (id: string) => void;
+  onModeratorSignIn: (token: string) => Promise<boolean>;
+  onModeratorSignOut: () => void;
 }
 
 // ── Submission Form ──
@@ -84,7 +87,9 @@ function ReportForm({
   onSubmit,
   onCancel,
 }: {
-  onSubmit: CommunityReportsProps["onAddReport"];
+  onSubmit: (
+    report: Parameters<CommunityReportsProps["onAddReport"]>[0],
+  ) => void;
   onCancel: () => void;
 }) {
   const [category, setCategory] = useState<ReportCategory>("flooding");
@@ -215,12 +220,14 @@ function ReportForm({
 function ReportCard({
   report,
   expanded,
+  isModerator,
   onToggle,
   onModerate,
   onRemove,
 }: {
   report: CommunityReport;
   expanded: boolean;
+  isModerator: boolean;
   onToggle: () => void;
   onModerate: CommunityReportsProps["onModerate"];
   onRemove: () => void;
@@ -271,9 +278,11 @@ function ReportCard({
               <StatusIcon className={`h-3 w-3 ${vis.tone}`} />
               <span className={`text-[10px] ${vis.tone}`}>{vis.label}</span>
             </div>
-            <span className="text-[10px] text-[var(--text-dim)]">
-              by {report.reporterName}
-            </span>
+            {report.reporterName && (
+              <span className="text-[10px] text-[var(--text-dim)]">
+                by {report.reporterName}
+              </span>
+            )}
           </div>
 
           {/* Description */}
@@ -299,8 +308,8 @@ function ReportCard({
             </div>
           )}
 
-          {/* Moderation controls (only for pending reports) */}
-          {report.status === "pending" && (
+          {/* Moderation controls (signed-in moderators, pending reports) */}
+          {isModerator && report.status === "pending" && (
             <div className="space-y-1.5">
               <input
                 className="w-full rounded-md border border-overlay/10 bg-overlay/5 px-2 py-1 text-[10px] text-[var(--text-primary)] placeholder:text-overlay/30 focus:border-cyan-400/30 focus:outline-none"
@@ -317,7 +326,6 @@ function ReportCard({
                     onModerate(report.id, {
                       status: "approved",
                       reason: moderationReason,
-                      moderator: "Moderator",
                     });
                     setModerationReason("");
                   }}
@@ -332,7 +340,6 @@ function ReportCard({
                     onModerate(report.id, {
                       status: "rejected",
                       reason: moderationReason,
-                      moderator: "Moderator",
                     });
                     setModerationReason("");
                   }}
@@ -360,15 +367,23 @@ function ReportCard({
 
 export function CommunityReportsPanel({
   reports,
+  isModerator,
   onAddReport,
   onModerate,
   onRemove,
+  onModeratorSignIn,
+  onModeratorSignOut,
 }: CommunityReportsProps) {
   const [open, setOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [submitNotice, setSubmitNotice] = useState<
+    "submitted" | "failed" | null
+  >(null);
 
-  const pendingCount = reports.filter((r) => r.status === "pending").length;
+  const pendingCount = isModerator
+    ? reports.filter((r) => r.status === "pending").length
+    : 0;
 
   return (
     <div className="shrink-0">
@@ -422,12 +437,28 @@ export function CommunityReportsPanel({
             <div className="mb-2">
               <ReportForm
                 onSubmit={(r) => {
-                  onAddReport(r);
                   setShowForm(false);
+                  setSubmitNotice(null);
+                  void onAddReport(r).then(setSubmitNotice);
                 }}
                 onCancel={() => setShowForm(false)}
               />
             </div>
+          )}
+
+          {submitNotice && (
+            <p
+              className={`mb-2 rounded-md border px-2 py-1.5 text-[10px] leading-4 ${
+                submitNotice === "submitted"
+                  ? "border-amber-400/20 bg-amber-400/8 text-amber-300"
+                  : "border-red-400/20 bg-red-400/8 text-red-300"
+              }`}
+              role="status"
+            >
+              {submitNotice === "submitted"
+                ? "Report submitted. It will appear here after a moderator approves it."
+                : "Could not submit your report. Please try again."}
+            </p>
           )}
 
           {/* Report list */}
@@ -438,6 +469,7 @@ export function CommunityReportsPanel({
                   key={report.id}
                   report={report}
                   expanded={expandedId === report.id}
+                  isModerator={isModerator}
                   onToggle={() =>
                     setExpandedId(expandedId === report.id ? null : report.id)
                   }
@@ -452,8 +484,112 @@ export function CommunityReportsPanel({
               one.
             </p>
           )}
+
+          <ModeratorAccess
+            isModerator={isModerator}
+            onSignIn={onModeratorSignIn}
+            onSignOut={onModeratorSignOut}
+          />
         </div>
       )}
     </div>
+  );
+}
+
+// ── Moderator sign-in (token is posted once; the server sets an HttpOnly session) ──
+
+function ModeratorAccess({
+  isModerator,
+  onSignIn,
+  onSignOut,
+}: {
+  isModerator: boolean;
+  onSignIn: (token: string) => Promise<boolean>;
+  onSignOut: () => void;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [token, setToken] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  if (isModerator) {
+    return (
+      <div className="mt-2 flex items-center justify-between border-t border-overlay/6 pt-2 text-[10px]">
+        <span className="text-emerald-300">Moderator mode</span>
+        <button
+          type="button"
+          className="text-[var(--text-dim)] transition hover:text-[var(--text-primary)]"
+          onClick={onSignOut}
+        >
+          Sign out
+        </button>
+      </div>
+    );
+  }
+
+  if (!showForm) {
+    return (
+      <div className="mt-2 border-t border-overlay/6 pt-2 text-right">
+        <button
+          type="button"
+          className="text-[10px] text-[var(--text-dim)] transition hover:text-[var(--text-primary)]"
+          onClick={() => setShowForm(true)}
+        >
+          Moderator sign in
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className="mt-2 space-y-1.5 border-t border-overlay/6 pt-2"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!token) return;
+        setBusy(true);
+        setFailed(false);
+        const ok = await onSignIn(token);
+        setBusy(false);
+        setToken("");
+        if (ok) setShowForm(false);
+        else setFailed(true);
+      }}
+    >
+      <input
+        aria-label="Moderator token"
+        autoComplete="current-password"
+        className="w-full rounded-md border border-overlay/10 bg-overlay/5 px-2 py-1 text-[10px] text-[var(--text-primary)] placeholder:text-overlay/30 focus:border-cyan-400/30 focus:outline-none"
+        placeholder="Moderator token"
+        type="password"
+        value={token}
+        onChange={(e) => setToken(e.target.value)}
+      />
+      {failed && (
+        <p className="text-[10px] text-red-300" role="alert">
+          Sign-in failed. Check the token and try again.
+        </p>
+      )}
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          className="text-[10px] text-[var(--text-dim)] transition hover:text-[var(--text-primary)]"
+          onClick={() => {
+            setShowForm(false);
+            setToken("");
+            setFailed(false);
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={busy || !token}
+          className="rounded-md bg-cyan-500/20 px-2.5 py-1 text-[10px] font-medium text-cyan-200 transition hover:bg-cyan-500/30 disabled:opacity-40"
+        >
+          {busy ? "Signing in…" : "Sign in"}
+        </button>
+      </div>
+    </form>
   );
 }
