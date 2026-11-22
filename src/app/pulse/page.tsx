@@ -16,7 +16,7 @@ import {
   Clock,
   Activity,
 } from "lucide-react";
-import { filterIncidentsByType } from "@/lib/incidents";
+import { filterIncidentsByType, formatRelativeTime } from "@/lib/incidents";
 import { eventLabel, severityText, t } from "@/lib/i18n";
 import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { visualFromSeverity } from "@/lib/severity";
@@ -73,22 +73,6 @@ const SEVERITY_GLOW: Record<string, string> = {
   watch: "card-glow-watch",
 };
 
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  if (diff < 0) {
-    const mins = Math.floor(-diff / 60_000);
-    if (mins < 60) return `in ${mins}m`;
-    const hrs = Math.floor(mins / 60);
-    return `in ${hrs}h`;
-  }
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
-}
 
 /** Build data pills from incident metadata */
 function dataPills(incident: Incident): string[] {
@@ -386,7 +370,7 @@ function EventCard({ incident }: { incident: Incident }) {
                 suppressHydrationWarning
               >
                 <Clock className="h-3.5 w-3.5" />
-                {relativeTime(incident.updated_at)}
+                {formatRelativeTime(incident.updated_at, locale)}
               </span>
             </div>
           </div>

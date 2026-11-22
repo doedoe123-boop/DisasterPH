@@ -15,7 +15,11 @@ import {
   Mountain,
   TriangleAlert,
 } from "lucide-react";
-import { filterIncidentsByType, formatShortTime } from "@/lib/incidents";
+import {
+  filterIncidentsByType,
+  formatRelativeTime,
+  formatShortTime,
+} from "@/lib/incidents";
 import { eventLabel, severityText, t } from "@/lib/i18n";
 import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
@@ -50,17 +54,6 @@ interface FilterChip {
   value: IncidentEventType | "all" | "critical";
   icon?: typeof Activity;
   accentClass?: string;
-}
-
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
 }
 
 /* ── Motion variants ── */
@@ -337,7 +330,7 @@ export function DisasterPHCommand() {
                                 className="text-[12px] text-[var(--text-dim)]"
                                 suppressHydrationWarning
                               >
-                                {relativeTime(incident.updated_at)}
+                                {formatRelativeTime(incident.updated_at, locale)}
                               </span>
                             </div>
                           </div>
@@ -547,7 +540,7 @@ export function DisasterPHCommand() {
                             ·
                           </span>
                           <span suppressHydrationWarning>
-                            {relativeTime(selectedIncident.updated_at)}
+                            {formatRelativeTime(selectedIncident.updated_at, locale)}
                           </span>
                         </div>
 
@@ -726,7 +719,7 @@ export function DisasterPHCommand() {
                                   ·
                                 </span>
                                 <span suppressHydrationWarning>
-                                  {relativeTime(incident.updated_at)}
+                                  {formatRelativeTime(incident.updated_at, locale)}
                                 </span>
                               </div>
                             </div>

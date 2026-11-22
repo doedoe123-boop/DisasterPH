@@ -55,18 +55,57 @@ export function buildDashboardStats(
   };
 }
 
+/*
+ * All public times are shown in Philippine Standard Time with a "PHT" label,
+ * regardless of the viewer's device time zone.
+ */
+const PH_TIME_ZONE = "Asia/Manila";
+
+/** e.g. "4:15 PM PHT" */
 export function formatShortTime(value: string) {
-  return new Intl.DateTimeFormat("en-PH", {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return `${new Intl.DateTimeFormat("en-PH", {
+    timeZone: PH_TIME_ZONE,
     hour: "numeric",
     minute: "2-digit",
-  }).format(new Date(value));
+  }).format(date)} PHT`;
 }
 
+/** e.g. "Nov 22, 2026, 4:15 PM PHT" */
 export function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("en-PH", {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return `${new Intl.DateTimeFormat("en-PH", {
+    timeZone: PH_TIME_ZONE,
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(value));
+  }).format(date)} PHT`;
+}
+
+/** Relative age in English or Filipino, e.g. "9h ago" / "9 oras ang nakalipas". */
+export function formatRelativeTime(
+  value: string,
+  locale: "en" | "fil" = "en",
+  now: number = Date.now(),
+): string {
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return "—";
+  const diff = now - time;
+  const fil = locale === "fil";
+  if (diff < 0) {
+    const mins = Math.max(1, Math.floor(-diff / 60_000));
+    if (mins < 60) return fil ? `sa loob ng ${mins} min` : `in ${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    return fil ? `sa loob ng ${hrs} oras` : `in ${hrs}h`;
+  }
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return fil ? "ngayon lang" : "just now";
+  if (mins < 60) return fil ? `${mins} min ang nakalipas` : `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return fil ? `${hrs} oras ang nakalipas` : `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return fil ? `${days} araw ang nakalipas` : `${days}d ago`;
 }
 
 /** Sort incidents by severity × proximity to saved places (nearest first) */

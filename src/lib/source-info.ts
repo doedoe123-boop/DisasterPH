@@ -1,4 +1,5 @@
 import type { Incident } from "@/types/incident";
+import { formatDateTime } from "@/lib/incidents";
 
 /**
  * Plain facts about where an incident's data comes from, for display in
@@ -59,13 +60,5 @@ export function sourceInfo(incident: Incident): SourceInfo {
   }
 }
 
-/** Absolute Philippine time, labelled, e.g. "22 Nov 2026, 4:15 PM PHT". */
-export function formatPHT(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return `${new Intl.DateTimeFormat("en-PH", {
-    timeZone: "Asia/Manila",
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date)} PHT`;
-}
+/** Absolute Philippine time, labelled, e.g. "Nov 22, 2026, 4:15 PM PHT". */
+export const formatPHT = formatDateTime;
