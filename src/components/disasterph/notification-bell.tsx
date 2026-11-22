@@ -4,10 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bell, BellOff, BellRing, ShieldCheck, X } from "lucide-react";
 import {
+  enableAlerts,
   getPermissionState,
   notificationsSupported,
-  pushSupported,
-  subscribeToPush,
   unsubscribeFromPush,
   getNotificationPrefs,
   saveNotificationPrefs,
@@ -79,14 +78,7 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
     setBusy(true);
     setError(null);
     try {
-      const prefs = getNotificationPrefs();
-      prefs.enabled = true;
-      prefs.webPushEnabled = true;
-      saveNotificationPrefs(prefs);
-
-      if (pushSupported()) {
-        await subscribeToPush(prefs);
-      }
+      await enableAlerts(getNotificationPrefs());
       setState("granted");
       setOpen(false);
     } catch (err) {

@@ -194,6 +194,39 @@ export async function unsubscribeFromPush(): Promise<void> {
   await subscription.unsubscribe();
 }
 
+/**
+ * Background (closed-tab) Web Push is paused: /api/push/dispatch requires a
+ * server secret and no trusted server-side dispatcher exists yet. While
+ * false, the UI offers open-tab alerts only and does not create new push
+ * subscriptions.
+ */
+export const BACKGROUND_PUSH_AVAILABLE = false;
+
+/**
+ * Turn alerts on. With background push paused this only requests notification
+ * permission and sets `enabled`; any existing push subscription and the stored
+ * `webPushEnabled` preference are left as they are.
+ */
+export async function enableAlerts(
+  prefs: NotificationPrefs,
+): Promise<NotificationPrefs> {
+  if (BACKGROUND_PUSH_AVAILABLE && pushSupported() && getVapidPublicKey()) {
+    const next = { ...prefs, enabled: true, webPushEnabled: true };
+    await subscribeToPush(next);
+    saveNotificationPrefs(next);
+    return next;
+  }
+
+  const permission = await requestPermission();
+  if (permission !== "granted") {
+    throw new Error("Notification permission was not granted.");
+  }
+
+  const next = { ...prefs, enabled: true };
+  saveNotificationPrefs(next);
+  return next;
+}
+
 /** Check if an alert passes the user's notification preferences */
 export function alertPassesPrefs(
   alert: AlertEvent,

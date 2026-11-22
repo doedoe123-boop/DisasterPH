@@ -113,7 +113,7 @@ export const copy = {
     notification: {
       enabledTitle: "Alerts active",
       enabledBody:
-        "You'll be notified about critical and warning-level disasters in your region.",
+        "You'll be notified about critical and warning-level disasters in your region while DisasterPH is open.",
       disable: "Turn off alerts",
       disabledError: "Could not disable alerts.",
       enableError: "Could not enable alerts.",
@@ -125,8 +125,8 @@ export const copy = {
       blockedIosHint: "On iPhone, add this site to your Home Screen first.",
       promptTitle: "Get disaster alerts",
       promptBody:
-        "Receive instant push notifications when a critical disaster impacts your region — even when this tab is closed.",
-      enable: "Enable push alerts",
+        "Get notified when a critical disaster impacts your region. Alerts are available while DisasterPH is open in your browser.",
+      enable: "Enable alerts",
       enabling: "Enabling…",
       disabling: "Disabling…",
       permissionHint:
@@ -134,6 +134,13 @@ export const copy = {
       bellEnabled: "Alert notifications enabled",
       bellBlocked: "Notifications blocked",
       bellPrompt: "Enable disaster alerts",
+      settingsTitle: "Notifications",
+      settingsEnable: "Enable regional alerts",
+      settingsActive: "Alerts active while DisasterPH is open",
+      settingsBlockedBody:
+        "Enable notifications in your browser settings for this site.",
+      openTabNote:
+        "Alerts appear only while DisasterPH is open. Keep a tab open to receive them.",
     },
     risk: {
       summary: "Risk Summary",
@@ -343,7 +350,7 @@ export const copy = {
     notification: {
       enabledTitle: "Aktibo ang mga alerto",
       enabledBody:
-        "Makakatanggap ka ng abiso para sa kritikal at warning-level na sakuna sa iyong rehiyon.",
+        "Makakatanggap ka ng abiso para sa kritikal at warning-level na sakuna sa iyong rehiyon habang nakabukas ang DisasterPH.",
       disable: "Patayin ang mga alerto",
       disabledError: "Hindi mapatay ang mga alerto.",
       enableError: "Hindi ma-activate ang mga alerto.",
@@ -356,8 +363,8 @@ export const copy = {
         "Sa iPhone, idagdag muna ang site na ito sa Home Screen.",
       promptTitle: "Tumanggap ng alerto sa sakuna",
       promptBody:
-        "Makakatanggap ng push notification kapag may kritikal na sakunang tumama sa iyong rehiyon kahit sarado ang tab na ito.",
-      enable: "Buksan ang push alerts",
+        "Makatanggap ng abiso kapag may kritikal na sakunang tumama sa iyong rehiyon. Available ang mga alerto habang nakabukas ang DisasterPH sa iyong browser.",
+      enable: "Buksan ang mga alerto",
       enabling: "Binubuksan…",
       disabling: "Pinapatay…",
       permissionHint:
@@ -365,6 +372,13 @@ export const copy = {
       bellEnabled: "Aktibo ang alert notifications",
       bellBlocked: "Naka-block ang notifications",
       bellPrompt: "Buksan ang disaster alerts",
+      settingsTitle: "Mga Abiso",
+      settingsEnable: "Buksan ang mga alerto sa rehiyon",
+      settingsActive: "Aktibo ang mga alerto habang nakabukas ang DisasterPH",
+      settingsBlockedBody:
+        "Payagan ang notifications para sa site na ito sa iyong browser settings.",
+      openTabNote:
+        "Lumalabas lang ang mga alerto habang nakabukas ang DisasterPH. Panatilihing bukas ang isang tab para matanggap ang mga ito.",
     },
     risk: {
       summary: "Buod ng Panganib",
