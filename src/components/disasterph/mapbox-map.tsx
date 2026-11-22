@@ -697,7 +697,6 @@ function buildPopupMeta(incident: Incident): string {
     if (m.magnitude != null) parts.push(`M${Number(m.magnitude).toFixed(1)}`);
     if (m.depth_km != null)
       parts.push(`${Number(m.depth_km).toFixed(0)} km deep`);
-    if (m.tsunami_warning) parts.push("Tsunami warning");
   } else if (incident.event_type === "typhoon") {
     if (m.signal_number != null) parts.push(`Signal #${m.signal_number}`);
     if (m.wind_speed_kph != null) parts.push(`${m.wind_speed_kph} kph`);

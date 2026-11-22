@@ -59,15 +59,13 @@ function technicalData(
         label: locale === "fil" ? "Mga Ulat ng Naramdaman" : "Felt Reports",
         value: String(m.felt_reports),
       });
+    // This feed has no tsunami assessment; never show Yes/No.
     rows.push({
       label: "Tsunami",
-      value: m.tsunami_warning
-        ? locale === "fil"
-          ? "Oo"
-          : "Yes"
-        : locale === "fil"
-          ? "Hindi"
-          : "No",
+      value:
+        locale === "fil"
+          ? "Walang assessment dito — tingnan ang PHIVOLCS"
+          : "Not assessed here — check PHIVOLCS",
     });
   } else if (incident.event_type === "typhoon") {
     if (m.signal_number != null)

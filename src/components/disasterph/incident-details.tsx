@@ -12,7 +12,8 @@ const STRUCTURED_KEYS = new Set([
   "magnitude",
   "depth_km",
   "felt_reports",
-  "tsunami_warning",
+  "usgs_tsunami_flag",
+  "tsunami_warning", // legacy key from older cached data; never displayed
   "mmi",
   "alert_level",
   "wind_speed_kph",
@@ -38,7 +39,8 @@ function EarthquakeStats({ metadata }: { metadata: Incident["metadata"] }) {
   const mag = metadata.magnitude as number | null;
   const depth = metadata.depth_km as number | null;
   const felt = metadata.felt_reports as number | null;
-  const tsunami = metadata.tsunami_warning as boolean | null;
+  // USGS oceanic-event flag, not a tsunami warning (see ingest/phivolcs.ts).
+  const oceanicFlag = metadata.usgs_tsunami_flag === true;
   const mmi = metadata.mmi as number | null;
 
   return (
@@ -86,10 +88,19 @@ function EarthquakeStats({ metadata }: { metadata: Incident["metadata"] }) {
           </p>
         </div>
       )}
-      {tsunami && (
-        <div className="col-span-2 rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5">
-          <p className="text-[11px] font-medium text-red-300">
-            Tsunami warning issued
+      {oceanicFlag && (
+        <div className="col-span-2 rounded-lg border border-overlay/10 bg-overlay/[0.03] px-2.5 py-1.5">
+          <p className="text-[11px] leading-4 text-[var(--text-muted)]">
+            Large event in an oceanic region. Check{" "}
+            <a
+              className="underline decoration-dotted underline-offset-2 hover:text-[var(--text-primary)]"
+              href="https://www.phivolcs.dost.gov.ph/"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              PHIVOLCS
+            </a>{" "}
+            for official tsunami information.
           </p>
         </div>
       )}
