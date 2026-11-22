@@ -110,6 +110,12 @@ export const copy = {
       noDescription: "No detailed description available for this event.",
       viewFullDetail: "View full detail",
     },
+    map: {
+      loading: "Loading map…",
+      unavailableTitle: "Map unavailable on this device",
+      unavailableBody:
+        "This browser can't display the interactive map. Alerts and incidents are still listed in the feed.",
+    },
     notification: {
       enabledTitle: "Alerts active",
       enabledBody:
@@ -346,6 +352,12 @@ export const copy = {
       expiredIncident: "Maaaring tapos na o hindi na aktibo ang abisong ito.",
       noDescription: "Walang detalyadong paliwanag para sa abisong ito.",
       viewFullDetail: "Tingnan ang buong detalye",
+    },
+    map: {
+      loading: "Nilo-load ang mapa…",
+      unavailableTitle: "Hindi maipakita ang mapa sa device na ito",
+      unavailableBody:
+        "Hindi kayang ipakita ng browser na ito ang interactive na mapa. Makikita pa rin ang mga alerto at insidente sa feed.",
     },
     notification: {
       enabledTitle: "Aktibo ang mga alerto",
