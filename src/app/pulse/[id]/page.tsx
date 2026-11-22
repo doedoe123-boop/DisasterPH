@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDateTime } from "@/lib/incidents";
+import { formatPHT, sourceInfo } from "@/lib/source-info";
 import { eventLabel, severityText, t, type Locale } from "@/lib/i18n";
 import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { visualFromSeverity } from "@/lib/severity";
@@ -26,11 +27,12 @@ import { PulseDetailSkeleton } from "@/components/disasterph/page-skeletons";
 import { useLocale } from "@/hooks/useLocale";
 
 /** Map source to display label */
-function sourceLabel(incident: Incident, locale: Locale): string {
+function sourceLabel(incident: Incident): string {
   const labels: Record<string, string> = {
     EONET: "NASA EONET",
     PAGASA: "PAGASA",
-    PHIVOLCS: locale === "fil" ? "PHIVOLCS/USGS" : "USGS/PHIVOLCS",
+    // Earthquake records come from the USGS catalogue (see ingest/phivolcs.ts).
+    PHIVOLCS: "USGS",
   };
   return labels[incident.source] ?? incident.source;
 }
@@ -95,29 +97,6 @@ function technicalData(
   rows.push({ label: locale === "fil" ? "Long" : "Lng", value: incident.longitude.toFixed(4) });
 
   return rows;
-}
-
-/** Estimate data confidence from incident source and metadata completeness */
-function dataConfidence(incident: Incident): { pct: number; label: string } {
-  let score = 60; // base
-  if (incident.source === "PHIVOLCS" || incident.source === "PAGASA")
-    score += 20;
-  if (
-    incident.metadata.magnitude != null ||
-    incident.metadata.signal_number != null
-  )
-    score += 10;
-  if (incident.description && incident.description.length > 40) score += 5;
-  if (incident.metadata.confidence === "reference-only")
-    score = Math.min(score, 65);
-  const pct = Math.min(score, 99);
-  const label =
-    pct >= 90
-      ? "High Confidence"
-      : pct >= 70
-        ? "Moderate Confidence"
-        : "Low Confidence";
-  return { pct, label };
 }
 
 /** Estimate affected areas from region and event type */
@@ -256,15 +235,7 @@ export default function PulseDetailPage() {
   }
 
   const sv = visualFromSeverity(incident.severity);
-  const confidence = dataConfidence(incident);
-  const confidenceLabel =
-    locale === "fil"
-      ? confidence.pct >= 90
-        ? "Mataas na Tiwala"
-        : confidence.pct >= 70
-          ? "Katamtamang Tiwala"
-          : "Mababang Tiwala"
-      : confidence.label;
+  const source = sourceInfo(incident);
   const affectedAreas = estimateAffectedAreas(incident);
 
   return (
@@ -306,7 +277,7 @@ export default function PulseDetailPage() {
                   {eventLabel(incident.event_type, locale)}
                 </span>
                 <span className="text-[11px] text-[var(--text-dim)]">
-                  via {sourceLabel(incident, locale)}
+                  via {sourceLabel(incident)}
                 </span>
               </div>
 
@@ -354,28 +325,50 @@ export default function PulseDetailPage() {
             >
               {/* Left column */}
               <div className="space-y-6">
-                {/* Data confidence bar */}
+                {/* Source and freshness (replaces a computed confidence score) */}
                 <div className="rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)]">
-                      {i18n.common.dataConfidence}
-                    </span>
-                    <span className="text-sm font-semibold text-orange-400">
-                      {confidence.pct}% — {confidenceLabel}
-                    </span>
-                  </div>
-                  <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-overlay/10">
-                    <motion.div
-                      className="h-full rounded-full bg-orange-400"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${confidence.pct}%` }}
-                      transition={{
-                        duration: 0.8,
-                        ease: "easeOut",
-                        delay: 0.3,
-                      }}
-                    />
-                  </div>
+                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)]">
+                    {i18n.common.source.heading}
+                  </h2>
+                  <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt className="text-[11px] uppercase tracking-wider text-[var(--text-dim)]">
+                        {i18n.common.source.publishedBy}
+                      </dt>
+                      <dd className="mt-0.5 font-medium text-[var(--text-primary)]">
+                        {i18n.common.source.publishers[source.publisher]}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[11px] uppercase tracking-wider text-[var(--text-dim)]">
+                        {i18n.common.source.updated}
+                      </dt>
+                      <dd
+                        className="mt-0.5 font-medium text-[var(--text-primary)]"
+                        suppressHydrationWarning
+                      >
+                        {formatPHT(incident.updated_at)}
+                      </dd>
+                    </div>
+                  </dl>
+                  {(source.publisher === "USGS" || source.referenceOnly) && (
+                    <p className="mt-3 text-[12px] leading-5 text-[var(--text-muted)]">
+                      {source.referenceOnly
+                        ? i18n.common.source.referenceOnly
+                        : i18n.common.source.usgsNote}
+                    </p>
+                  )}
+                  {source.recordUrl && (
+                    <a
+                      className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium text-cyan-400 hover:text-cyan-300"
+                      href={source.recordUrl}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      {i18n.common.source.record}
+                    </a>
+                  )}
                 </div>
 
                 {/* Description box */}
@@ -454,15 +447,10 @@ export default function PulseDetailPage() {
                   </div>
                 </div>
 
-                {/* Official Bulletin link */}
+                {/* Responsible Philippine agency (not a link to a specific bulletin) */}
+                {source.agency && (
                 <a
-                  href={
-                    incident.source === "PHIVOLCS"
-                      ? "https://earthquake.phivolcs.dost.gov.ph/"
-                      : incident.source === "PAGASA"
-                        ? "https://www.pagasa.dost.gov.ph/"
-                        : "https://eonet.gsfc.nasa.gov/"
-                  }
+                  href={source.agency.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-4 transition hover:bg-overlay/[0.04]"
@@ -470,13 +458,11 @@ export default function PulseDetailPage() {
                   <ExternalLink className="h-5 w-5 shrink-0 text-cyan-400" />
                   <div>
                     <p className="text-sm font-semibold text-[var(--text-primary)]">
-                      {i18n.common.officialBulletin}
-                    </p>
-                    <p className="text-[11px] text-[var(--text-dim)]">
-                      {i18n.common.viewSourceAt} {sourceLabel(incident, locale)}
+                      {i18n.common.source.agencyLink} {source.agency.name}
                     </p>
                   </div>
                 </a>
+                )}
               </aside>
             </motion.div>
 
