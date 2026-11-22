@@ -14,6 +14,8 @@ import {
 } from "@/lib/mapbox";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
 import { loadMapLibre } from "@/lib/maplibre-loader";
+import { Mountain } from "lucide-react";
+import { TERRAIN_CONFIG, TERRAIN_SOURCE, disableTerrain, enableTerrain } from "@/lib/terrain";
 import { displayRegion } from "@/lib/geo/ph-regions";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
@@ -56,6 +58,10 @@ export default function MapLibreMapComponent({
   // retry cannot help); "error" = e.g. a failed chunk load (retry may help).
   const [mapFailed, setMapFailed] = useState<false | "unsupported" | "error">(false);
   const [mapAttempt, setMapAttempt] = useState(0);
+  // Opt-in terrain: off by default, and only offered when a DEM source is configured.
+  const [terrainOn, setTerrainOn] = useState(false);
+  const [terrainFailed, setTerrainFailed] = useState(false);
+  const terrainRef = useRef(false);
   const { locale } = useLocale();
   const mapCopy = t(locale).map;
   const incidentsRef = useRef(incidents);
@@ -147,6 +153,14 @@ export default function MapLibreMapComponent({
         setMapReady(true);
       });
 
+      // Missing or failing DEM tiles never block the map: fall back to 2D.
+      map.on("error", (e) => {
+        if ((e as { sourceId?: string }).sourceId === TERRAIN_SOURCE) {
+          setTerrainFailed(true);
+          setTerrainOn(false);
+        }
+      });
+
       mapRef.current = map;
 
       themeHandler = (e: Event) => {
@@ -155,6 +169,8 @@ export default function MapLibreMapComponent({
         map.once("styledata", () => {
           applySky(map);
           addAllSourcesAndLayers(map, incidentsRef.current);
+          // Style swaps drop sources; restore terrain if it was on.
+          if (terrainRef.current && TERRAIN_CONFIG) enableTerrain(map, TERRAIN_CONFIG, false);
         });
       };
       window.addEventListener("themechange", themeHandler);
@@ -362,9 +378,42 @@ export default function MapLibreMapComponent({
     });
   }, [selectedIncidentId, incidents, mapReady]);
 
+  // Apply the terrain toggle (no DEM request happens until it is turned on).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || !TERRAIN_CONFIG) return;
+    if (terrainOn) {
+      enableTerrain(map, TERRAIN_CONFIG);
+    } else if (terrainRef.current) {
+      disableTerrain(map);
+    }
+    terrainRef.current = terrainOn;
+  }, [terrainOn, mapReady]);
+
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
+      {TERRAIN_CONFIG && mapReady && !mapFailed && (
+        <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5">
+          <button
+            aria-pressed={terrainOn}
+            className="flex items-center gap-1.5 rounded-lg border border-overlay/15 bg-[var(--bg-panel)]/90 px-2.5 py-1.5 text-[12px] font-medium text-[var(--text-primary)] shadow transition hover:bg-[var(--bg-panel)]"
+            onClick={() => {
+              setTerrainFailed(false);
+              setTerrainOn((on) => !on);
+            }}
+            type="button"
+          >
+            <Mountain className="h-3.5 w-3.5" />
+            {terrainOn ? mapCopy.terrainOff : mapCopy.terrainOn}
+          </button>
+          {terrainFailed && (
+            <p className="rounded-md bg-[var(--bg-panel)]/90 px-2 py-1 text-[11px] text-amber-300" role="status">
+              {mapCopy.terrainFailed}
+            </p>
+          )}
+        </div>
+      )}
       {mapFailed ? (
         <div
           className="absolute inset-0 flex items-center justify-center bg-background p-4"
