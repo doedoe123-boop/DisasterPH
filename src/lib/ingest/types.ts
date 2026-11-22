@@ -5,6 +5,11 @@ export interface FetchLog {
   latency_ms: number;
   event_count: number;
   error?: string;
+  /** Source-specific note (replaces the generic "Fetched N events"). */
+  note?: string;
+  bulletin_state?: "none" | "active" | "unknown";
+  /** Fetched but could not be interpreted with confidence. */
+  uncertain?: boolean;
 }
 
 export interface SourceHealthRecord {
@@ -15,4 +20,5 @@ export interface SourceHealthRecord {
   latency_ms: number;
   consecutive_failures: number;
   notes: string;
+  bulletin_state?: "none" | "active" | "unknown";
 }
