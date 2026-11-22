@@ -1,5 +1,7 @@
 "use client";
 
+import { displayRegion } from "@/lib/geo/ph-regions";
+import { useLocale } from "@/hooks/useLocale";
 import { MapPin } from "lucide-react";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
 import { severityLabel, visualFromSeverity } from "@/lib/severity";
@@ -26,6 +28,7 @@ export function SituationCard({
   prepTips,
   nearPlaceName,
 }: SituationCardProps) {
+  const { locale } = useLocale();
   const topTips = prepTips.slice(0, 3);
   const severityVisual = visualFromSeverity(incident.severity);
 
@@ -63,7 +66,7 @@ export function SituationCard({
 
         <div className="mt-1.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
           <MapPin className="h-3 w-3 shrink-0 text-[var(--text-dim)]" />
-          <span>{incident.region}</span>
+          <span>{displayRegion(incident.region, locale)}</span>
         </div>
 
         {incident.description && (

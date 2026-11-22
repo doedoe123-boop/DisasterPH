@@ -3,7 +3,7 @@ import type {
   IncidentEventType,
   IncidentSeverity,
 } from "@/types/incident";
-import { estimateRegion, PH_BOUNDS } from "./regions";
+import { PH_BOUNDS, regionMetadata } from "./regions";
 
 /*
  * NASA EONET v3 — supplementary reference source only.
@@ -105,7 +105,7 @@ export async function fetchEonetEvents(): Promise<Incident[]> {
       latitude: lat,
       longitude: lon,
       severity,
-      region: estimateRegion(lat, lon),
+      region: regionMetadata(lat, lon).region,
       started_at:
         typeof firstGeo?.date === "string"
           ? firstGeo.date
@@ -120,6 +120,7 @@ export async function fetchEonetEvents(): Promise<Incident[]> {
         magnitude_value: (latest.magnitudeValue as number) ?? null,
         magnitude_unit: (latest.magnitudeUnit as string) ?? null,
         confidence: "reference-only",
+        ...regionMetadata(lat, lon).metadata,
         note: "EONET data is supplementary. Refer to PAGASA/PHIVOLCS for official advisories.",
         ...(trackPoints ? { track_points: trackPoints } : {}),
         ...(eventType === "typhoon" && latest.magnitudeValue != null

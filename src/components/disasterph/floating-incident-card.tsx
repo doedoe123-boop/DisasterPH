@@ -1,5 +1,7 @@
 "use client";
 
+import { displayRegion } from "@/lib/geo/ph-regions";
+import { useLocale } from "@/hooks/useLocale";
 import { useState } from "react";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
 import {
@@ -81,6 +83,7 @@ export function FloatingIncidentCard({
   placeRisks,
   focusMode,
 }: FloatingIncidentCardProps) {
+  const { locale } = useLocale();
   const [expanded, setExpanded] = useState(false);
 
   // Auto-expand in focus mode
@@ -143,7 +146,7 @@ export function FloatingIncidentCard({
             {incident.title}
           </h3>
           <div className="mt-1 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
-            <span>{incident.region}</span>
+            <span>{displayRegion(incident.region, locale)}</span>
             <span className="text-[var(--text-dim)]">·</span>
             <span suppressHydrationWarning>{formatShortTime(incident.updated_at)}</span>
           </div>
@@ -229,7 +232,7 @@ export function FloatingIncidentCard({
 
           <div className="mt-1.5 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
             <MapPin className="h-3 w-3 shrink-0 text-[var(--text-dim)]" />
-            <span>{incident.region}</span>
+            <span>{displayRegion(incident.region, locale)}</span>
             <span className="text-[var(--text-dim)]">·</span>
             <span suppressHydrationWarning>{formatShortTime(incident.updated_at)}</span>
           </div>

@@ -1,3 +1,5 @@
+import { displayRegion } from "@/lib/geo/ph-regions";
+import { useLocale } from "@/hooks/useLocale";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
 import { severityLabel, visualFromSeverity } from "@/lib/severity";
 import type { Incident } from "@/types/incident";
@@ -21,6 +23,7 @@ export function IncidentFeedCard({
   onMouseEnter,
   onMouseLeave,
 }: IncidentFeedCardProps) {
+  const { locale } = useLocale();
   const isCritical =
     incident.severity === "critical" || incident.severity === "warning";
   const severityVisual = visualFromSeverity(incident.severity);
@@ -67,7 +70,7 @@ export function IncidentFeedCard({
         {incident.title}
       </p>
       <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-        {incident.region}
+        {displayRegion(incident.region, locale)}
       </p>
     </button>
   );

@@ -14,6 +14,7 @@ import {
 } from "@/lib/mapbox";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
 import { loadMapLibre } from "@/lib/maplibre-loader";
+import { displayRegion } from "@/lib/geo/ph-regions";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -302,13 +303,13 @@ export default function MapLibreMapComponent({
       })
         .setLngLat([incident.longitude, incident.latitude])
         // Built with DOM nodes + textContent: feed text never becomes markup.
-        .setDOMContent(buildPopupContent(incident))
+        .setDOMContent(buildPopupContent(incident, locale))
         .addTo(map);
     } else {
       popupRef.current?.remove();
       popupRef.current = null;
     }
-  }, [hoveredIncidentId, incidents, mapReady]);
+  }, [hoveredIncidentId, incidents, mapReady, locale]);
 
   // ── Community report markers (visually distinct from official data) ──
   useEffect(() => {
@@ -721,7 +722,7 @@ function textEl(tag: string, style: string, text?: string): HTMLElement {
 }
 
 /** Hover popup for an incident. Upstream strings are only ever set as text. */
-function buildPopupContent(incident: Incident): HTMLElement {
+function buildPopupContent(incident: Incident, locale: "en" | "fil"): HTMLElement {
   const root = textEl("div", "font-family:system-ui,sans-serif;min-width:180px;");
 
   const header = textEl("div", "display:flex;align-items:center;gap:4px;margin-bottom:4px;");
@@ -758,7 +759,7 @@ function buildPopupContent(incident: Incident): HTMLElement {
     textEl(
       "div",
       "font-size:11px;color:var(--text-muted);margin-top:3px;",
-      `${incident.region} · ${formatShortTime(incident.updated_at)}`,
+      `${displayRegion(incident.region, locale)} · ${formatShortTime(incident.updated_at)}`,
     ),
   );
   return root;

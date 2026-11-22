@@ -1,5 +1,6 @@
 "use client";
 
+import { displayRegion } from "@/lib/geo/ph-regions";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -363,7 +364,7 @@ function EventCard({ incident }: { incident: Incident }) {
             <div className="mt-2.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[13px] text-[var(--text-muted)]">
               <span className="flex items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5" />
-                {incident.region}
+                {displayRegion(incident.region, locale)}
               </span>
               <span
                 className="flex items-center gap-1.5"

@@ -1,4 +1,5 @@
 import type { AlertEvent } from "@/types/incident";
+import { regionForMatching } from "@/lib/ingest/regions";
 
 const PREFS_KEY = "disasterph-notification-prefs";
 const PUSH_ENDPOINT = "/api/push/subscriptions";
@@ -48,12 +49,49 @@ export function normalizeNotificationPrefs(
   };
 }
 
+/*
+ * Region names in prefs come from saved places. Version 2 derives them from
+ * official PSGC region boundaries; version 1 used rough lat/lon boxes that
+ * named many places' regions wrongly (e.g. Bacolod, Davao City, Baguio).
+ * Stored v1 regions are recomputed once from the saved places; if that is
+ * not possible the filter is cleared (all regions), never narrowed.
+ */
+const REGIONS_VERSION_KEY = "disasterph-notification-regions-version";
+const REGIONS_VERSION = "2";
+const SAVED_PLACES_KEY = "disasterph-saved-places";
+
+function migrateRegions(prefs: NotificationPrefs): NotificationPrefs {
+  if (localStorage.getItem(REGIONS_VERSION_KEY) === REGIONS_VERSION) return prefs;
+  let regions: string[] = [];
+  if (prefs.regions.length > 0) {
+    try {
+      const places = JSON.parse(localStorage.getItem(SAVED_PLACES_KEY) ?? "[]") as Array<{
+        latitude?: unknown;
+        longitude?: unknown;
+      }>;
+      regions = Array.from(
+        new Set(
+          places
+            .filter((p) => typeof p.latitude === "number" && typeof p.longitude === "number")
+            .map((p) => regionForMatching(p.latitude as number, p.longitude as number)),
+        ),
+      ).sort();
+    } catch {
+      regions = [];
+    }
+  }
+  const migrated = { ...prefs, regions };
+  localStorage.setItem(PREFS_KEY, JSON.stringify(migrated));
+  localStorage.setItem(REGIONS_VERSION_KEY, REGIONS_VERSION);
+  return migrated;
+}
+
 export function getNotificationPrefs(): NotificationPrefs {
   if (typeof window === "undefined") return DEFAULT_PREFS;
   try {
     const raw = localStorage.getItem(PREFS_KEY);
     if (!raw) return DEFAULT_PREFS;
-    return normalizeNotificationPrefs(JSON.parse(raw));
+    return migrateRegions(normalizeNotificationPrefs(JSON.parse(raw)));
   } catch {
     return DEFAULT_PREFS;
   }
@@ -61,6 +99,8 @@ export function getNotificationPrefs(): NotificationPrefs {
 
 export function saveNotificationPrefs(prefs: NotificationPrefs): void {
   localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  // Anything saved from now on uses current region names.
+  localStorage.setItem(REGIONS_VERSION_KEY, REGIONS_VERSION);
 }
 
 /** Check browser support for notifications */
