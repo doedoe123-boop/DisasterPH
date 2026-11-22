@@ -191,7 +191,13 @@ export default function PulseDetailPage() {
   }, [decodedId]);
 
   useEffect(() => {
-    fetchIncident();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) void fetchIncident();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [fetchIncident]);
 
   const prepTips = useMemo(

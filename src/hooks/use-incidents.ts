@@ -45,6 +45,9 @@ export function useIncidents(filter?: string): UseIncidentsResult {
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const retryTimerRef = useRef<number | null>(null);
+  const [staleAt, setStaleAt] = useState<string | null>(null);
+  // Latest fetchData for the retry timer (a callback cannot reference itself).
+  const fetchRef = useRef<() => void>(() => {});
 
   const cacheKey = `${INCIDENT_CACHE_KEY}:${filter ?? "all"}`;
 
@@ -96,7 +99,7 @@ export function useIncidents(filter?: string): UseIncidentsResult {
         err instanceof Error ? err.message : "Failed to fetch incidents",
       );
       if (typeof window !== "undefined") {
-        retryTimerRef.current = window.setTimeout(fetchData, RETRY_MS);
+        retryTimerRef.current = window.setTimeout(() => fetchRef.current(), RETRY_MS);
       }
     } finally {
       setIsLoading(false);
@@ -104,20 +107,43 @@ export function useIncidents(filter?: string): UseIncidentsResult {
   }, [cacheKey, filter, hydrateFromCache]);
 
   useEffect(() => {
-    hydrateFromCache();
-    fetchData();
+    fetchRef.current = () => void fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    // Cached data first, then a fresh fetch; started on the next microtask
+    // rather than synchronously in the effect body.
+    queueMicrotask(() => {
+      if (cancelled) return;
+      hydrateFromCache();
+      void fetchData();
+    });
     const id = setInterval(fetchData, POLL_MS);
     return () => {
+      cancelled = true;
       clearInterval(id);
       if (retryTimerRef.current) window.clearTimeout(retryTimerRef.current);
       abortRef.current?.abort();
     };
   }, [fetchData, hydrateFromCache]);
 
-  const staleAt =
-    generatedAt && Date.now() - new Date(generatedAt).getTime() > STALE_MS
-      ? generatedAt
-      : null;
+  // Staleness is time-dependent, so it is recomputed when data changes and
+  // every 30 s rather than read from the clock during render.
+  useEffect(() => {
+    const check = () =>
+      setStaleAt(
+        generatedAt && Date.now() - new Date(generatedAt).getTime() > STALE_MS
+          ? generatedAt
+          : null,
+      );
+    const first = window.setTimeout(check, 0);
+    const id = window.setInterval(check, 30_000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(id);
+    };
+  }, [generatedAt]);
 
   return {
     incidents,

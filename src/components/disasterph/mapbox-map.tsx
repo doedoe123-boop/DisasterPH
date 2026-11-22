@@ -58,7 +58,10 @@ export default function MapLibreMapComponent({
   const { locale } = useLocale();
   const mapCopy = t(locale).map;
   const incidentsRef = useRef(incidents);
-  incidentsRef.current = incidents;
+  // Read later by the theme-change handler; updated after commit, not during render.
+  useEffect(() => {
+    incidentsRef.current = incidents;
+  }, [incidents]);
 
   // ── Initialize map (runtime-only import) ──
   useEffect(() => {

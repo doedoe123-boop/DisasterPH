@@ -19,6 +19,8 @@ export function useSourceStatus(): UseSourceStatusResult {
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const retryTimerRef = useRef<number | null>(null);
+  // Latest fetchData for the retry timer (a callback cannot reference itself).
+  const fetchRef = useRef<() => void>(() => {});
 
   const hydrateFromCache = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -57,7 +59,7 @@ export function useSourceStatus(): UseSourceStatusResult {
         err instanceof Error ? err.message : "Failed to fetch source status",
       );
       if (typeof window !== "undefined") {
-        retryTimerRef.current = window.setTimeout(fetchData, RETRY_MS);
+        retryTimerRef.current = window.setTimeout(() => fetchRef.current(), RETRY_MS);
       }
     } finally {
       setIsLoading(false);
@@ -65,10 +67,21 @@ export function useSourceStatus(): UseSourceStatusResult {
   }, [hydrateFromCache]);
 
   useEffect(() => {
-    hydrateFromCache();
-    fetchData();
+    fetchRef.current = () => void fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    // Cached data first, then a fresh fetch; started on the next microtask
+    // rather than synchronously in the effect body.
+    queueMicrotask(() => {
+      if (cancelled) return;
+      hydrateFromCache();
+      void fetchData();
+    });
     const id = setInterval(fetchData, POLL_MS);
     return () => {
+      cancelled = true;
       clearInterval(id);
       if (retryTimerRef.current) window.clearTimeout(retryTimerRef.current);
       abortRef.current?.abort();
