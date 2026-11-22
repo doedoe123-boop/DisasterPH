@@ -51,8 +51,10 @@ export default function MapLibreMapComponent({
   const popupRef = useRef<MlPopup | null>(null);
   const initialSidebarWidthRef = useRef(sidebarWidth);
   const [mapReady, setMapReady] = useState(false);
-  // Set when MapLibre cannot load or start (e.g. no WebGL2, failed chunk load).
-  const [mapFailed, setMapFailed] = useState(false);
+  // Set when MapLibre cannot load or start. "unsupported" = no WebGL2 (a
+  // retry cannot help); "error" = e.g. a failed chunk load (retry may help).
+  const [mapFailed, setMapFailed] = useState<false | "unsupported" | "error">(false);
+  const [mapAttempt, setMapAttempt] = useState(0);
   const { locale } = useLocale();
   const mapCopy = t(locale).map;
   const incidentsRef = useRef(incidents);
@@ -93,8 +95,9 @@ export default function MapLibreMapComponent({
         });
       } catch (error) {
         if (!cancelled) {
-          console.warn("Map unavailable:", error instanceof Error ? error.name : error);
-          setMapFailed(true);
+          const name = error instanceof Error ? error.name : String(error);
+          console.warn("Map unavailable:", name);
+          setMapFailed(name === "GPUInitializationError" ? "unsupported" : "error");
         }
         return;
       }
@@ -164,7 +167,7 @@ export default function MapLibreMapComponent({
       mlRef.current = null;
       setMapReady(false);
     };
-  }, []);
+  }, [mapAttempt]);
 
   // ── Resize observer ──
   useEffect(() => {
@@ -374,6 +377,18 @@ export default function MapLibreMapComponent({
             <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-dim)]">
               {mapCopy.unavailableBody}
             </p>
+            {mapFailed === "error" && (
+              <button
+                className="mt-3 rounded-md border border-overlay/12 px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition hover:bg-overlay/6"
+                onClick={() => {
+                  setMapFailed(false);
+                  setMapAttempt((n) => n + 1);
+                }}
+                type="button"
+              >
+                {mapCopy.retry}
+              </button>
+            )}
           </div>
         </div>
       ) : (

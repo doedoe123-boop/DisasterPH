@@ -129,6 +129,7 @@ export const copy = {
       unavailableTitle: "Map unavailable on this device",
       unavailableBody:
         "This browser can't display the interactive map. Alerts and incidents are still listed in the feed.",
+      retry: "Try again",
     },
     notification: {
       enabledTitle: "Alerts active",
@@ -395,6 +396,7 @@ export const copy = {
       unavailableTitle: "Hindi maipakita ang mapa sa device na ito",
       unavailableBody:
         "Hindi kayang ipakita ng browser na ito ang interactive na mapa. Makikita pa rin ang mga alerto at insidente sa feed.",
+      retry: "Subukan muli",
     },
     notification: {
       enabledTitle: "Aktibo ang mga alerto",
