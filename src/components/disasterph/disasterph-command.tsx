@@ -225,7 +225,8 @@ export function DisasterPHCommand() {
                   type="button"
                   className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-dim)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
                   onClick={() => setSidebarOpen(false)}
-                  title="Close sidebar"
+                  title={i18n.controls.closeSidebar}
+                  aria-label={i18n.controls.closeSidebar}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -644,7 +645,8 @@ export function DisasterPHCommand() {
                   type="button"
                   className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-dim)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
                   onClick={() => setLowbarOpen(false)}
-                  title="Close feed"
+                  title={i18n.controls.closeFeed}
+                  aria-label={i18n.controls.closeFeed}
                 >
                   <X className="h-4 w-4" />
                 </button>

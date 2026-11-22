@@ -17,6 +17,20 @@ import { useLocale } from "@/hooks/useLocale";
  * flaky connection). The feed stays usable; "Try again" reloads the page
  * because a failed lazy chunk is not reliably retried in place.
  */
+function MapInitializing() {
+  const { locale } = useLocale();
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-background">
+      <div className="text-center">
+        <div className="loading-shimmer mx-auto h-3 w-24 rounded-full" />
+        <p className="mt-3 text-xs text-[var(--text-dim)]">
+          {t(locale).controls.initializingMap}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function MapLoadFailed() {
   const { locale } = useLocale();
   const copy = t(locale).map;
@@ -52,16 +66,7 @@ const MapboxMap = dynamic(
     })),
   {
   ssr: false,
-  loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-background">
-      <div className="text-center">
-        <div className="loading-shimmer mx-auto h-3 w-24 rounded-full" />
-        <p className="mt-3 text-xs text-[var(--text-dim)]">
-          Initializing map view…
-        </p>
-      </div>
-    </div>
-  ),
+  loading: () => <MapInitializing />,
   },
 );
 
@@ -94,6 +99,8 @@ export function CommandMap({
   lowbarExpanded = true,
   onToggleLowbar = () => {},
 }: CommandMapProps) {
+  const { locale } = useLocale();
+  const controls = t(locale).controls;
   // Compute effective sidebar width for map padding offset
   const sidebarWidth = focusMode ? 0 : sidebarExpanded ? 320 : 48;
 
@@ -118,7 +125,8 @@ export function CommandMap({
               : "border-overlay/10 text-[var(--text-dim)]"
           }`}
           onClick={onToggleFocus}
-          title={focusMode ? "Exit full map" : "Open full map"}
+          title={focusMode ? controls.exitFullMap : controls.openFullMap}
+          aria-label={focusMode ? controls.exitFullMap : controls.openFullMap}
           type="button"
         >
           {focusMode ? (
@@ -134,7 +142,8 @@ export function CommandMap({
           <button
             className="flex h-8 w-8 items-center justify-center rounded-lg border border-overlay/10 bg-[var(--bg-panel)] text-[var(--text-dim)] transition hover:border-overlay/20 hover:text-[var(--text-primary)]"
             onClick={onToggleSidebar}
-            title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+            title={sidebarExpanded ? controls.collapseSidebar : controls.expandSidebar}
+            aria-label={sidebarExpanded ? controls.collapseSidebar : controls.expandSidebar}
             type="button"
           >
             {sidebarExpanded ? (
@@ -151,7 +160,8 @@ export function CommandMap({
               : "border-overlay/10 text-[var(--text-dim)]"
           }`}
           onClick={onToggleFocus}
-          title={focusMode ? "Exit focus mode (Esc)" : "Focus mode (F)"}
+          title={focusMode ? controls.exitFocusMode : controls.focusMode}
+          aria-label={focusMode ? controls.exitFocusMode : controls.focusMode}
           type="button"
         >
           {focusMode ? (
@@ -167,11 +177,11 @@ export function CommandMap({
           <button
             className="flex h-9 items-center gap-1.5 rounded-xl border border-overlay/10 bg-[var(--bg-panel)] px-3 text-[13px] font-medium text-[var(--text-primary)] shadow-[var(--shadow-card)] backdrop-blur transition hover:border-overlay/20 hover:bg-overlay/8 active:scale-[0.98]"
             onClick={onToggleLowbar}
-            title="Show incident feed"
+            title={controls.showFeedTitle}
             type="button"
           >
             <ChevronUp className="h-3.5 w-3.5" />
-            <span>Show feed</span>
+            <span>{controls.showFeed}</span>
           </button>
         </div>
       )}

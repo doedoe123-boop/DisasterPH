@@ -3,32 +3,21 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Phone } from "lucide-react";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/hooks/useLocale";
+import {
+  AGENCY_LINES,
+  EMERGENCY_NUMBER,
+  formatReviewedOn,
+  type AgencyLine,
+} from "@/lib/hotlines";
 
-interface EmergencyContact {
-  name: string;
-  number: string;
-  category: "national";
-}
-
-const CONTACTS: EmergencyContact[] = [
-  { name: "NDRRMC", number: "(02) 8911-5061", category: "national" },
-  { name: "Philippine Red Cross", number: "143", category: "national" },
-  { name: "PHIVOLCS", number: "(02) 8426-1468", category: "national" },
-  { name: "PAGASA", number: "(02) 8284-0800", category: "national" },
-  { name: "PNP Emergency", number: "117", category: "national" },
-  { name: "BFP (Fire)", number: "(02) 8426-0219", category: "national" },
-  { name: "DOH Hotline", number: "1555", category: "national" },
-  { name: "Coast Guard", number: "(02) 8527-8481", category: "national" },
-];
-
-function toDialable(number: string): string {
-  return number.replace(/[^0-9+]/g, "");
-}
-
-function ContactCard({ contact }: { contact: EmergencyContact }) {
+function AgencyCard({ line }: { line: AgencyLine }) {
+  const { locale } = useLocale();
+  const copy = t(locale).hotlines;
   return (
     <motion.a
-      href={`tel:${toDialable(contact.number)}`}
+      href={`tel:${line.dial}`}
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02, y: -1 }}
@@ -36,14 +25,17 @@ function ContactCard({ contact }: { contact: EmergencyContact }) {
       className="block rounded-xl border border-overlay/10 bg-overlay/[0.03] px-3 py-3 md:px-4 md:py-3.5 transition-colors hover:border-cyan-400/25 hover:bg-overlay/[0.06] active:bg-overlay/[0.06]"
     >
       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-dim)]">
-        National
+        {copy.agencyLabel}
       </p>
       <p className="mt-1 md:mt-1.5 text-[14px] md:text-[16px] font-bold leading-snug text-[var(--text-primary)]">
-        {contact.name}
+        {line.name}
+      </p>
+      <p className="mt-0.5 text-[11px] leading-4 text-[var(--text-dim)]">
+        {copy.purpose[line.purpose]}
       </p>
       <p className="mt-1 flex items-center gap-1.5 text-[13px] md:text-[15px] font-semibold text-cyan-400">
         <Phone className="h-3.5 w-3.5" />
-        {contact.number}
+        {line.number}
       </p>
     </motion.a>
   );
@@ -51,6 +43,8 @@ function ContactCard({ contact }: { contact: EmergencyContact }) {
 
 export function EmergencyContacts() {
   const [open, setOpen] = useState(false);
+  const { locale } = useLocale();
+  const copy = t(locale).hotlines;
 
   return (
     <>
@@ -66,9 +60,34 @@ export function EmergencyContacts() {
               className="overflow-hidden border-t border-overlay/8 bg-[var(--bg-panel)] backdrop-blur-md max-h-[60vh] overflow-y-auto"
             >
               <div className="px-4 py-4 md:px-5 md:py-5">
-                <div className="grid grid-cols-2 gap-2.5 md:gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                  {CONTACTS.map((contact) => (
-                    <ContactCard key={contact.number} contact={contact} />
+                {/* The emergency number comes first and stands apart */}
+                <a
+                  href={`tel:${EMERGENCY_NUMBER.dial}`}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-red-500/40 bg-red-500/12 px-4 py-3.5 transition hover:bg-red-500/20"
+                >
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-red-300">
+                      {copy.emergencyTitle}
+                    </p>
+                    <p className="mt-1 text-[13px] leading-5 text-[var(--text-primary)]">
+                      {copy.emergencyBody}
+                    </p>
+                  </div>
+                  <span className="flex shrink-0 items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-[16px] font-bold text-white">
+                    <Phone className="h-4 w-4" />
+                    {copy.call} {EMERGENCY_NUMBER.number}
+                  </span>
+                </a>
+
+                <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-dim)]">
+                  {copy.agencyTitle}
+                </p>
+                <p className="mt-1 text-[11px] leading-4 text-[var(--text-dim)]">
+                  {copy.agencyNote.replace("{date}", formatReviewedOn())}
+                </p>
+                <div className="mt-2.5 grid grid-cols-2 gap-2.5 md:gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {AGENCY_LINES.map((line) => (
+                    <AgencyCard key={line.id} line={line} />
                   ))}
                 </div>
               </div>
@@ -84,7 +103,7 @@ export function EmergencyContacts() {
           <div className="flex items-center gap-2.5">
             <Phone className="h-[18px] w-[18px] text-amber-400" />
             <span className="text-[12px] md:text-[13px] font-bold uppercase tracking-[0.18em] text-[var(--text-primary)]">
-              Emergency Hotlines
+              {copy.title}
             </span>
           </div>
           <motion.div
