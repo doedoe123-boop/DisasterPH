@@ -1,4 +1,18 @@
 import type { HelpAction, Incident } from "@/types/incident";
+import { EMERGENCY_NUMBER, agencyLine } from "@/lib/hotlines";
+
+const NDRRMC = agencyLine("ndrrmc");
+const RED_CROSS = agencyLine("red-cross");
+
+/** 911 is the nationwide emergency number (Unified 911). */
+const CALL_911: HelpAction = {
+  id: "call-911",
+  label: "Call 911",
+  description: "Emergency: police, fire, medical, rescue",
+  icon: "phone",
+  actionType: "call",
+  href: `tel:${EMERGENCY_NUMBER.dial}`,
+};
 
 /**
  * Generate context-aware help actions based on the selected incident.
@@ -12,21 +26,22 @@ export function getHelpActions(incident: Incident | undefined): HelpAction[] {
 
   // ── High-severity: emergency contacts first ──
   if (severity === "critical" || severity === "warning") {
+    actions.push(CALL_911);
     actions.push({
       id: "ndrrmc",
       label: "Call NDRRMC",
-      description: "National disaster hotline",
+      description: "Disaster operations center (not for emergencies)",
       icon: "phone",
       actionType: "call",
-      href: "tel:+6328911-1406",
+      href: `tel:${NDRRMC.dial}`,
     });
     actions.push({
       id: "red-cross",
       label: "Red Cross PH",
-      description: "143 emergency line",
+      description: "Red Cross hotline (143)",
       icon: "phone",
       actionType: "call",
-      href: "tel:143",
+      href: `tel:${RED_CROSS.dial}`,
     });
   }
 
@@ -104,10 +119,10 @@ export function getHelpActions(incident: Incident | undefined): HelpAction[] {
     actions.push({
       id: "ndrrmc-low",
       label: "Call NDRRMC",
-      description: "National disaster hotline",
+      description: "Disaster operations center (not for emergencies)",
       icon: "phone",
       actionType: "call",
-      href: "tel:+6328911-1406",
+      href: `tel:${NDRRMC.dial}`,
     });
   }
 
@@ -125,21 +140,22 @@ export function getHelpActions(incident: Incident | undefined): HelpAction[] {
 
 function getDefaultActions(): HelpAction[] {
   return [
+    CALL_911,
     {
       id: "ndrrmc",
       label: "Call NDRRMC",
-      description: "National disaster hotline",
+      description: "Disaster operations center (not for emergencies)",
       icon: "phone",
       actionType: "call",
-      href: "tel:+6328911-1406",
+      href: `tel:${NDRRMC.dial}`,
     },
     {
       id: "red-cross",
       label: "Red Cross PH",
-      description: "143 emergency line",
+      description: "Red Cross hotline (143)",
       icon: "phone",
       actionType: "call",
-      href: "tel:143",
+      href: `tel:${RED_CROSS.dial}`,
     },
     {
       id: "pagasa",
