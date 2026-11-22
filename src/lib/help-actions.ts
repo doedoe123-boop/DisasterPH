@@ -1,4 +1,5 @@
 import type { HelpAction, Incident } from "@/types/incident";
+import { formatDateTime } from "@/lib/incidents";
 
 /**
  * Generate context-aware help actions based on the selected incident.
@@ -174,5 +175,5 @@ function getSafetyTipDescription(eventType: Incident["event_type"]): string {
 
 function buildShareText(incident: Incident): string {
   const severity = incident.severity.toUpperCase();
-  return `[${severity}] ${incident.title} — ${incident.region}. Source: ${incident.source}. Updated: ${new Date(incident.updated_at).toLocaleString("en-PH")}`;
+  return `[${severity}] ${incident.title} — ${incident.region}. Source: ${incident.source}. Updated: ${formatDateTime(incident.updated_at)}`;
 }
