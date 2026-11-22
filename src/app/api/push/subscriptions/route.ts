@@ -14,6 +14,7 @@ import {
   parseSubscription,
 } from "@/lib/push-subscription-validation";
 import { rateLimit } from "@/lib/rate-limit";
+import { readJsonWithLimit } from "@/lib/read-limited-body";
 
 export const dynamic = "force-dynamic";
 
@@ -52,19 +53,16 @@ async function readBody(
     return { response: json({ error: "rate_limited" }, 429) };
   }
 
-  const text = await request.text();
-  if (text.length > MAX_BODY_BYTES) {
-    return { response: json({ error: "payload_too_large" }, 413) };
+  // Byte limit enforced while streaming (also without Content-Length).
+  const read = await readJsonWithLimit(request, MAX_BODY_BYTES);
+  if (!read.ok) {
+    return { response: json({ error: read.error }, read.status) };
   }
-  try {
-    const parsed: unknown = JSON.parse(text);
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      throw new Error("not an object");
-    }
-    return { body: parsed as Record<string, unknown> };
-  } catch {
+  const parsed = read.value;
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     return { response: json({ error: "invalid_json" }, 400) };
   }
+  return { body: parsed as Record<string, unknown> };
 }
 
 // POST — create a subscription, or update one the caller proves it owns.
