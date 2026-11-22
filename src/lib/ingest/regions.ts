@@ -1,19 +1,42 @@
-/** Rough Philippine region estimation from lat/lon. */
+import {
+  locateRegion,
+  matchingRegion,
+  regionLabel,
+  type RegionLocation,
+} from "@/lib/geo/ph-regions";
+
+/**
+ * Display region for a point, from official PSGC region boundaries.
+ * Offshore points are labelled "Offshore" / "Offshore, near X" instead of
+ * being assigned a region.
+ */
 export function estimateRegion(lat: number, lon: number): string {
-  if (lat > 18) return "Cordillera Administrative Region";
-  if (lat > 16 && lon < 121) return "Ilocos Region";
-  if (lat > 16) return "Cagayan Valley";
-  if (lat > 14.5 && lon < 121) return "Central Luzon";
-  if (lat > 14 && lon < 121.5) return "National Capital Region";
-  if (lat > 13 && lon < 122) return "CALABARZON";
-  if (lat > 12 && lon > 123) return "Eastern Visayas";
-  if (lat > 12) return "Bicol Region";
-  if (lat > 10 && lon < 123) return "Western Visayas";
-  if (lat > 10) return "Central Visayas";
-  if (lat > 8) return "Northern Mindanao";
-  if (lat > 6 && lon > 125) return "Caraga";
-  if (lat > 6) return "Davao Region";
-  return "BARMM";
+  return regionLabel(locateRegion(lat, lon));
+}
+
+/**
+ * Region used for matching (saved places, alert region filters): the land
+ * region, or for offshore points the nearest region within 100 km.
+ */
+export function regionForMatching(lat: number, lon: number): string {
+  const loc = locateRegion(lat, lon);
+  return matchingRegion(loc) ?? regionLabel(loc);
+}
+
+/** Region metadata to store on an incident. */
+export function regionMetadata(lat: number, lon: number): {
+  region: string;
+  metadata: { offshore: boolean; near_region: string | null; region_psgc: number | null };
+} {
+  const loc: RegionLocation = locateRegion(lat, lon);
+  return {
+    region: regionLabel(loc),
+    metadata: {
+      offshore: loc.offshore,
+      near_region: loc.offshore ? loc.nearName : null,
+      region_psgc: loc.offshore ? null : loc.psgc,
+    },
+  };
 }
 
 /** Philippines bounding box. */

@@ -13,7 +13,7 @@ import {
   pushSupported,
   unsubscribeFromPush,
 } from "@/lib/notifications";
-import { estimateRegion } from "@/lib/ingest/regions";
+import { regionForMatching } from "@/lib/ingest/regions";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
@@ -30,7 +30,7 @@ export function NotificationSettings() {
   const { places } = useSavedPlaces();
 
   const savedPlaceRegions = Array.from(
-    new Set(places.map((place) => estimateRegion(place.latitude, place.longitude))),
+    new Set(places.map((place) => regionForMatching(place.latitude, place.longitude))),
   ).sort();
 
   const update = useCallback((patch: Partial<NotificationPrefs>) => {

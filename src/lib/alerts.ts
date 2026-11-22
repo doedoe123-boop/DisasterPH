@@ -116,7 +116,11 @@ export function evaluateAlertEngine(
       incidentId: incident.id,
       incidentTitle: incident.title,
       incidentSeverity: incident.severity,
-      incidentRegion: incident.region,
+      // Region used for alert preferences: offshore events match their nearest region.
+      incidentRegion:
+        typeof incident.metadata?.near_region === "string"
+          ? incident.metadata.near_region
+          : incident.region,
       trigger,
       placeIds: snapshot.placeIds,
       placeLabels,
