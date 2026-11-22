@@ -19,7 +19,9 @@ export interface TerrainConfig {
 }
 
 export const TERRAIN_SOURCE = "terrain-dem";
-export const TERRAIN_PITCH = 45;
+// A design setting to test on devices: enough tilt to read relief, little
+// enough that labels and pins stay legible. North stays up.
+export const TERRAIN_PITCH = 30;
 
 export function parseTerrainConfig(env: {
   tiles?: string;

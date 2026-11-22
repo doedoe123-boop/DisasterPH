@@ -447,7 +447,9 @@ export function DisasterPHCommand() {
             <CommandMap
               incidents={filteredIncidents}
               communityReports={[]}
-              selectedIncidentId={selectedIncident?.id ?? ""}
+              // Only an explicit selection moves the map. The detail panels
+              // fall back to the newest event, but the camera must not.
+              selectedIncidentId={selectedIncidentId}
               hoveredIncidentId={hoveredIncidentId}
               onHoverIncident={setHoveredIncidentId}
               onSelectIncident={(incident) => {
@@ -460,6 +462,8 @@ export function DisasterPHCommand() {
               onToggleSidebar={() => setSidebarOpen((s) => !s)}
               lowbarExpanded={lowbarOpen}
               onToggleLowbar={() => setLowbarOpen((s) => !s)}
+              // Focus-mode incident card: absolute left-4 (16px) + w-[320px].
+              mapLeftInset={focusMode && sheetOpen && selectedIncident ? 336 : 0}
             />
 
             {/* ── Focus Mode: Compact Incident Card ── */}

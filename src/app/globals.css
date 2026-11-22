@@ -658,6 +658,11 @@ select {
    ═══════════════════════════════════════════ */
 
 /* MapLibre GL – popup */
+/* Above incident markers (inline z-index 10–30) so pins never cover the text. */
+.bantay-popup {
+  z-index: 40;
+}
+
 .bantay-popup .maplibregl-popup-content {
   background: var(--bg-panel);
   border: 1px solid rgb(var(--ui-overlay) / 0.1);

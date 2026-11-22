@@ -18,9 +18,6 @@ export const DEFAULT_CAMERA = {
   bearing: 0,
 } as const;
 
-/** Zoom level when flying to an incident */
-export const INCIDENT_ZOOM = 8.5;
-
 /** MapLibre night tile style */
 export const MAP_STYLE_NIGHT = "https://tiles.openfreemap.org/styles/dark";
 /** MapLibre day tile style */
