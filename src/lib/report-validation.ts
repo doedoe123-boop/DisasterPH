@@ -56,13 +56,3 @@ export function validateCoordinates(
 export function isHoneypotFilled(body: Record<string, unknown>): boolean {
   return typeof body.website === "string" && body.website.length > 0;
 }
-
-/**
- * Verify admin token for protected endpoints.
- * Uses server-only env var (not NEXT_PUBLIC_).
- */
-export function isValidAdminToken(headerValue: string | null): boolean {
-  const token = process.env.ADMIN_TOKEN;
-  if (!token) return false; // No token configured = locked out
-  return headerValue === token;
-}

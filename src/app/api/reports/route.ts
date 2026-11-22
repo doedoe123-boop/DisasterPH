@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
+import { PUBLIC_REPORT_COLUMNS } from "@/lib/community-reports";
 import { rateLimit } from "@/lib/rate-limit";
 import {
   validateCategory,
@@ -9,16 +10,17 @@ import {
 
 export const dynamic = "force-dynamic";
 
-// GET /api/reports — list all reports (newest first)
+// GET /api/reports — approved reports only, public fields only (newest first)
 export async function GET() {
-  const { data, error } = await getSupabase()
+  const { data, error } = await getSupabaseAdmin()
     .from("community_reports")
-    .select("*")
+    .select(PUBLIC_REPORT_COLUMNS)
+    .eq("status", "approved")
     .order("created_at", { ascending: false })
     .limit(100);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Could not load reports" }, { status: 500 });
   }
 
   return NextResponse.json({ data });
@@ -42,7 +44,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    const parsed: unknown = await request.json();
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      throw new Error("not an object");
+    }
+    body = parsed as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
   // ── Honeypot trap ──
   if (isHoneypotFilled(body)) {
@@ -92,7 +103,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: coordCheck.reason }, { status: 400 });
   }
 
-  const { data, error } = await getSupabase()
+  // Status and moderation fields never come from the client; the 003
+  // migration's trigger also forces pending on every insert.
+  const { data, error } = await getSupabaseAdmin()
     .from("community_reports")
     .insert({
       category,
@@ -104,11 +117,11 @@ export async function POST(request: NextRequest) {
       reporter_name: String(reporter_name).slice(0, 50),
       status: "pending",
     })
-    .select()
+    .select(PUBLIC_REPORT_COLUMNS)
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Could not submit report" }, { status: 500 });
   }
 
   return NextResponse.json({ data }, { status: 201 });

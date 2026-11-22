@@ -61,7 +61,15 @@ export function DisasterPHDashboard() {
   const { advisories, error: advisoryError } = useAdvisories();
   const { places, addPlace, removePlace } = useSavedPlaces();
   const { isOnline } = useNetworkStatus();
-  const { reports, addReport, moderate, removeReport } = useCommunityReports();
+  const {
+    reports,
+    isModerator,
+    addReport,
+    moderate,
+    removeReport,
+    signInModerator,
+    signOutModerator,
+  } = useCommunityReports();
 
   const selectedIncident: Incident | undefined =
     incidents.find((i) => i.id === selectedIncidentId) ?? incidents[0];
@@ -392,9 +400,12 @@ export function DisasterPHDashboard() {
 
               <CommunityReportsPanel
                 reports={reports}
+                isModerator={isModerator}
                 onAddReport={addReport}
                 onModerate={moderate}
                 onRemove={removeReport}
+                onModeratorSignIn={signInModerator}
+                onModeratorSignOut={signOutModerator}
               />
 
               {/* ── Priority Feed (always visible, collapsible) ── */}
