@@ -22,6 +22,7 @@ import { computeAllPlaceRisks } from "@/lib/risk-summary";
 import { visualFromSeverity } from "@/lib/severity";
 import type { Incident, IncidentEventType } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
+import { HazardEmptyState } from "@/components/disasterph/hazard-empty-state";
 import { useAlertCenter } from "@/hooks/use-alert-center";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
 import { useNetworkStatus } from "@/hooks/use-network-status";
@@ -659,9 +660,11 @@ export function DisasterPHCommand() {
               {/* Incident cards */}
               <div className="md:max-h-72 md:overflow-y-auto pb-16 md:pb-0">
                 {filteredIncidents.length === 0 ? (
-                  <p className="py-8 text-center text-[15px] text-[var(--text-dim)]">
-                    {i18n.common.noFilterMatches}
-                  </p>
+                  <HazardEmptyState
+                    filter={activeFilter}
+                    locale={locale}
+                    sourceStatuses={sourceStatuses}
+                  />
                 ) : (
                   <motion.div
                     variants={staggerContainer}

@@ -40,6 +40,8 @@ export interface SourceStatus {
   last_fetch_at: string;
   latency_ms: number;
   notes: string;
+  /** PAGASA only: what the official bulletin page says about tropical cyclones. */
+  bulletin_state?: "none" | "active" | "unknown";
 }
 
 export interface DashboardStats {

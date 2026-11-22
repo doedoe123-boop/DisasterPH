@@ -67,13 +67,22 @@ export function recordFetch(log: FetchLog): void {
   if (log.success) {
     prev.last_success_at = log.fetched_at;
     prev.consecutive_failures = 0;
-    prev.notes = `Fetched ${log.event_count} event${log.event_count !== 1 ? "s" : ""} successfully.`;
+    prev.notes =
+      log.note ??
+      `Fetched ${log.event_count} event${log.event_count !== 1 ? "s" : ""} successfully.`;
+    prev.bulletin_state = log.bulletin_state;
     const age = Date.now() - new Date(log.fetched_at).getTime();
-    prev.status =
-      age < STALE_MS ? "healthy" : age < DELAYED_MS ? "delayed" : "degraded";
+    prev.status = log.uncertain
+      ? "degraded" // reachable, but its content could not be read reliably
+      : age < STALE_MS
+        ? "healthy"
+        : age < DELAYED_MS
+          ? "delayed"
+          : "degraded";
   } else {
     prev.consecutive_failures++;
     prev.notes = log.error ?? "Fetch failed.";
+    prev.bulletin_state = undefined; // a failed fetch tells us nothing about bulletins
     prev.status = prev.consecutive_failures >= 3 ? "offline" : "degraded";
   }
 
@@ -98,6 +107,7 @@ export function getSourceHealth(): SourceStatus[] {
       last_fetch_at: h.last_fetch_at ?? new Date().toISOString(),
       latency_ms: h.latency_ms,
       notes: h.notes,
+      ...(h.bulletin_state && { bulletin_state: h.bulletin_state }),
     });
   }
 

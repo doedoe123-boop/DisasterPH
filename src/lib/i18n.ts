@@ -128,6 +128,23 @@ export const copy = {
       noDescription: "No detailed description available for this event.",
       viewFullDetail: "View full detail",
     },
+    hazardEmpty: {
+      typhoonNone:
+        "No active tropical cyclone in the Philippine Area of Responsibility, according to PAGASA's bulletin page (checked {time}).",
+      typhoonActive:
+        "PAGASA has an active tropical cyclone bulletin. DisasterPH does not show its details yet, so read the official bulletin.",
+      typhoonUnknown:
+        "Tropical cyclone status from PAGASA is not available right now. Check the official bulletin.",
+      floodNotCovered:
+        "DisasterPH does not show PAGASA flood advisories yet. Check PAGASA's flood information.",
+      volcanoNotCovered:
+        "No volcano events in this feed. DisasterPH does not show PHIVOLCS volcano bulletins yet.",
+      landslideNotCovered:
+        "DisasterPH does not track landslide advisories yet. Follow your local DRRMO for landslide warnings.",
+      pagasaTcLink: "PAGASA tropical cyclone bulletin",
+      pagasaFloodLink: "PAGASA flood information",
+      phivolcsLink: "PHIVOLCS bulletins",
+    },
     map: {
       loading: "Loading map…",
       unavailableTitle: "Map unavailable on this device",
@@ -398,6 +415,23 @@ export const copy = {
       expiredIncident: "Maaaring tapos na o hindi na aktibo ang abisong ito.",
       noDescription: "Walang detalyadong paliwanag para sa abisong ito.",
       viewFullDetail: "Tingnan ang buong detalye",
+    },
+    hazardEmpty: {
+      typhoonNone:
+        "Walang aktibong bagyo sa Philippine Area of Responsibility, ayon sa bulletin page ng PAGASA (sinuri noong {time}).",
+      typhoonActive:
+        "May aktibong tropical cyclone bulletin ang PAGASA. Hindi pa ipinapakita ng DisasterPH ang mga detalye nito, kaya basahin ang opisyal na bulletin.",
+      typhoonUnknown:
+        "Hindi available ngayon ang status ng bagyo mula sa PAGASA. Tingnan ang opisyal na bulletin.",
+      floodNotCovered:
+        "Hindi pa ipinapakita ng DisasterPH ang mga flood advisory ng PAGASA. Tingnan ang flood information ng PAGASA.",
+      volcanoNotCovered:
+        "Walang pangyayaring may kinalaman sa bulkan sa feed na ito. Hindi pa ipinapakita ng DisasterPH ang mga volcano bulletin ng PHIVOLCS.",
+      landslideNotCovered:
+        "Hindi pa sinusubaybayan ng DisasterPH ang mga landslide advisory. Sundin ang inyong lokal na DRRMO para sa babala sa pagguho ng lupa.",
+      pagasaTcLink: "Tropical cyclone bulletin ng PAGASA",
+      pagasaFloodLink: "Flood information ng PAGASA",
+      phivolcsLink: "Mga bulletin ng PHIVOLCS",
     },
     map: {
       loading: "Nilo-load ang mapa…",
