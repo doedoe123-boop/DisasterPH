@@ -40,7 +40,12 @@ interface Shelter {
   amenities: string[];
 }
 
-/* ── Demo shelter data ── */
+/*
+ * ── Demo shelter data (NOT real) ──
+ * Sample records for UI development only. They are never rendered in
+ * production builds: there is no verified shelter data source yet.
+ */
+const SHELTER_DEMO = process.env.NODE_ENV === "development";
 const SHELTERS: Shelter[] = [
   {
     id: "s1",
@@ -168,6 +173,38 @@ const listContainer = {
 };
 
 export default function SheltersPage() {
+  return SHELTER_DEMO ? <SheltersDemo /> : <SheltersUnavailable />;
+}
+
+/** Public state until a verified source (e.g. an LGU/DRRMO operator) exists. */
+function SheltersUnavailable() {
+  const { locale } = useLocale();
+  const copy = t(locale).shelters.unavailable;
+  return (
+    <div className="flex min-h-screen flex-col bg-[var(--bg-base)] text-[var(--text-primary)]">
+      <AppHeader />
+      <main className="mx-auto w-full max-w-xl flex-1 px-5 py-12">
+        <div className="rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-6">
+          <div className="flex items-center gap-2.5">
+            <Building2 className="h-5 w-5 text-[var(--text-dim)]" />
+            <h1 className="text-lg font-semibold">{copy.title}</h1>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">{copy.body}</p>
+          <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">{copy.followLocal}</p>
+          <a
+            className="mt-5 inline-flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20"
+            href="tel:911"
+          >
+            <Phone className="h-4 w-4" />
+            {copy.emergency} 911
+          </a>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function SheltersDemo() {
   const { locale } = useLocale();
   const i18n = t(locale);
   const [search, setSearch] = useState("");
@@ -210,6 +247,12 @@ export default function SheltersPage() {
   return (
     <div className="flex h-screen flex-col bg-[var(--bg-base)] text-[var(--text-primary)]">
       <AppHeader />
+      <p
+        className="border-b border-amber-400/30 bg-amber-400/10 px-4 py-2 text-center text-[12px] font-medium text-amber-300"
+        role="note"
+      >
+        {i18n.shelters.demoBanner}
+      </p>
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* ══════════════════════════════════════════
@@ -386,13 +429,10 @@ export default function SheltersPage() {
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
                       {i18n.shelters.labels.hotline}
                     </p>
-                    <a
-                      href={`tel:${selected.phone.replace(/[^0-9+]/g, "")}`}
-                      className="shelter-call-link mt-1.5 flex items-center gap-1.5 text-[15px] font-semibold text-cyan-400 transition hover:text-cyan-300"
-                    >
+                    <span className="mt-1.5 flex items-center gap-1.5 text-[15px] font-semibold text-[var(--text-muted)]">
                       <Phone className="h-4 w-4" />
                       {selected.phone}
-                    </a>
+                    </span>
                   </div>
 
                   {/* Amenities */}
@@ -768,12 +808,9 @@ export default function SheltersPage() {
                   </div>
                   <div className="flex items-center gap-2.5">
                     <Phone className="h-4 w-4 shrink-0 text-[var(--text-dim)]" />
-                    <a
-                      href={`tel:${selected.phone.replace(/[^0-9+]/g, "")}`}
-                      className="text-[13px] font-semibold text-cyan-400"
-                    >
+                    <span className="text-[13px] font-semibold text-[var(--text-muted)]">
                       {selected.phone}
-                    </a>
+                    </span>
                   </div>
                   <div className="flex items-center gap-2.5">
                     <Building2 className="h-4 w-4 shrink-0 text-[var(--text-dim)]" />

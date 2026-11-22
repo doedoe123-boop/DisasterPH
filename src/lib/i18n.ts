@@ -243,6 +243,15 @@ export const copy = {
       },
     },
     shelters: {
+      unavailable: {
+        title: "Evacuation center information",
+        body: "DisasterPH does not have verified evacuation center information yet, so no shelter status, capacity, or contact numbers are shown here.",
+        followLocal:
+          "During an emergency, follow the instructions of your barangay and your city or municipal disaster risk reduction and management office (DRRMO).",
+        emergency: "For emergencies, call",
+      },
+      demoBanner:
+        "Development preview: sample data only. These are not real shelter records, statuses, or phone numbers.",
       title: "Sanctuary",
       subtitle: "Shelter Operations",
       searchPlaceholder: "Search shelters...",
@@ -501,6 +510,15 @@ export const copy = {
       },
     },
     shelters: {
+      unavailable: {
+        title: "Impormasyon sa evacuation center",
+        body: "Wala pang beripikadong impormasyon ang DisasterPH tungkol sa mga evacuation center, kaya walang ipinapakitang status, kapasidad, o numero ng telepono rito.",
+        followLocal:
+          "Sa panahon ng emergency, sundin ang tagubilin ng inyong barangay at ng city o municipal disaster risk reduction and management office (DRRMO).",
+        emergency: "Para sa emergency, tumawag sa",
+      },
+      demoBanner:
+        "Development preview: sample na datos lamang. Hindi ito tunay na rekord, status, o numero ng telepono ng silungan.",
       title: "Silungan",
       subtitle: "Operasyon ng Silungan",
       searchPlaceholder: "Maghanap ng silungan...",
