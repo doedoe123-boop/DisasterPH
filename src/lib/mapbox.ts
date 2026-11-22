@@ -13,12 +13,10 @@ export const PH_BOUNDS: [[number, number], [number, number]] = [
 export const DEFAULT_CAMERA = {
   center: PH_CENTER,
   zoom: 5.2,
-  pitch: 25,
+  // Flat and north-up by default; 3D terrain is opt-in.
+  pitch: 0,
   bearing: 0,
 } as const;
-
-/** Zoom level when flying to an incident */
-export const INCIDENT_ZOOM = 8.5;
 
 /** MapLibre night tile style */
 export const MAP_STYLE_NIGHT = "https://tiles.openfreemap.org/styles/dark";

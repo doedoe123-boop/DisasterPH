@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { CommunityReport, Incident } from "@/types/incident";
 import {
   PH_BOUNDS,
   DEFAULT_CAMERA,
-  INCIDENT_ZOOM,
   MAP_STYLE_NIGHT,
   MAP_STYLE_DAY,
   getMapStyle,
@@ -14,6 +13,9 @@ import {
 } from "@/lib/mapbox";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
 import { loadMapLibre } from "@/lib/maplibre-loader";
+import { Mountain, LocateFixed } from "lucide-react";
+import { TERRAIN_CONFIG, TERRAIN_SOURCE, disableTerrain, enableTerrain } from "@/lib/terrain";
+import { focusZoom, isInView, mapPadding } from "@/lib/map-camera";
 import { displayRegion } from "@/lib/geo/ph-regions";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
@@ -31,8 +33,37 @@ interface Props {
   hoveredIncidentId: string | null;
   onHoverIncident: (id: string | null) => void;
   onSelectIncident: (incident: Incident) => void;
-  /** Width of the sidebar in pixels, used to offset the map center */
-  sidebarWidth: number;
+  /** Width in pixels of a panel floating over the left edge of the map
+   *  (the focus-mode incident card); 0 when nothing covers the map. */
+  leftInset: number;
+}
+
+/** Flat, north-up view of the whole country inside the unobstructed area. */
+function fitNational(map: MlMap, leftInset: number, duration: number) {
+  const { clientWidth: w, clientHeight: h } = map.getContainer();
+  map.fitBounds(PH_BOUNDS, {
+    padding: mapPadding(w, h, leftInset),
+    pitch: DEFAULT_CAMERA.pitch,
+    bearing: DEFAULT_CAMERA.bearing,
+    duration,
+    essential: false,
+  });
+}
+
+/** In the flat view the map cannot be rotated or tilted by accident (as in
+ *  most web maps); 3D terrain turns those gestures back on. */
+function setRotateGestures(map: MlMap, enabled: boolean) {
+  if (enabled) {
+    map.dragRotate.enable();
+    map.touchZoomRotate.enableRotation();
+    map.touchPitch.enable();
+    map.keyboard.enableRotation();
+  } else {
+    map.dragRotate.disable();
+    map.touchZoomRotate.disableRotation();
+    map.touchPitch.disable();
+    map.keyboard.disableRotation();
+  }
 }
 
 export default function MapLibreMapComponent({
@@ -42,7 +73,7 @@ export default function MapLibreMapComponent({
   hoveredIncidentId,
   onHoverIncident,
   onSelectIncident,
-  sidebarWidth,
+  leftInset,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -50,12 +81,23 @@ export default function MapLibreMapComponent({
   const markersRef = useRef<Map<string, MlMarker>>(new Map());
   const communityMarkersRef = useRef<Map<string, MlMarker>>(new Map());
   const popupRef = useRef<MlPopup | null>(null);
-  const initialSidebarWidthRef = useRef(sidebarWidth);
+  // Read by long-lived map handlers; updated after commit.
+  const leftInsetRef = useRef(leftInset);
+  useEffect(() => {
+    leftInsetRef.current = leftInset;
+  }, [leftInset]);
+  // Set once the resident pans/zooms/selects; until then layout changes
+  // re-fit the national view instead of leaving it off-centre.
+  const userMovedRef = useRef(false);
   const [mapReady, setMapReady] = useState(false);
   // Set when MapLibre cannot load or start. "unsupported" = no WebGL2 (a
   // retry cannot help); "error" = e.g. a failed chunk load (retry may help).
   const [mapFailed, setMapFailed] = useState<false | "unsupported" | "error">(false);
   const [mapAttempt, setMapAttempt] = useState(0);
+  // Opt-in terrain: off by default, and only offered when a DEM source is configured.
+  const [terrainOn, setTerrainOn] = useState(false);
+  const [terrainFailed, setTerrainFailed] = useState(false);
+  const terrainRef = useRef(false);
   const { locale } = useLocale();
   const mapCopy = t(locale).map;
   const incidentsRef = useRef(incidents);
@@ -89,11 +131,10 @@ export default function MapLibreMapComponent({
           zoom: DEFAULT_CAMERA.zoom,
           pitch: DEFAULT_CAMERA.pitch,
           bearing: DEFAULT_CAMERA.bearing,
-          maxBounds: [
-            [110, 2],
-            [135, 23],
-          ],
-          minZoom: 4,
+          // No maxBounds: on a wide, short map a tight box forced the
+          // camera to zoom in and cut off Mindanao. "Reset map view"
+          // brings the resident back instead.
+          minZoom: 3,
           maxZoom: 16,
           attributionControl: false,
           // MapLibre control labels (tooltips and accessible names). They can
@@ -131,20 +172,23 @@ export default function MapLibreMapComponent({
         // Theme-aware sky atmosphere
         applySky(map);
 
-        // Fit to Philippines bounds with padding that accounts for sidebar
-        map.fitBounds(PH_BOUNDS, {
-          padding: {
-            top: 40,
-            bottom: 40,
-            left: 40,
-            right: 40 + initialSidebarWidthRef.current,
-          },
-          pitch: DEFAULT_CAMERA.pitch,
-          bearing: DEFAULT_CAMERA.bearing,
-          duration: 0,
-        });
+        setRotateGestures(map, false);
+        fitNational(map, leftInsetRef.current, 0);
 
         setMapReady(true);
+      });
+
+      // Only gestures carry an originalEvent; programmatic moves do not.
+      map.on("movestart", (e) => {
+        if ((e as { originalEvent?: Event }).originalEvent) userMovedRef.current = true;
+      });
+
+      // Missing or failing DEM tiles never block the map: fall back to 2D.
+      map.on("error", (e) => {
+        if ((e as { sourceId?: string }).sourceId === TERRAIN_SOURCE) {
+          setTerrainFailed(true);
+          setTerrainOn(false);
+        }
       });
 
       mapRef.current = map;
@@ -155,6 +199,8 @@ export default function MapLibreMapComponent({
         map.once("styledata", () => {
           applySky(map);
           addAllSourcesAndLayers(map, incidentsRef.current);
+          // Style swaps drop sources; restore terrain if it was on.
+          if (terrainRef.current && TERRAIN_CONFIG) enableTerrain(map, TERRAIN_CONFIG, false);
         });
       };
       window.addEventListener("themechange", themeHandler);
@@ -183,28 +229,16 @@ export default function MapLibreMapComponent({
     const map = mapRef.current;
     if (!container || !map) return;
 
-    const observer = new ResizeObserver(() => map.resize());
+    // The sidebar and feed sit beside the map, not over it, so they only
+    // change the container size. Keep the national view fitted until the
+    // resident moves the map; after that, leave their camera alone.
+    const observer = new ResizeObserver(() => {
+      map.resize();
+      if (!userMovedRef.current) fitNational(map, leftInsetRef.current, 0);
+    });
     observer.observe(container);
     return () => observer.disconnect();
   }, [mapReady]);
-
-  // ── Re-fit bounds when sidebar width changes ──
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-
-    // Small delay so the container has resized before we re-fit
-    const timeout = setTimeout(() => {
-      map.resize();
-      map.fitBounds(PH_BOUNDS, {
-        padding: { top: 40, bottom: 40, left: 40, right: 40 + sidebarWidth },
-        pitch: DEFAULT_CAMERA.pitch,
-        bearing: DEFAULT_CAMERA.bearing,
-        duration: 600,
-      });
-    }, 50);
-    return () => clearTimeout(timeout);
-  }, [sidebarWidth, mapReady]);
 
   // ── Sync markers ──
   useEffect(() => {
@@ -283,18 +317,20 @@ export default function MapLibreMapComponent({
         if (inner) inner.style.filter = "";
       }
     });
-  }, [selectedIncidentId, hoveredIncidentId]);
+    // incidents/mapReady: markers created after a selection still get the highlight.
+  }, [selectedIncidentId, hoveredIncidentId, incidents, mapReady]);
 
-  // ── Hover tooltip ──
+  // ── Popup: the hovered event, otherwise the selected one ──
+  // Showing it for the selection gives an offshore pin its context (place
+  // and source description) on touch screens too, where there is no hover.
   useEffect(() => {
     const map = mapRef.current;
     const ml = mlRef.current;
     if (!map || !ml || !mapReady) return;
 
-    if (hoveredIncidentId) {
-      const incident = incidents.find((i) => i.id === hoveredIncidentId);
-      if (!incident) return;
-
+    const popupId = hoveredIncidentId ?? (selectedIncidentId || null);
+    const incident = popupId ? incidents.find((i) => i.id === popupId) : undefined;
+    if (incident) {
 
       popupRef.current?.remove();
       popupRef.current = new ml.Popup({
@@ -312,7 +348,7 @@ export default function MapLibreMapComponent({
       popupRef.current?.remove();
       popupRef.current = null;
     }
-  }, [hoveredIncidentId, incidents, mapReady, locale]);
+  }, [hoveredIncidentId, selectedIncidentId, incidents, mapReady, locale]);
 
   // ── Community report markers (visually distinct from official data) ──
   useEffect(() => {
@@ -345,26 +381,102 @@ export default function MapLibreMapComponent({
     });
   }, [communityReports, mapReady]);
 
-  // ── Fly to selected incident ──
+  // ── Bring a newly selected incident into view ──
+  // Runs only when the resident's selection changes — not when the feed
+  // refreshes — and moves the camera only if the pin is hidden or behind a
+  // panel. Pitch and bearing are left as they are.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady || !selectedIncidentId) return;
 
-    const incident = incidents.find((i) => i.id === selectedIncidentId);
+    const incident = incidentsRef.current.find((i) => i.id === selectedIncidentId);
     if (!incident) return;
 
-    map.flyTo({
-      center: [incident.longitude, incident.latitude],
-      zoom: Math.max(map.getZoom(), INCIDENT_ZOOM),
-      pitch: 50,
-      duration: 1800,
-      essential: true,
+    const lngLat: [number, number] = [incident.longitude, incident.latitude];
+    const { clientWidth: w, clientHeight: h } = map.getContainer();
+    const padding = mapPadding(w, h, leftInsetRef.current);
+    if (isInView(map.project(lngLat), w, h, padding)) return;
+
+    userMovedRef.current = true;
+    map.easeTo({
+      center: lngLat,
+      zoom: focusZoom(map.getZoom()),
+      // Centre the pin in the unobstructed area. (offset, not padding:
+      // easeTo's padding would persist on the map after the move.)
+      offset: [(padding.left - padding.right) / 2, (padding.top - padding.bottom) / 2],
+      duration: 700,
+      essential: false,
     });
-  }, [selectedIncidentId, incidents, mapReady]);
+  }, [selectedIncidentId, mapReady]);
+
+  // Apply the terrain toggle (no DEM request happens until it is turned on).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || !TERRAIN_CONFIG) return;
+    if (terrainOn) {
+      enableTerrain(map, TERRAIN_CONFIG);
+      setRotateGestures(map, true);
+    } else if (terrainRef.current) {
+      disableTerrain(map);
+      setRotateGestures(map, false);
+    }
+    terrainRef.current = terrainOn;
+  }, [terrainOn, mapReady]);
+
+  const resetView = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (terrainRef.current) {
+      // Turn terrain off without disableTerrain's own camera move, which
+      // would interrupt the fit below.
+      map.setTerrain(null);
+      setRotateGestures(map, false);
+      terrainRef.current = false;
+      setTerrainOn(false);
+    }
+    userMovedRef.current = false;
+    fitNational(map, leftInsetRef.current, 600);
+  };
 
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
+      {mapReady && !mapFailed && (
+        <div
+          // The inset panel (focus-mode card) is only shown at lg and up.
+          className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5 lg:left-[calc(var(--map-left-inset)+0.75rem)]"
+          style={{ "--map-left-inset": `${leftInset}px` } as CSSProperties}
+        >
+          <button
+            className="flex items-center gap-1.5 rounded-lg border border-overlay/15 bg-[var(--bg-panel)]/90 px-2.5 py-1.5 text-[12px] font-medium text-[var(--text-primary)] shadow transition hover:bg-[var(--bg-panel)]"
+            onClick={resetView}
+            title={mapCopy.resetViewTitle}
+            type="button"
+          >
+            <LocateFixed className="h-3.5 w-3.5" />
+            {mapCopy.resetView}
+          </button>
+          {TERRAIN_CONFIG && (
+          <button
+            aria-pressed={terrainOn}
+            className="flex items-center gap-1.5 rounded-lg border border-overlay/15 bg-[var(--bg-panel)]/90 px-2.5 py-1.5 text-[12px] font-medium text-[var(--text-primary)] shadow transition hover:bg-[var(--bg-panel)]"
+            onClick={() => {
+              setTerrainFailed(false);
+              setTerrainOn((on) => !on);
+            }}
+            type="button"
+          >
+            <Mountain className="h-3.5 w-3.5" />
+            {terrainOn ? mapCopy.terrainOff : mapCopy.terrainOn}
+          </button>
+          )}
+          {terrainFailed && (
+            <p className="rounded-md bg-[var(--bg-panel)]/90 px-2 py-1 text-[11px] text-amber-300" role="status">
+              {mapCopy.terrainFailed}
+            </p>
+          )}
+        </div>
+      )}
       {mapFailed ? (
         <div
           className="absolute inset-0 flex items-center justify-center bg-background p-4"
@@ -687,10 +799,15 @@ function createMarkerElement(incident: Incident): HTMLDivElement {
 
   const el = document.createElement("div");
   el.className = "mapbox-marker";
+  el.dataset.incidentId = incident.id;
+  // Attribute, not markup: feed text is never parsed as HTML.
+  el.setAttribute("aria-label", String(incident.title));
   el.style.width = `${size}px`;
   el.style.height = `${size}px`;
   el.style.cursor = "pointer";
-  el.style.position = "relative";
+  // No inline position: MapLibre's .maplibregl-marker class makes the
+  // element absolute. An inline "relative" put markers in normal flow, so
+  // each one was drawn lower by the heights of the markers before it.
 
   el.innerHTML = `
     <div style="position:absolute;inset:-4px;border-radius:50%;border:1.5px solid ${ringColor};opacity:0.4;animation:marker-ping 2.5s cubic-bezier(0,0,0.2,1) infinite;pointer-events:none;"></div>
@@ -765,6 +882,12 @@ function buildPopupContent(incident: Incident, locale: "en" | "fil"): HTMLElemen
       `${displayRegion(incident.region, locale)} · ${formatShortTime(incident.updated_at)}`,
     ),
   );
+  // The source agency's own location text (e.g. "045 km S 31° W of …"):
+  // context for offshore pins. Skipped when the title already contains it.
+  const place = incident.metadata.source_place;
+  if (typeof place === "string" && place.trim() && !incident.title.includes(place.trim())) {
+    root.append(textEl("div", "font-size:11px;color:var(--text-dim);margin-top:2px;", place.trim()));
+  }
   return root;
 }
 
@@ -859,7 +982,9 @@ function createCommunityMarkerElement(report: CommunityReport): HTMLDivElement {
   el.style.width = `${size}px`;
   el.style.height = `${size}px`;
   el.style.cursor = "default";
-  el.style.position = "relative";
+  // No inline position: MapLibre's .maplibregl-marker class makes the
+  // element absolute. An inline "relative" put markers in normal flow, so
+  // each one was drawn lower by the heights of the markers before it.
   el.title = `Community: ${report.title}`;
 
   el.innerHTML = `

@@ -188,6 +188,11 @@ export const copy = {
       unavailableBody:
         "This browser can't display the interactive map. Alerts and incidents are still listed in the feed.",
       retry: "Try again",
+      terrainOn: "3D terrain",
+      terrainOff: "Return to 2D",
+      terrainFailed: "Terrain could not load. Showing the 2D map.",
+      resetView: "Reset map view",
+      resetViewTitle: "Show all of the Philippines, flat and north-up",
     },
     notification: {
       enabledTitle: "Alerts active",
@@ -536,6 +541,11 @@ export const copy = {
       unavailableBody:
         "Hindi kayang ipakita ng browser na ito ang interactive na mapa. Makikita pa rin ang mga alerto at insidente sa feed.",
       retry: "Subukan muli",
+      terrainOn: "3D na anyong-lupa",
+      terrainOff: "Bumalik sa 2D",
+      terrainFailed: "Hindi ma-load ang anyong-lupa. Ipinapakita ang 2D na mapa.",
+      resetView: "Ibalik ang mapa",
+      resetViewTitle: "Ipakita ang buong Pilipinas, patag at nakaharap sa hilaga",
     },
     notification: {
       enabledTitle: "Aktibo ang mga alerto",

@@ -83,6 +83,8 @@ interface CommandMapProps {
   onToggleSidebar: () => void;
   lowbarExpanded?: boolean;
   onToggleLowbar?: () => void;
+  /** Pixels of the map covered on the left by a floating panel. */
+  mapLeftInset?: number;
 }
 
 export function CommandMap({
@@ -98,11 +100,10 @@ export function CommandMap({
   onToggleSidebar,
   lowbarExpanded = true,
   onToggleLowbar = () => {},
+  mapLeftInset = 0,
 }: CommandMapProps) {
   const { locale } = useLocale();
   const controls = t(locale).controls;
-  // Compute effective sidebar width for map padding offset
-  const sidebarWidth = focusMode ? 0 : sidebarExpanded ? 320 : 48;
 
   return (
     <div className="relative h-full overflow-hidden bg-background">
@@ -113,7 +114,7 @@ export function CommandMap({
         hoveredIncidentId={hoveredIncidentId}
         onHoverIncident={onHoverIncident}
         onSelectIncident={onSelectIncident}
-        sidebarWidth={sidebarWidth}
+        leftInset={mapLeftInset}
       />
 
       {/* Map controls */}
