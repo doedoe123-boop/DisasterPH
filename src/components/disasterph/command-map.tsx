@@ -9,8 +9,48 @@ import {
   Minimize2,
 } from "lucide-react";
 import type { CommunityReport, Incident } from "@/types/incident";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/hooks/useLocale";
 
-const MapboxMap = dynamic(() => import("./mapbox-map"), {
+/**
+ * Shown when the map component itself fails to download (for example on a
+ * flaky connection). The feed stays usable; "Try again" reloads the page
+ * because a failed lazy chunk is not reliably retried in place.
+ */
+function MapLoadFailed() {
+  const { locale } = useLocale();
+  const copy = t(locale).map;
+  return (
+    <div
+      className="flex h-full w-full items-center justify-center bg-background p-4"
+      role="status"
+    >
+      <div className="max-w-xs text-center">
+        <p className="text-sm font-medium text-[var(--text-primary)]">
+          {copy.unavailableTitle}
+        </p>
+        <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-dim)]">
+          {copy.unavailableBody}
+        </p>
+        <button
+          className="mt-3 rounded-md border border-overlay/12 px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition hover:bg-overlay/6"
+          onClick={() => window.location.reload()}
+          type="button"
+        >
+          {copy.retry}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const MapboxMap = dynamic(
+  () =>
+    import("./mapbox-map").catch(() => ({
+      // Ignores the map props; renders the fallback instead.
+      default: MapLoadFailed as unknown as (typeof import("./mapbox-map"))["default"],
+    })),
+  {
   ssr: false,
   loading: () => (
     <div className="flex h-full w-full items-center justify-center bg-background">
@@ -22,7 +62,8 @@ const MapboxMap = dynamic(() => import("./mapbox-map"), {
       </div>
     </div>
   ),
-});
+  },
+);
 
 interface CommandMapProps {
   incidents: Incident[];
