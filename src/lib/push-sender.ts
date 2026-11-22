@@ -6,10 +6,13 @@ import {
   listPushSubscriptions,
   type PushSubscriptionRecord,
 } from "@/lib/push-subscription-store";
+import { isAllowedPushEndpoint } from "@/lib/push-destination";
+
+const PUSH_TIMEOUT_MS = 10_000;
 
 export interface PushSendResult {
   endpoint: string;
-  status: "sent" | "skipped" | "failed" | "expired";
+  status: "sent" | "skipped" | "failed" | "expired" | "blocked";
   reason?: string;
 }
 
@@ -18,6 +21,7 @@ export interface PushDispatchResult {
   skipped: number;
   failed: number;
   expired: number;
+  blocked: number;
   results: PushSendResult[];
 }
 
@@ -63,8 +67,23 @@ async function sendToSubscription(
     };
   }
 
+  // Re-check the destination at send time: records stored before validation
+  // existed may point anywhere. Blocked records are left in place, not deleted.
+  if (
+    !isAllowedPushEndpoint(record.subscription?.endpoint) ||
+    record.subscription.endpoint !== record.endpoint
+  ) {
+    return {
+      endpoint: record.endpoint,
+      status: "blocked",
+      reason: "destination_not_allowed",
+    };
+  }
+
   try {
-    await webPush.sendNotification(record.subscription, payloadForAlert(alert));
+    await webPush.sendNotification(record.subscription, payloadForAlert(alert), {
+      timeout: PUSH_TIMEOUT_MS,
+    });
     return { endpoint: record.endpoint, status: "sent" };
   } catch (error) {
     const statusCode =
@@ -104,6 +123,7 @@ export async function dispatchPushAlert(
     skipped: results.filter((result) => result.status === "skipped").length,
     failed: results.filter((result) => result.status === "failed").length,
     expired: results.filter((result) => result.status === "expired").length,
+    blocked: results.filter((result) => result.status === "blocked").length,
     results,
   };
 }

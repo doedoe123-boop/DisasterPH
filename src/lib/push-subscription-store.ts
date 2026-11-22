@@ -21,6 +21,9 @@ interface PushSubscriptionRow {
   updated_at: string;
 }
 
+/** Column path used to pin writes to the auth secret that was verified. */
+const AUTH_PATH = "subscription->keys->>auth";
+
 const globalForPush = globalThis as typeof globalThis & {
   disasterphPushSubscriptions?: Map<string, PushSubscriptionRecord>;
 };
@@ -41,60 +44,118 @@ function rowToRecord(row: PushSubscriptionRow): PushSubscriptionRecord {
   return {
     endpoint: row.endpoint,
     subscription: row.subscription,
-    preferences: normalizeNotificationPrefs(row.preferences),
+    preferences: normalizeNotificationPrefs(row.preferences ?? {}),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
-function upsertMemorySubscription(
-  subscription: StoredPushSubscription,
-  preferences: NotificationPrefs,
-): PushSubscriptionRecord {
-  const now = new Date().toISOString();
-  const existing = memoryStore.get(subscription.endpoint);
-  const record: PushSubscriptionRecord = {
-    endpoint: subscription.endpoint,
-    subscription,
-    preferences,
-    createdAt: existing?.createdAt ?? now,
-    updatedAt: now,
-  };
-
-  memoryStore.set(subscription.endpoint, record);
-  return record;
+export function storedAuthSecret(record: PushSubscriptionRecord): unknown {
+  return (record.subscription as Partial<StoredPushSubscription> | null)?.keys?.auth;
 }
 
-export async function upsertPushSubscription(
-  subscription: StoredPushSubscription,
-  preferences: NotificationPrefs,
-): Promise<PushSubscriptionRecord> {
-  if (!canUseSupabase()) {
-    return upsertMemorySubscription(subscription, preferences);
-  }
+export async function getPushSubscription(
+  endpoint: string,
+): Promise<PushSubscriptionRecord | null> {
+  if (!canUseSupabase()) return memoryStore.get(endpoint) ?? null;
 
-  const now = new Date().toISOString();
   const { data, error } = await getSupabaseAdmin()
     .from("push_subscriptions")
-    .upsert(
-      {
-        endpoint: subscription.endpoint,
-        subscription,
-        preferences,
-        updated_at: now,
-      },
-      { onConflict: "endpoint" },
-    )
     .select("*")
-    .single();
+    .eq("endpoint", endpoint)
+    .maybeSingle();
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return rowToRecord(data as PushSubscriptionRow);
+  if (error) throw new Error(error.message);
+  return data ? rowToRecord(data as PushSubscriptionRow) : null;
 }
 
+/** Create a new record. Returns null if the endpoint already exists. */
+export async function insertPushSubscription(
+  subscription: StoredPushSubscription,
+  preferences: NotificationPrefs,
+): Promise<PushSubscriptionRecord | null> {
+  const now = new Date().toISOString();
+
+  if (!canUseSupabase()) {
+    if (memoryStore.has(subscription.endpoint)) return null;
+    const record = {
+      endpoint: subscription.endpoint,
+      subscription,
+      preferences,
+      createdAt: now,
+      updatedAt: now,
+    };
+    memoryStore.set(subscription.endpoint, record);
+    return record;
+  }
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("push_subscriptions")
+    .insert({ endpoint: subscription.endpoint, subscription, preferences, updated_at: now })
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === "23505") return null; // concurrent insert of same endpoint
+    throw new Error(error.message);
+  }
+  return data ? rowToRecord(data as PushSubscriptionRow) : null;
+}
+
+/**
+ * Update a record only if its stored auth secret is still `verifiedAuth`
+ * (the value the caller already proved). Returns null if it changed.
+ */
+export async function updateOwnedPushSubscription(
+  verifiedAuth: string,
+  subscription: StoredPushSubscription,
+  preferences: NotificationPrefs,
+): Promise<PushSubscriptionRecord | null> {
+  const now = new Date().toISOString();
+
+  if (!canUseSupabase()) {
+    const existing = memoryStore.get(subscription.endpoint);
+    if (!existing || storedAuthSecret(existing) !== verifiedAuth) return null;
+    const record = { ...existing, subscription, preferences, updatedAt: now };
+    memoryStore.set(subscription.endpoint, record);
+    return record;
+  }
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("push_subscriptions")
+    .update({ subscription, preferences, updated_at: now })
+    .eq("endpoint", subscription.endpoint)
+    .eq(AUTH_PATH, verifiedAuth)
+    .select("*")
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data ? rowToRecord(data as PushSubscriptionRow) : null;
+}
+
+/** Delete a record only if its stored auth secret is still `verifiedAuth`. */
+export async function deleteOwnedPushSubscription(
+  endpoint: string,
+  verifiedAuth: string,
+): Promise<boolean> {
+  if (!canUseSupabase()) {
+    const existing = memoryStore.get(endpoint);
+    if (!existing || storedAuthSecret(existing) !== verifiedAuth) return false;
+    return memoryStore.delete(endpoint);
+  }
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("push_subscriptions")
+    .delete()
+    .eq("endpoint", endpoint)
+    .eq(AUTH_PATH, verifiedAuth)
+    .select("endpoint");
+
+  if (error) throw new Error(error.message);
+  return Array.isArray(data) && data.length > 0;
+}
+
+/** Server-internal cleanup (expired endpoints reported by the push service). */
 export async function deletePushSubscription(endpoint: string): Promise<boolean> {
   if (!canUseSupabase()) {
     return memoryStore.delete(endpoint);
@@ -112,6 +173,7 @@ export async function deletePushSubscription(endpoint: string): Promise<boolean>
   return true;
 }
 
+/** Server-internal: all records for dispatch. Never exposed over HTTP. */
 export async function listPushSubscriptions(): Promise<PushSubscriptionRecord[]> {
   if (!canUseSupabase()) {
     return Array.from(memoryStore.values()).sort((a, b) =>

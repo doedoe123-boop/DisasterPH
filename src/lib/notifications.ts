@@ -144,15 +144,19 @@ export async function savePushSubscription(
   });
 }
 
+/**
+ * Ask the server to forget this browser's subscription. Ownership is proven
+ * with the subscription's own endpoint + keys.auth secret, which only this
+ * browser and the server know.
+ */
 export async function deletePushSubscription(
   subscription: PushSubscription,
 ): Promise<void> {
+  const { endpoint, keys } = serializePushSubscription(subscription);
   await fetch(PUSH_ENDPOINT, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      endpoint: subscription.endpoint,
-    }),
+    body: JSON.stringify({ subscription: { endpoint, keys: { auth: keys.auth } } }),
   });
 }
 
@@ -190,7 +194,14 @@ export async function unsubscribeFromPush(): Promise<void> {
   const subscription = await getExistingPushSubscription();
   if (!subscription) return;
 
-  await deletePushSubscription(subscription);
+  try {
+    await deletePushSubscription(subscription);
+  } catch {
+    // Offline or server error: still unsubscribe locally below.
+  }
+  // Unsubscribing at the browser invalidates the endpoint with the push
+  // service, so the user stops receiving pushes even if the server record
+  // could not be removed (it is cleaned up on the next 404/410 from delivery).
   await subscription.unsubscribe();
 }
 
