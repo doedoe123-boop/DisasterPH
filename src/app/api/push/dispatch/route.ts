@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authorizePushDispatch } from "@/lib/push-dispatch-auth";
 import { dispatchPushAlert } from "@/lib/push-sender";
 import type { AlertEvent } from "@/types/incident";
 
@@ -17,8 +18,23 @@ function isAlertEvent(value: unknown): value is AlertEvent {
   );
 }
 
+// Server-to-server only: callers must send `Authorization: Bearer <PUSH_DISPATCH_SECRET>`.
+// Browsers must not call this route.
 export async function POST(request: Request) {
-  const payload = (await request.json()) as { alert?: unknown };
+  const auth = authorizePushDispatch(request.headers.get("authorization"));
+  if (!auth.ok) {
+    return NextResponse.json(
+      { error: auth.error, message: auth.message },
+      { status: auth.status },
+    );
+  }
+
+  let payload: { alert?: unknown };
+  try {
+    payload = (await request.json()) as { alert?: unknown };
+  } catch {
+    payload = {};
+  }
 
   if (!isAlertEvent(payload.alert)) {
     return NextResponse.json(
