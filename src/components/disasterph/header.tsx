@@ -115,7 +115,8 @@ export function AppHeader() {
             type="button"
             onClick={() => setTheme(theme === "day" ? "night" : "day")}
             className="header-utility-button flex h-9 w-9 items-center justify-center rounded-full border border-overlay/10 bg-overlay/[0.04] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
-            title={`Switch to ${theme === "day" ? "night" : "day"} mode`}
+            title={theme === "day" ? i18n.controls.switchToNight : i18n.controls.switchToDay}
+            aria-label={theme === "day" ? i18n.controls.switchToNight : i18n.controls.switchToDay}
           >
             {theme === "day" ? (
               <Moon className="h-[18px] w-[18px]" />
@@ -159,7 +160,8 @@ export function AppHeader() {
           <button
             className="header-utility-button flex h-8 min-w-12 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] px-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
             onClick={() => setLocale(locale === "fil" ? "en" : "fil")}
-            title={`Switch to ${locale === "fil" ? "English" : "Filipino"}`}
+            title={i18n.controls.switchLanguage}
+            aria-label={i18n.controls.switchLanguage}
             type="button"
           >
             {locale === "fil" ? "Fil" : "Eng"}
@@ -167,7 +169,8 @@ export function AppHeader() {
           <button
             className="header-utility-button flex h-8 w-8 items-center justify-center rounded-lg border border-overlay/10 bg-overlay/[0.04] text-[var(--text-muted)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
             onClick={() => setTheme(theme === "day" ? "night" : "day")}
-            title={`Switch to ${theme === "day" ? "night" : "day"} mode`}
+            title={theme === "day" ? i18n.controls.switchToNight : i18n.controls.switchToDay}
+            aria-label={theme === "day" ? i18n.controls.switchToNight : i18n.controls.switchToDay}
             type="button"
           >
             {theme === "day" ? (
