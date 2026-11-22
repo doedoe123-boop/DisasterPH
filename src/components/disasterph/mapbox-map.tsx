@@ -287,15 +287,6 @@ export default function MapLibreMapComponent({
       const incident = incidents.find((i) => i.id === hoveredIncidentId);
       if (!incident) return;
 
-      const metaLine = buildPopupMeta(incident);
-      const html = `<div style="font-family:system-ui,sans-serif;min-width:180px;">
-        <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">
-          <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);">${eventTypeLabel[incident.event_type]}</span>
-          <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:${SEVERITY_RING[incident.severity]};margin-left:auto;">${incident.severity}</span>
-        </div>
-        <div style="font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.3;">${incident.title}</div>${metaLine}
-        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">${incident.region} · ${formatShortTime(incident.updated_at)}</div>
-      </div>`;
 
       popupRef.current?.remove();
       popupRef.current = new ml.Popup({
@@ -306,7 +297,8 @@ export default function MapLibreMapComponent({
         maxWidth: "260px",
       })
         .setLngLat([incident.longitude, incident.latitude])
-        .setHTML(html)
+        // Built with DOM nodes + textContent: feed text never becomes markup.
+        .setDOMContent(buildPopupContent(incident))
         .addTo(map);
     } else {
       popupRef.current?.remove();
@@ -704,6 +696,59 @@ function getMarkerLabel(incident: Incident): string {
   return labels[incident.event_type] ?? "??";
 }
 
+/** Create an element with inline style and plain-text content. */
+function textEl(tag: string, style: string, text?: string): HTMLElement {
+  const node = document.createElement(tag);
+  node.style.cssText = style;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+/** Hover popup for an incident. Upstream strings are only ever set as text. */
+function buildPopupContent(incident: Incident): HTMLElement {
+  const root = textEl("div", "font-family:system-ui,sans-serif;min-width:180px;");
+
+  const header = textEl("div", "display:flex;align-items:center;gap:4px;margin-bottom:4px;");
+  header.append(
+    textEl(
+      "span",
+      "font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);",
+      eventTypeLabel[incident.event_type] ?? String(incident.event_type),
+    ),
+    textEl(
+      "span",
+      `font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:${SEVERITY_RING[incident.severity] ?? "inherit"};margin-left:auto;`,
+      String(incident.severity),
+    ),
+  );
+  root.append(header);
+
+  root.append(
+    textEl(
+      "div",
+      "font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.3;",
+      String(incident.title),
+    ),
+  );
+
+  const meta = buildPopupMeta(incident);
+  if (meta) {
+    root.append(
+      textEl("div", "font-size:11px;color:var(--accent-orange);margin-top:2px;font-weight:500;", meta),
+    );
+  }
+
+  root.append(
+    textEl(
+      "div",
+      "font-size:11px;color:var(--text-muted);margin-top:3px;",
+      `${incident.region} · ${formatShortTime(incident.updated_at)}`,
+    ),
+  );
+  return root;
+}
+
+/** Short metric line for the popup (plain text). */
 function buildPopupMeta(incident: Incident): string {
   const m = incident.metadata;
   const parts: string[] = [];
@@ -719,8 +764,7 @@ function buildPopupMeta(incident: Incident): string {
     if (m.alert_level) parts.push(`Alert: ${String(m.alert_level)}`);
   }
 
-  if (parts.length === 0) return "";
-  return `\n        <div style="font-size:11px;color:var(--accent-orange);margin-top:2px;font-weight:500;">${parts.join(" · ")}</div>`;
+  return parts.join(" · ");
 }
 
 /** Earthquake felt-impact radius based on magnitude (approx) */
