@@ -26,6 +26,7 @@ import type {
   IncidentSeverity,
 } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
+import { HazardEmptyState } from "@/components/disasterph/hazard-empty-state";
 import { useLocale } from "@/hooks/useLocale";
 import { AppHeader } from "@/components/disasterph/header";
 import { PulseFeedSkeleton } from "@/components/disasterph/page-skeletons";
@@ -124,7 +125,7 @@ const cardVariants = {
 };
 
 export default function PulseFeedPage() {
-  const { incidents, isLoading } = useIncidents();
+  const { incidents, isLoading, sourceStatuses } = useIncidents();
   const { locale } = useLocale();
   const i18n = t(locale);
   const [search, setSearch] = useState("");
@@ -300,9 +301,17 @@ export default function PulseFeedPage() {
             animate={{ opacity: 1 }}
             className="mt-20 text-center"
           >
-            <p className="text-[16px] text-[var(--text-muted)]">
-              {i18n.common.noEventsMatch}
-            </p>
+            {typeFilter !== "all" && severityFilter === "all" && !search.trim() ? (
+              <HazardEmptyState
+                filter={typeFilter}
+                locale={locale}
+                sourceStatuses={sourceStatuses}
+              />
+            ) : (
+              <p className="text-[16px] text-[var(--text-muted)]">
+                {i18n.common.noEventsMatch}
+              </p>
+            )}
           </motion.div>
         )}
       </main>
