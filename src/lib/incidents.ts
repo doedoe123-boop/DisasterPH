@@ -41,13 +41,16 @@ export function sortIncidents(incidents: Incident[]) {
   });
 }
 
-export function buildDashboardStats(incidents: Incident[]): DashboardStats {
+export function buildDashboardStats(
+  incidents: Incident[],
+  sources: Array<{ status: string }> = [],
+): DashboardStats {
   return {
     activeAlerts: incidents.length,
     criticalAlerts: incidents.filter(
       (incident) => severityRank[incident.severity] >= severityRank.warning,
     ).length,
-    sourcesOnline: 3,
+    sourcesOnline: sources.filter((s) => s.status === "healthy").length,
     regionsTracked: new Set(incidents.map((incident) => incident.region)).size,
   };
 }
