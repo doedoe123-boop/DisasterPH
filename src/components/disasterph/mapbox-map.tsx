@@ -13,6 +13,9 @@ import {
   SEVERITY_RING,
 } from "@/lib/mapbox";
 import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
+import { loadMapLibre } from "@/lib/maplibre-loader";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/hooks/useLocale";
 
 // Type-only imports — the real module is loaded at runtime via import()
 type MapLibreModule = typeof import("maplibre-gl");
@@ -48,6 +51,10 @@ export default function MapLibreMapComponent({
   const popupRef = useRef<MlPopup | null>(null);
   const initialSidebarWidthRef = useRef(sidebarWidth);
   const [mapReady, setMapReady] = useState(false);
+  // Set when MapLibre cannot load or start (e.g. no WebGL2, failed chunk load).
+  const [mapFailed, setMapFailed] = useState(false);
+  const { locale } = useLocale();
+  const mapCopy = t(locale).map;
   const incidentsRef = useRef(incidents);
   incidentsRef.current = incidents;
 
@@ -60,27 +67,39 @@ export default function MapLibreMapComponent({
     const communityMarkers = communityMarkersRef.current;
 
     async function init() {
-      const maplibregl = await import("maplibre-gl");
-      await import("maplibre-gl/dist/maplibre-gl.css");
-      if (cancelled || !containerRef.current) return;
+      let maplibregl: MapLibreModule;
+      let map: MlMap;
+      try {
+        maplibregl = await loadMapLibre();
+        await import("maplibre-gl/dist/maplibre-gl.css");
+        if (cancelled || !containerRef.current) return;
+
+        // MapLibre v6 requires WebGL2; without it the constructor throws
+        // GPUInitializationError instead of returning a map.
+        map = new maplibregl.Map({
+          container: containerRef.current,
+          style: getMapStyle(),
+          center: DEFAULT_CAMERA.center,
+          zoom: DEFAULT_CAMERA.zoom,
+          pitch: DEFAULT_CAMERA.pitch,
+          bearing: DEFAULT_CAMERA.bearing,
+          maxBounds: [
+            [110, 2],
+            [135, 23],
+          ],
+          minZoom: 4,
+          maxZoom: 16,
+          attributionControl: false,
+        });
+      } catch (error) {
+        if (!cancelled) {
+          console.warn("Map unavailable:", error instanceof Error ? error.name : error);
+          setMapFailed(true);
+        }
+        return;
+      }
 
       mlRef.current = maplibregl;
-
-      const map = new maplibregl.Map({
-        container: containerRef.current,
-        style: getMapStyle(),
-        center: DEFAULT_CAMERA.center,
-        zoom: DEFAULT_CAMERA.zoom,
-        pitch: DEFAULT_CAMERA.pitch,
-        bearing: DEFAULT_CAMERA.bearing,
-        maxBounds: [
-          [110, 2],
-          [135, 23],
-        ],
-        minZoom: 4,
-        maxZoom: 16,
-        attributionControl: false,
-      });
 
       map.addControl(
         new maplibregl.NavigationControl({
@@ -343,13 +362,29 @@ export default function MapLibreMapComponent({
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
-      {!mapReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background">
-          <div className="text-center">
-            <div className="loading-shimmer mx-auto h-3 w-24 rounded-full" />
-            <p className="mt-3 text-xs text-[var(--text-dim)]">Loading map…</p>
+      {mapFailed ? (
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-background p-4"
+          role="status"
+        >
+          <div className="max-w-xs text-center">
+            <p className="text-sm font-medium text-[var(--text-primary)]">
+              {mapCopy.unavailableTitle}
+            </p>
+            <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-dim)]">
+              {mapCopy.unavailableBody}
+            </p>
           </div>
         </div>
+      ) : (
+        !mapReady && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background">
+            <div className="text-center">
+              <div className="loading-shimmer mx-auto h-3 w-24 rounded-full" />
+              <p className="mt-3 text-xs text-[var(--text-dim)]">{mapCopy.loading}</p>
+            </div>
+          </div>
+        )
       )}
     </div>
   );
