@@ -30,6 +30,9 @@ import { useIncidents } from "@/hooks/use-incidents";
 import { HazardEmptyState } from "@/components/disasterph/hazard-empty-state";
 import { useAlertCenter } from "@/hooks/use-alert-center";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
+import { useSelectedArea } from "@/hooks/use-selected-area";
+import { incidentInArea, resolveArea } from "@/lib/area";
+import { AreaBar } from "@/components/disasterph/area-bar";
 import { useNetworkStatus } from "@/hooks/use-network-status";
 import { useLocale } from "@/hooks/useLocale";
 import { AppHeader } from "./header";
@@ -116,11 +119,19 @@ export function DisasterPHCommand() {
     d.setHours(0, 0, 0, 0);
     return d.getTime() - 10 * 24 * 60 * 60 * 1000;
   }, []);
-  const recentIncidents = useMemo(() => {
+  const allRecentIncidents = useMemo(() => {
     return incidents.filter(
       (i) => new Date(i.updated_at).getTime() >= tenDayCutoff,
     );
   }, [incidents, tenDayCutoff]);
+
+  // ── Place-first: everything below (counters, chips, feed, map) follows
+  //    the visitor's chosen area, so all views share one filter state. ──
+  const [area, setArea] = useSelectedArea();
+  const recentIncidents = useMemo(() => {
+    const effective = resolveArea(area, places);
+    return allRecentIncidents.filter((i) => incidentInArea(i, effective, places));
+  }, [allRecentIncidents, area, places]);
 
   // ── Filtered incidents for the main view ──
   const filteredIncidents = useMemo(() => {
@@ -220,7 +231,7 @@ export function DisasterPHCommand() {
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-overlay/8">
                 <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)]">
-                  {locale === "fil" ? "Mga Bagong Abiso" : "Recent Signals"}
+                  {i18n.nav.recentEvents}
                 </h2>
                 <button
                   type="button"
@@ -349,6 +360,20 @@ export function DisasterPHCommand() {
         <div
           className={`flex min-w-0 flex-1 flex-col ${focusMode ? "relative" : ""}`}
         >
+          {/* ── Your area (place-first entry point) ── */}
+          {!focusMode && (
+            <div className="bg-[var(--bg-panel)]">
+              <AreaBar
+                area={area}
+                count={recentIncidents.length}
+                locale={locale}
+                onChange={setArea}
+                places={places}
+                warningCount={criticalCount}
+              />
+            </div>
+          )}
+
           {/* ── Filter Bar ── */}
           {!focusMode && (
             <motion.div

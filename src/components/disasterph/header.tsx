@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, Tv, Radio, Landmark, Sun, Moon } from "lucide-react";
+import { Shield, Tv, Radio, Landmark, Sun, Moon, Phone } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
+import { EMERGENCY_NUMBER } from "@/lib/hotlines";
 import { useTheme } from "@/hooks/useTheme";
 import { NotificationBell } from "@/components/disasterph/notification-bell";
 
@@ -94,6 +95,15 @@ export function AppHeader() {
 
         {/* Right: LIVE indicator */}
         <div className="flex items-center gap-3">
+          <a
+            href={`tel:${EMERGENCY_NUMBER.dial}`}
+            className="flex h-9 items-center gap-1.5 rounded-full bg-red-600 px-3.5 text-[13px] font-bold text-white shadow-[0_0_12px_rgba(220,38,38,0.25)] transition hover:bg-red-500"
+            aria-label={i18n.nav.call911Label}
+            title={i18n.nav.call911Label}
+          >
+            <Phone className="h-4 w-4" />
+            {i18n.nav.call911}
+          </a>
           <div className="header-locale-toggle flex h-9 items-center rounded-full border border-overlay/10 bg-overlay/[0.04] p-1">
             {(["en", "fil"] as const).map((mode) => (
               <button
@@ -130,7 +140,7 @@ export function AppHeader() {
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(57,217,138,0.5)]" />
             </span>
             <span className="text-[12px] font-bold tracking-[0.15em] text-emerald-300 uppercase">
-              {i18n.nav.live}
+              {i18n.nav.liveBadge}
             </span>
           </div>
         </div>
@@ -147,13 +157,22 @@ export function AppHeader() {
           </span>
         </Link>
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          <div className="header-live-pill flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-3 py-1">
+          <a
+            href={`tel:${EMERGENCY_NUMBER.dial}`}
+            className="flex h-8 items-center gap-1 rounded-lg bg-red-600 px-2.5 text-[12px] font-bold text-white transition hover:bg-red-500"
+            aria-label={i18n.nav.call911Label}
+            title={i18n.nav.call911Label}
+          >
+            <Phone className="h-3.5 w-3.5" />
+            {i18n.nav.call911}
+          </a>
+          <div className="header-live-pill hidden min-[420px]:flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-3 py-1">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
             </span>
             <span className="text-[10px] font-bold tracking-[0.15em] text-emerald-300 uppercase">
-              {i18n.nav.live}
+              {i18n.nav.liveBadge}
             </span>
           </div>
           <NotificationBell compact />

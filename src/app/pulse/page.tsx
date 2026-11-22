@@ -184,7 +184,7 @@ export default function PulseFeedPage() {
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] tracking-tight">
-                {locale === "fil" ? "Mga Abiso" : "Pulse Feed"}
+                {locale === "fil" ? "Mga Abiso" : "Alerts"}
               </h1>
               <p className="text-[12px] md:text-[13px] text-[var(--text-dim)] mt-0.5 hidden sm:block">
                 {locale === "fil"
