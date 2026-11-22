@@ -58,6 +58,8 @@ export function HelpActions({ actions, compact = false }: HelpActionsProps) {
   function localizeAction(action: HelpAction) {
     const copy = i18n.help.actions;
     switch (action.id) {
+      case "call-911":
+        return copy.emergency911;
       case "ndrrmc":
       case "ndrrmc-low":
         return copy.ndrrmc;

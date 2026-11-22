@@ -201,6 +201,25 @@ export const copy = {
           "A critical-level event is very close. Check if evacuation is needed.",
       },
     },
+    hotlines: {
+      title: "Emergency Hotlines",
+      emergencyTitle: "Emergency",
+      emergencyBody: "Police, fire, medical, and rescue. Free, 24/7.",
+      call: "Call",
+      agencyTitle: "Agency lines",
+      agencyLabel: "Agency line",
+      agencyNote:
+        "For information and coordination, not emergencies. From public listings, last reviewed {date}.",
+      purpose: {
+        ndrrmc: "Disaster operations center",
+        redCross: "Red Cross hotline",
+        phivolcs: "Earthquakes and volcanoes",
+        pagasa: "Weather and tropical cyclones",
+        bfp: "Fire protection office",
+        doh: "Health hotline",
+        coastGuard: "Maritime incidents",
+      },
+    },
     help: {
       title: "Help & Safety",
       copied: "Copied!",
@@ -211,13 +230,17 @@ export const copy = {
         copy: "Copy",
       },
       actions: {
+        emergency911: {
+          label: "Call 911",
+          description: "Emergency: police, fire, medical, rescue",
+        },
         ndrrmc: {
           label: "Call NDRRMC",
-          description: "National disaster hotline",
+          description: "Disaster operations center (not for emergencies)",
         },
         redCross: {
           label: "Red Cross PH",
-          description: "143 emergency line",
+          description: "Red Cross hotline (143)",
         },
         pagasaAdvisory: {
           label: "PAGASA Advisories",
@@ -490,6 +513,25 @@ export const copy = {
           "Napakalapit ng isang kritikal na pangyayari. Suriin kung kailangan ng paglikas.",
       },
     },
+    hotlines: {
+      title: "Mga Emergency Hotline",
+      emergencyTitle: "Emergency",
+      emergencyBody: "Pulis, bumbero, medikal, at rescue. Libre, 24/7.",
+      call: "Tumawag sa",
+      agencyTitle: "Mga linya ng ahensya",
+      agencyLabel: "Linya ng ahensya",
+      agencyNote:
+        "Para sa impormasyon at koordinasyon, hindi para sa emergency. Mula sa mga pampublikong listahan, huling sinuri noong {date}.",
+      purpose: {
+        ndrrmc: "Operations center para sa sakuna",
+        redCross: "Hotline ng Red Cross",
+        phivolcs: "Lindol at bulkan",
+        pagasa: "Panahon at bagyo",
+        bfp: "Tanggapan ng bumbero",
+        doh: "Hotline para sa kalusugan",
+        coastGuard: "Insidente sa dagat",
+      },
+    },
     help: {
       title: "Tulong at Kaligtasan",
       copied: "Nakopya!",
@@ -500,13 +542,17 @@ export const copy = {
         copy: "Kopya",
       },
       actions: {
+        emergency911: {
+          label: "Tumawag sa 911",
+          description: "Emergency: pulis, bumbero, medikal, rescue",
+        },
         ndrrmc: {
           label: "Tawagan ang NDRRMC",
-          description: "Pambansang hotline sa sakuna",
+          description: "Operations center para sa sakuna (hindi para sa emergency)",
         },
         redCross: {
           label: "Red Cross PH",
-          description: "143 emergency line",
+          description: "Hotline ng Red Cross (143)",
         },
         pagasaAdvisory: {
           label: "PAGASA Advisories",

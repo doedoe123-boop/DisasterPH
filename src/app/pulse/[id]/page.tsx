@@ -16,6 +16,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDateTime } from "@/lib/incidents";
 import { formatPHT, sourceInfo } from "@/lib/source-info";
+import { EMERGENCY_NUMBER, agencyLine } from "@/lib/hotlines";
 import { eventLabel, severityText, t, type Locale } from "@/lib/i18n";
 import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { visualFromSeverity } from "@/lib/severity";
@@ -412,38 +413,43 @@ export default function PulseDetailPage() {
                   </div>
                 )}
 
-                {/* Emergency Contacts */}
+                {/* Emergency Contacts: 911 first, then agency lines */}
                 <div className="rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-5">
                   <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-dim)]">
                     {i18n.common.emergencyContacts}
                   </h2>
                   <div className="mt-3 space-y-3">
                     <a
-                      href="tel:+6328911-1406"
-                      className="flex items-center gap-3 rounded-lg border border-overlay/5 bg-overlay/[0.02] p-3 transition hover:bg-overlay/[0.05]"
+                      href={`tel:${EMERGENCY_NUMBER.dial}`}
+                      className="flex items-center gap-3 rounded-lg border border-red-500/40 bg-red-500/12 p-3 transition hover:bg-red-500/20"
                     >
-                      <Phone className="h-4 w-4 shrink-0 text-cyan-400" />
+                      <Phone className="h-4 w-4 shrink-0 text-red-300" />
                       <div>
-                        <p className="text-sm font-semibold text-[var(--text-primary)]">
-                          NDRRMC
+                        <p className="text-sm font-bold text-[var(--text-primary)]">
+                          {i18n.hotlines.call} {EMERGENCY_NUMBER.number}
                         </p>
                         <p className="text-xs text-[var(--text-dim)]">
-                          +63 2 8911-1406
+                          {i18n.hotlines.emergencyBody}
                         </p>
                       </div>
                     </a>
-                    <a
-                      href="tel:143"
-                      className="flex items-center gap-3 rounded-lg border border-overlay/5 bg-overlay/[0.02] p-3 transition hover:bg-overlay/[0.05]"
-                    >
-                      <Phone className="h-4 w-4 shrink-0 text-cyan-400" />
-                      <div>
-                        <p className="text-sm font-semibold text-[var(--text-primary)]">
-                          Red Cross PH
-                        </p>
-                        <p className="text-xs text-[var(--text-dim)]">143</p>
-                      </div>
-                    </a>
+                    {[agencyLine("ndrrmc"), agencyLine("red-cross")].map((line) => (
+                      <a
+                        key={line.id}
+                        href={`tel:${line.dial}`}
+                        className="flex items-center gap-3 rounded-lg border border-overlay/5 bg-overlay/[0.02] p-3 transition hover:bg-overlay/[0.05]"
+                      >
+                        <Phone className="h-4 w-4 shrink-0 text-cyan-400" />
+                        <div>
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">
+                            {line.name}
+                          </p>
+                          <p className="text-xs text-[var(--text-dim)]">
+                            {line.number} · {i18n.hotlines.purpose[line.purpose]}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
                   </div>
                 </div>
 
