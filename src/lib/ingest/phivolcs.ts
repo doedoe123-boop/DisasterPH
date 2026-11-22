@@ -1,5 +1,5 @@
 import type { Incident, IncidentSeverity } from "@/types/incident";
-import { estimateRegion, PH_BOUNDS } from "./regions";
+import { PH_BOUNDS, regionMetadata } from "./regions";
 
 /*
  * Philippine earthquake data via the USGS FDSN API.
@@ -47,6 +47,7 @@ export async function fetchPhivolcsEvents(): Promise<Incident[]> {
     const time = props.time
       ? new Date(props.time as number).toISOString()
       : new Date().toISOString();
+    const where = regionMetadata(lat, lon);
     const updated = props.updated
       ? new Date(props.updated as number).toISOString()
       : time;
@@ -61,7 +62,7 @@ export async function fetchPhivolcsEvents(): Promise<Incident[]> {
       latitude: lat,
       longitude: lon,
       severity,
-      region: estimateRegion(lat, lon),
+      region: where.region,
       started_at: time,
       updated_at: updated,
       metadata: {
@@ -77,6 +78,9 @@ export async function fetchPhivolcsEvents(): Promise<Incident[]> {
         alert_level: (props.alert as string) ?? null,
         usgs_url: (props.url as string) ?? null,
         data_source: "USGS/PHIVOLCS",
+        // The source's own epicenter description, kept verbatim.
+        source_place: place,
+        ...where.metadata,
       },
     });
   }
