@@ -67,6 +67,10 @@ export const copy = {
       active: "Active",
       critical: "Critical",
       sources: "Sources",
+      recent: "Recent",
+      warningPlus: "Warning+",
+      sourcesHealthy: "Sources OK",
+      showingOf: "showing {shown} of {total}",
       healthy: "Healthy",
       delayed: "Delayed",
       degraded: "Degraded",
@@ -94,11 +98,25 @@ export const copy = {
       copied: "Copied!",
       postToX: "Post to X",
       shareFacebook: "Share on Facebook",
-      officialBulletin: "Official Bulletin",
-      viewSourceAt: "View source at",
       emergencyContacts: "Emergency Contacts",
       technicalData: "Technical Data",
-      dataConfidence: "Data Confidence",
+      source: {
+        heading: "Source",
+        publishedBy: "Data from",
+        publishers: {
+          USGS: "USGS earthquake catalogue",
+          PAGASA: "PAGASA",
+          NASA_EONET: "NASA EONET",
+          OTHER: "Other source",
+        },
+        updated: "Last updated by source",
+        record: "View this event's source record",
+        usgsNote:
+          "Recorded event from the USGS catalogue. For official Philippine earthquake information, see PHIVOLCS.",
+        referenceOnly:
+          "Reference only. This is not an official Philippine advisory.",
+        agencyLink: "Official information from",
+      },
       affectedAreas: "Affected Areas",
       nearbyIncidents: "Nearby incidents",
       nearestHazard: "Nearest hazard",
@@ -115,6 +133,7 @@ export const copy = {
       unavailableTitle: "Map unavailable on this device",
       unavailableBody:
         "This browser can't display the interactive map. Alerts and incidents are still listed in the feed.",
+      retry: "Try again",
     },
     notification: {
       enabledTitle: "Alerts active",
@@ -229,6 +248,15 @@ export const copy = {
       },
     },
     shelters: {
+      unavailable: {
+        title: "Evacuation center information",
+        body: "DisasterPH does not have verified evacuation center information yet, so no shelter status, capacity, or contact numbers are shown here.",
+        followLocal:
+          "During an emergency, follow the instructions of your barangay and your city or municipal disaster risk reduction and management office (DRRMO).",
+        emergency: "For emergencies, call",
+      },
+      demoBanner:
+        "Development preview: sample data only. These are not real shelter records, statuses, or phone numbers.",
       title: "Sanctuary",
       subtitle: "Shelter Operations",
       searchPlaceholder: "Search shelters...",
@@ -310,6 +338,10 @@ export const copy = {
       active: "Aktibo",
       critical: "Kritikal",
       sources: "Mga Pinagmulan",
+      recent: "Kamakailan",
+      warningPlus: "Babala+",
+      sourcesHealthy: "Maayos na pinagmulan",
+      showingOf: "ipinapakita ang {shown} sa {total}",
       healthy: "Maayos",
       delayed: "Naantala",
       degraded: "Mahina",
@@ -337,11 +369,25 @@ export const copy = {
       copied: "Nakopya!",
       postToX: "I-post sa X",
       shareFacebook: "Ibahagi sa Facebook",
-      officialBulletin: "Opisyal na Bulletin",
-      viewSourceAt: "Tingnan ang source sa",
       emergencyContacts: "Mga Emergency Contact",
       technicalData: "Teknikal na Datos",
-      dataConfidence: "Tiwala sa Datos",
+      source: {
+        heading: "Pinagmulan",
+        publishedBy: "Datos mula sa",
+        publishers: {
+          USGS: "USGS earthquake catalogue",
+          PAGASA: "PAGASA",
+          NASA_EONET: "NASA EONET",
+          OTHER: "Ibang pinagmulan",
+        },
+        updated: "Huling update ng pinagmulan",
+        record: "Tingnan ang source record ng pangyayaring ito",
+        usgsNote:
+          "Naitalang pangyayari mula sa USGS catalogue. Para sa opisyal na impormasyon sa lindol sa Pilipinas, tingnan ang PHIVOLCS.",
+        referenceOnly:
+          "Para sa sanggunian lamang. Hindi ito opisyal na abiso sa Pilipinas.",
+        agencyLink: "Opisyal na impormasyon mula sa",
+      },
       affectedAreas: "Mga Apektadong Lugar",
       nearbyIncidents: "Mga kalapit na insidente",
       nearestHazard: "Pinakamalapit na panganib",
@@ -358,6 +404,7 @@ export const copy = {
       unavailableTitle: "Hindi maipakita ang mapa sa device na ito",
       unavailableBody:
         "Hindi kayang ipakita ng browser na ito ang interactive na mapa. Makikita pa rin ang mga alerto at insidente sa feed.",
+      retry: "Subukan muli",
     },
     notification: {
       enabledTitle: "Aktibo ang mga alerto",
@@ -473,6 +520,15 @@ export const copy = {
       },
     },
     shelters: {
+      unavailable: {
+        title: "Impormasyon sa evacuation center",
+        body: "Wala pang beripikadong impormasyon ang DisasterPH tungkol sa mga evacuation center, kaya walang ipinapakitang status, kapasidad, o numero ng telepono rito.",
+        followLocal:
+          "Sa panahon ng emergency, sundin ang tagubilin ng inyong barangay at ng city o municipal disaster risk reduction and management office (DRRMO).",
+        emergency: "Para sa emergency, tumawag sa",
+      },
+      demoBanner:
+        "Development preview: sample na datos lamang. Hindi ito tunay na rekord, status, o numero ng telepono ng silungan.",
       title: "Silungan",
       subtitle: "Operasyon ng Silungan",
       searchPlaceholder: "Maghanap ng silungan...",

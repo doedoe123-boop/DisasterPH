@@ -12,6 +12,7 @@ export async function GET(request: Request) {
   const type = searchParams.get("type");
   const source = searchParams.get("source");
 
+  const sourceHealth = getSourceHealth();
   let incidents = getIncidents();
   incidents = filterIncidentsByType(incidents, type);
   if (source) {
@@ -23,8 +24,8 @@ export async function GET(request: Request) {
     meta: {
       count: incidents.length,
       filters: { type: type ?? "all", source: source ?? "all" },
-      stats: buildDashboardStats(incidents),
-      sources: getSourceHealth(),
+      stats: buildDashboardStats(incidents, sourceHealth),
+      sources: sourceHealth,
       generated_at: new Date().toISOString(),
     },
   });

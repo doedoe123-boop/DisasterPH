@@ -68,7 +68,11 @@ export async function fetchPhivolcsEvents(): Promise<Incident[]> {
         magnitude: mag,
         depth_km: depthKm,
         felt_reports: (props.felt as number) ?? null,
-        tsunami_warning: props.tsunami === 1,
+        // USGS `tsunami` flag: 1 marks a large event in an oceanic region.
+        // It does NOT say whether a tsunami occurred or a warning was issued,
+        // so it is stored as-is and never shown as a tsunami status.
+        usgs_tsunami_flag:
+          props.tsunami === 1 ? true : props.tsunami === 0 ? false : null,
         mmi: (props.mmi as number) ?? null,
         alert_level: (props.alert as string) ?? null,
         usgs_url: (props.url as string) ?? null,
@@ -102,12 +106,12 @@ function buildDescription(
   if (felt && felt > 0) {
     parts.push(`${felt} felt report${felt > 1 ? "s" : ""} received.`);
   }
+  // No tsunami statement either way: this feed carries no tsunami advisory.
+  // Official tsunami information comes from PHIVOLCS.
   if (props.tsunami === 1) {
     parts.push(
-      "Tsunami advisory may be in effect — check PHIVOLCS for official status.",
+      "USGS flags this as a large event in an oceanic region. Check PHIVOLCS for official tsunami information.",
     );
-  } else {
-    parts.push("No tsunami threat issued.");
   }
   return parts.join(" ");
 }

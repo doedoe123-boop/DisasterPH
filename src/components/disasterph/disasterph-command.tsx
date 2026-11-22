@@ -73,6 +73,9 @@ const staggerContainer = {
   animate: { transition: { staggerChildren: 0.04 } },
 };
 
+/** Maximum incidents listed in the main feed. */
+const FEED_LIMIT = 20;
+
 export function DisasterPHCommand() {
   const [activeFilter, setActiveFilter] = useState<
     IncidentEventType | "all" | "critical"
@@ -87,7 +90,9 @@ export function DisasterPHCommand() {
   const [lowbarOpen, setLowbarOpen] = useState(true);
 
   // ── Live data hooks ──
-  const { incidents, stats, isLoading, generatedAt } = useIncidents();
+  const { incidents, isLoading, generatedAt, sourceStatuses } = useIncidents();
+  // Sources the server currently reports as healthy (not a fixed number).
+  const healthySources = sourceStatuses.filter((s) => s.status === "healthy").length;
   const { places } = useSavedPlaces();
   const { isOnline } = useNetworkStatus();
   const { locale } = useLocale();
@@ -157,9 +162,10 @@ export function DisasterPHCommand() {
 
   // ── Filter bar chips ──
   const filterChips: FilterChip[] = [
-    { label: i18n.common.active, value: "all", icon: Activity },
+    { label: i18n.common.recent, value: "all", icon: Activity },
     {
-      label: i18n.common.critical,
+      // Counts and filters warning- and critical-level events.
+      label: i18n.common.warningPlus,
       value: "critical",
       accentClass: "text-red-400 border-red-500/40",
     },
@@ -171,7 +177,8 @@ export function DisasterPHCommand() {
   ];
 
   function chipCount(value: string): number {
-    if (value === "all") return stats.activeAlerts;
+    // Same 10-day set the feed shows, so the numbers agree.
+    if (value === "all") return recentIncidents.length;
     if (value === "critical") return criticalCount;
     return countByType[value] ?? 0;
   }
@@ -234,18 +241,18 @@ export function DisasterPHCommand() {
               <div className="grid grid-cols-3 gap-px border-b border-overlay/8 bg-overlay/5">
                 {[
                   {
-                    label: i18n.common.active,
-                    count: stats.activeAlerts,
+                    label: i18n.common.recent,
+                    count: recentIncidents.length,
                     color: "text-orange-400",
                   },
                   {
-                    label: i18n.common.critical,
+                    label: i18n.common.warningPlus,
                     count: criticalCount,
                     color: "text-red-400",
                   },
                   {
-                    label: i18n.common.sources,
-                    count: 3,
+                    label: i18n.common.sourcesHealthy,
+                    count: healthySources,
                     color: "text-cyan-400",
                   },
                 ].map((s) => (
@@ -633,7 +640,11 @@ export function DisasterPHCommand() {
                   })}
                 </div>
                 <span className="ml-auto text-[13px] font-medium text-[var(--text-dim)]">
-                  {filteredIncidents.length} {i18n.common.active.toLowerCase()}
+                  {filteredIncidents.length > FEED_LIMIT
+                    ? i18n.common.showingOf
+                        .replace("{shown}", String(FEED_LIMIT))
+                        .replace("{total}", String(filteredIncidents.length))
+                    : `${filteredIncidents.length} ${i18n.common.recent.toLowerCase()}`}
                 </span>
                 <button
                   type="button"
@@ -657,7 +668,7 @@ export function DisasterPHCommand() {
                     initial="initial"
                     animate="animate"
                   >
-                    {filteredIncidents.slice(0, 20).map((incident) => {
+                    {filteredIncidents.slice(0, FEED_LIMIT).map((incident) => {
                       const sv = visualFromSeverity(incident.severity);
                       const Icon =
                         HAZARD_ICON[incident.event_type] ?? AlertTriangle;
