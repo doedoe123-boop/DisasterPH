@@ -8,7 +8,7 @@ import type { SourceStatus } from "@/types/incident";
 const LINKS = {
   pagasaTc: "https://www.pagasa.dost.gov.ph/tropical-cyclone/severe-weather-bulletin",
   pagasaFlood: "https://www.pagasa.dost.gov.ph/flood",
-  phivolcs: "https://www.phivolcs.dost.gov.ph/",
+  phivolcsVolcano: "https://wovodat.phivolcs.dost.gov.ph/bulletin/list-of-bulletin",
 };
 
 /**
@@ -46,8 +46,13 @@ export function HazardEmptyState({
     message = copy.floodNotCovered;
     link = { href: LINKS.pagasaFlood, label: copy.pagasaFloodLink };
   } else if (filter === "volcano") {
-    message = copy.volcanoNotCovered;
-    link = { href: LINKS.phivolcs, label: copy.phivolcsLink };
+    // Empty only means "no volcano above Level 0" when the source worked.
+    const volcano = sourceStatuses.find((s) => s.source === "PHIVOLCS_VOLCANO");
+    link = { href: LINKS.phivolcsVolcano, label: copy.phivolcsLink };
+    message =
+      volcano && volcano.status === "healthy"
+        ? copy.volcanoNone.replace("{time}", formatPHT(volcano.last_fetch_at))
+        : copy.volcanoUnknown;
   } else if (filter === "landslide") {
     message = copy.landslideNotCovered;
   } else {

@@ -7,7 +7,7 @@ import { formatDateTime } from "@/lib/incidents";
  */
 export interface SourceInfo {
   /** Who published the data this record was built from. */
-  publisher: "PHIVOLCS" | "USGS" | "PAGASA" | "NASA_EONET" | "OTHER";
+  publisher: "PHIVOLCS" | "PHIVOLCS_VOLCANO" | "USGS" | "PAGASA" | "NASA_EONET" | "OTHER";
   /** Link to this event's own record at the publisher, when known and safe. */
   recordUrl: string | null;
   /** Responsible Philippine agency for official information, if any. */
@@ -34,8 +34,17 @@ export function sourceInfo(incident: Incident): SourceInfo {
   const m = incident.metadata;
   switch (incident.source) {
     // Earthquakes from PHIVOLCS's own earthquake page (see ingest/phivolcs.ts);
-    // the record link is the event's official bulletin.
+    // the record link is the event's official bulletin. Volcano alert levels
+    // link the volcano's latest daily bulletin (ingest/phivolcs-volcano.ts).
     case "PHIVOLCS":
+      if (incident.event_type === "volcano") {
+        return {
+          publisher: "PHIVOLCS_VOLCANO",
+          recordUrl: safeRecordUrl(m.bulletin_url, "phivolcs.dost.gov.ph"),
+          agency: { name: "PHIVOLCS", url: "https://wovodat.phivolcs.dost.gov.ph/bulletin/list-of-bulletin" },
+          referenceOnly: false,
+        };
+      }
       return {
         publisher: "PHIVOLCS",
         recordUrl: safeRecordUrl(m.bulletin_url, "phivolcs.dost.gov.ph"),

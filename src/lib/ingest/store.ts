@@ -50,17 +50,24 @@ export function upsertIncidents(batch: Incident[]): number {
  * written as-is, so revised bulletins (new magnitude or location, same time)
  * replace the earlier version. Records no longer in the batch are dropped,
  * except those passing `keep` (e.g. last month's quakes that fell off a
- * monthly list) — and nothing older than `maxAgeMs` is kept.
+ * monthly list) — and nothing older than `maxAgeMs` is kept. `eventType`
+ * limits this to one kind of event (PHIVOLCS publishes both earthquakes and
+ * volcano alert levels).
  */
 export function replaceSourceIncidents(
   source: Incident["source"],
   batch: Incident[],
-  options: { keep?: (inc: Incident) => boolean; maxAgeMs?: number } = {},
+  options: {
+    eventType?: Incident["event_type"];
+    keep?: (inc: Incident) => boolean;
+    maxAgeMs?: number;
+  } = {},
   now = Date.now(),
 ): void {
   const fresh = new Set(batch.map((inc) => `${inc.source}:${inc.external_id}`));
   for (const [key, inc] of incidents) {
     if (inc.source !== source || fresh.has(key)) continue;
+    if (options.eventType && inc.event_type !== options.eventType) continue;
     const tooOld =
       options.maxAgeMs !== undefined &&
       now - new Date(inc.started_at).getTime() > options.maxAgeMs;
@@ -144,8 +151,8 @@ export function getSourceHealth(): SourceStatus[] {
     });
   }
 
-  // Guarantee all three sources appear
-  for (const src of ["PAGASA", "PHIVOLCS", "EONET"] as const) {
+  // Guarantee every primary source appears (USGS only appears as a fallback)
+  for (const src of ["PAGASA", "PHIVOLCS", "PHIVOLCS_VOLCANO", "EONET"] as const) {
     if (!out.find((s) => s.source === src)) {
       out.push({
         source: src,

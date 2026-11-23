@@ -35,8 +35,12 @@ export interface Incident {
   metadata: Record<string, string | number | boolean | null>;
 }
 
+/** Status entries: one per incident source, plus PHIVOLCS volcano bulletins
+ *  (their incidents are published as "PHIVOLCS"). */
+export type SourceKey = IncidentSource | "PHIVOLCS_VOLCANO";
+
 export interface SourceStatus {
-  source: IncidentSource;
+  source: SourceKey;
   status: SourceHealthStatus;
   last_fetch_at: string;
   latency_ms: number;
