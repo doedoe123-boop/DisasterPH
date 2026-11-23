@@ -59,10 +59,14 @@ export function sourceInfo(incident: Incident): SourceInfo {
         agency: { name: "PHIVOLCS", url: "https://earthquake.phivolcs.dost.gov.ph/" },
         referenceOnly: false,
       };
+    // Tropical cyclone bulletins (ingest/pagasa.ts): the bulletin PDF, else
+    // the bulletin page.
     case "PAGASA":
       return {
         publisher: "PAGASA",
-        recordUrl: null,
+        recordUrl:
+          safeRecordUrl(m.pdf_url, "pagasa.dost.gov.ph") ??
+          safeRecordUrl(m.bulletin_url, "pagasa.dost.gov.ph"),
         agency: { name: "PAGASA", url: "https://www.pagasa.dost.gov.ph/" },
         referenceOnly: false,
       };

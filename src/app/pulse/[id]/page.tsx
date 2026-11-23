@@ -26,6 +26,7 @@ import type { Incident } from "@/types/incident";
 import { AppHeader } from "@/components/disasterph/header";
 import { PrepGuidance } from "@/components/disasterph/prep-guidance";
 import { VolcanoBulletin } from "@/components/disasterph/volcano-bulletin";
+import { TyphoonBulletin } from "@/components/disasterph/typhoon-bulletin";
 import { PulseDetailSkeleton } from "@/components/disasterph/page-skeletons";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -145,7 +146,10 @@ function estimateAffectedAreas(incident: Incident): string[] {
     if (found) return found[1];
   }
 
-  // Typhoon: use region + nearby
+  // Typhoon: provinces under a PAGASA wind signal, from the bulletin.
+  if (incident.event_type === "typhoon" && typeof m.signal_provinces === "string" && m.signal_provinces) {
+    return m.signal_provinces.split("|");
+  }
   if (incident.event_type === "typhoon" || incident.event_type === "flood") {
     if (incident.region) areas.push(incident.region);
   }
@@ -384,6 +388,11 @@ export default function PulseDetailPage() {
                 {/* Official PHIVOLCS volcano bulletin */}
                 {incident.event_type === "volcano" && incident.source === "PHIVOLCS" && (
                   <VolcanoBulletin incident={incident} locale={locale} />
+                )}
+
+                {/* Official PAGASA tropical cyclone bulletin */}
+                {incident.event_type === "typhoon" && incident.source === "PAGASA" && (
+                  <TyphoonBulletin incident={incident} locale={locale} />
                 )}
 
                 {/* What to do */}

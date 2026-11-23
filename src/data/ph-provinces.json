@@ -1,0 +1,415 @@
+{
+ "source": "faeldon/philippines-json-maps (MIT), PSGC",
+ "provinces": [
+  {
+   "name": "Ilocos Norte",
+   "psgc": 102800000,
+   "regionPsgc": 100000000
+  },
+  {
+   "name": "Ilocos Sur",
+   "psgc": 102900000,
+   "regionPsgc": 100000000
+  },
+  {
+   "name": "La Union",
+   "psgc": 103300000,
+   "regionPsgc": 100000000
+  },
+  {
+   "name": "Pangasinan",
+   "psgc": 105500000,
+   "regionPsgc": 100000000
+  },
+  {
+   "name": "Batanes",
+   "psgc": 200900000,
+   "regionPsgc": 200000000
+  },
+  {
+   "name": "Cagayan",
+   "psgc": 201500000,
+   "regionPsgc": 200000000
+  },
+  {
+   "name": "Isabela",
+   "psgc": 203100000,
+   "regionPsgc": 200000000
+  },
+  {
+   "name": "Nueva Vizcaya",
+   "psgc": 205000000,
+   "regionPsgc": 200000000
+  },
+  {
+   "name": "Quirino",
+   "psgc": 205700000,
+   "regionPsgc": 200000000
+  },
+  {
+   "name": "Bataan",
+   "psgc": 300800000,
+   "regionPsgc": 300000000
+  },
+  {
+   "name": "Bulacan",
+   "psgc": 301400000,
+   "regionPsgc": 300000000
+  },
+  {
+   "name": "Nueva Ecija",
+   "psgc": 304900000,
+   "regionPsgc": 300000000
+  },
+  {
+   "name": "Pampanga",
+   "psgc": 305400000,
+   "regionPsgc": 300000000
+  },
+  {
+   "name": "Tarlac",
+   "psgc": 306900000,
+   "regionPsgc": 300000000
+  },
+  {
+   "name": "Zambales",
+   "psgc": 307100000,
+   "regionPsgc": 300000000
+  },
+  {
+   "name": "Aurora",
+   "psgc": 307700000,
+   "regionPsgc": 300000000
+  },
+  {
+   "name": "Batangas",
+   "psgc": 401000000,
+   "regionPsgc": 400000000
+  },
+  {
+   "name": "Cavite",
+   "psgc": 402100000,
+   "regionPsgc": 400000000
+  },
+  {
+   "name": "Laguna",
+   "psgc": 403400000,
+   "regionPsgc": 400000000
+  },
+  {
+   "name": "Quezon",
+   "psgc": 405600000,
+   "regionPsgc": 400000000
+  },
+  {
+   "name": "Rizal",
+   "psgc": 405800000,
+   "regionPsgc": 400000000
+  },
+  {
+   "name": "Albay",
+   "psgc": 500500000,
+   "regionPsgc": 500000000
+  },
+  {
+   "name": "Camarines Norte",
+   "psgc": 501600000,
+   "regionPsgc": 500000000
+  },
+  {
+   "name": "Camarines Sur",
+   "psgc": 501700000,
+   "regionPsgc": 500000000
+  },
+  {
+   "name": "Catanduanes",
+   "psgc": 502000000,
+   "regionPsgc": 500000000
+  },
+  {
+   "name": "Masbate",
+   "psgc": 504100000,
+   "regionPsgc": 500000000
+  },
+  {
+   "name": "Sorsogon",
+   "psgc": 506200000,
+   "regionPsgc": 500000000
+  },
+  {
+   "name": "Aklan",
+   "psgc": 600400000,
+   "regionPsgc": 600000000
+  },
+  {
+   "name": "Antique",
+   "psgc": 600600000,
+   "regionPsgc": 600000000
+  },
+  {
+   "name": "Capiz",
+   "psgc": 601900000,
+   "regionPsgc": 600000000
+  },
+  {
+   "name": "Iloilo",
+   "psgc": 603000000,
+   "regionPsgc": 600000000
+  },
+  {
+   "name": "Guimaras",
+   "psgc": 607900000,
+   "regionPsgc": 600000000
+  },
+  {
+   "name": "Bohol",
+   "psgc": 701200000,
+   "regionPsgc": 700000000
+  },
+  {
+   "name": "Cebu",
+   "psgc": 702200000,
+   "regionPsgc": 700000000
+  },
+  {
+   "name": "Eastern Samar",
+   "psgc": 802600000,
+   "regionPsgc": 800000000
+  },
+  {
+   "name": "Leyte",
+   "psgc": 803700000,
+   "regionPsgc": 800000000
+  },
+  {
+   "name": "Northern Samar",
+   "psgc": 804800000,
+   "regionPsgc": 800000000
+  },
+  {
+   "name": "Samar",
+   "psgc": 806000000,
+   "regionPsgc": 800000000
+  },
+  {
+   "name": "Southern Leyte",
+   "psgc": 806400000,
+   "regionPsgc": 800000000
+  },
+  {
+   "name": "Biliran",
+   "psgc": 807800000,
+   "regionPsgc": 800000000
+  },
+  {
+   "name": "Sulu",
+   "psgc": 906600000,
+   "regionPsgc": 900000000
+  },
+  {
+   "name": "Zamboanga del Norte",
+   "psgc": 907200000,
+   "regionPsgc": 900000000
+  },
+  {
+   "name": "Zamboanga del Sur",
+   "psgc": 907300000,
+   "regionPsgc": 900000000
+  },
+  {
+   "name": "Zamboanga Sibugay",
+   "psgc": 908300000,
+   "regionPsgc": 900000000
+  },
+  {
+   "name": "Bukidnon",
+   "psgc": 1001300000,
+   "regionPsgc": 1000000000
+  },
+  {
+   "name": "Camiguin",
+   "psgc": 1001800000,
+   "regionPsgc": 1000000000
+  },
+  {
+   "name": "Lanao del Norte",
+   "psgc": 1003500000,
+   "regionPsgc": 1000000000
+  },
+  {
+   "name": "Misamis Occidental",
+   "psgc": 1004200000,
+   "regionPsgc": 1000000000
+  },
+  {
+   "name": "Misamis Oriental",
+   "psgc": 1004300000,
+   "regionPsgc": 1000000000
+  },
+  {
+   "name": "Davao del Norte",
+   "psgc": 1102300000,
+   "regionPsgc": 1100000000
+  },
+  {
+   "name": "Davao del Sur",
+   "psgc": 1102400000,
+   "regionPsgc": 1100000000
+  },
+  {
+   "name": "Davao Oriental",
+   "psgc": 1102500000,
+   "regionPsgc": 1100000000
+  },
+  {
+   "name": "Davao de Oro",
+   "psgc": 1108200000,
+   "regionPsgc": 1100000000
+  },
+  {
+   "name": "Davao Occidental",
+   "psgc": 1108600000,
+   "regionPsgc": 1100000000
+  },
+  {
+   "name": "Cotabato",
+   "psgc": 1204700000,
+   "regionPsgc": 1200000000
+  },
+  {
+   "name": "South Cotabato",
+   "psgc": 1206300000,
+   "regionPsgc": 1200000000
+  },
+  {
+   "name": "Sultan Kudarat",
+   "psgc": 1206500000,
+   "regionPsgc": 1200000000
+  },
+  {
+   "name": "Sarangani",
+   "psgc": 1208000000,
+   "regionPsgc": 1200000000
+  },
+  {
+   "name": "Abra",
+   "psgc": 1400100000,
+   "regionPsgc": 1400000000
+  },
+  {
+   "name": "Benguet",
+   "psgc": 1401100000,
+   "regionPsgc": 1400000000
+  },
+  {
+   "name": "Ifugao",
+   "psgc": 1402700000,
+   "regionPsgc": 1400000000
+  },
+  {
+   "name": "Kalinga",
+   "psgc": 1403200000,
+   "regionPsgc": 1400000000
+  },
+  {
+   "name": "Mountain Province",
+   "psgc": 1404400000,
+   "regionPsgc": 1400000000
+  },
+  {
+   "name": "Apayao",
+   "psgc": 1408100000,
+   "regionPsgc": 1400000000
+  },
+  {
+   "name": "Agusan del Norte",
+   "psgc": 1600200000,
+   "regionPsgc": 1600000000
+  },
+  {
+   "name": "Agusan del Sur",
+   "psgc": 1600300000,
+   "regionPsgc": 1600000000
+  },
+  {
+   "name": "Surigao del Norte",
+   "psgc": 1606700000,
+   "regionPsgc": 1600000000
+  },
+  {
+   "name": "Surigao del Sur",
+   "psgc": 1606800000,
+   "regionPsgc": 1600000000
+  },
+  {
+   "name": "Dinagat Islands",
+   "psgc": 1608500000,
+   "regionPsgc": 1600000000
+  },
+  {
+   "name": "Marinduque",
+   "psgc": 1704000000,
+   "regionPsgc": 1700000000
+  },
+  {
+   "name": "Occidental Mindoro",
+   "psgc": 1705100000,
+   "regionPsgc": 1700000000
+  },
+  {
+   "name": "Oriental Mindoro",
+   "psgc": 1705200000,
+   "regionPsgc": 1700000000
+  },
+  {
+   "name": "Palawan",
+   "psgc": 1705300000,
+   "regionPsgc": 1700000000
+  },
+  {
+   "name": "Romblon",
+   "psgc": 1705900000,
+   "regionPsgc": 1700000000
+  },
+  {
+   "name": "Negros Occidental",
+   "psgc": 1804500000,
+   "regionPsgc": 1800000000
+  },
+  {
+   "name": "Negros Oriental",
+   "psgc": 1804600000,
+   "regionPsgc": 1800000000
+  },
+  {
+   "name": "Siquijor",
+   "psgc": 1806100000,
+   "regionPsgc": 1800000000
+  },
+  {
+   "name": "Basilan",
+   "psgc": 1900700000,
+   "regionPsgc": 1900000000
+  },
+  {
+   "name": "Lanao del Sur",
+   "psgc": 1903600000,
+   "regionPsgc": 1900000000
+  },
+  {
+   "name": "Tawi-Tawi",
+   "psgc": 1907000000,
+   "regionPsgc": 1900000000
+  },
+  {
+   "name": "Maguindanao del Norte",
+   "psgc": 1908700000,
+   "regionPsgc": 1900000000
+  },
+  {
+   "name": "Maguindanao del Sur",
+   "psgc": 1908800000,
+   "regionPsgc": 1900000000
+  }
+ ]
+}

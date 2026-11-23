@@ -1,6 +1,8 @@
 src/data/ph-regions.json is derived from faeldon/philippines-json-maps
 (https://github.com/faeldon/philippines-json-maps, latest/geojson/country/lowres/country.0.001.json,
-PSGC as of 31 December 2023), simplified by scripts/build-ph-regions.mjs. It is used under the MIT License:
+PSGC as of 31 December 2023), simplified by scripts/build-ph-regions.mjs. src/data/ph-provinces.json (province -> region
+list) is derived from the same dataset (latest/geojson/regions/lowres/provdists-region-*.json)
+by scripts/build-ph-provinces.mjs. Both are used under the MIT License:
 
 MIT License
 
