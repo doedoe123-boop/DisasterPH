@@ -7,7 +7,7 @@ import { formatDateTime } from "@/lib/incidents";
  */
 export interface SourceInfo {
   /** Who published the data this record was built from. */
-  publisher: "USGS" | "PAGASA" | "NASA_EONET" | "OTHER";
+  publisher: "PHIVOLCS" | "USGS" | "PAGASA" | "NASA_EONET" | "OTHER";
   /** Link to this event's own record at the publisher, when known and safe. */
   recordUrl: string | null;
   /** Responsible Philippine agency for official information, if any. */
@@ -33,8 +33,17 @@ function safeRecordUrl(value: unknown, host: string): string | null {
 export function sourceInfo(incident: Incident): SourceInfo {
   const m = incident.metadata;
   switch (incident.source) {
-    // Earthquakes are ingested from the USGS catalogue (see ingest/phivolcs.ts).
+    // Earthquakes from PHIVOLCS's own earthquake page (see ingest/phivolcs.ts);
+    // the record link is the event's official bulletin.
     case "PHIVOLCS":
+      return {
+        publisher: "PHIVOLCS",
+        recordUrl: safeRecordUrl(m.bulletin_url, "phivolcs.dost.gov.ph"),
+        agency: { name: "PHIVOLCS", url: "https://earthquake.phivolcs.dost.gov.ph/" },
+        referenceOnly: false,
+      };
+    // Fallback only, while PHIVOLCS is unavailable (see ingest/usgs.ts).
+    case "USGS":
       return {
         publisher: "USGS",
         recordUrl: safeRecordUrl(m.usgs_url, "usgs.gov"),

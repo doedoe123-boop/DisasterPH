@@ -45,6 +45,39 @@ export function upsertIncidents(batch: Incident[]): number {
   return added;
 }
 
+/**
+ * Make `batch` the current set for one source. Every record in the batch is
+ * written as-is, so revised bulletins (new magnitude or location, same time)
+ * replace the earlier version. Records no longer in the batch are dropped,
+ * except those passing `keep` (e.g. last month's quakes that fell off a
+ * monthly list) — and nothing older than `maxAgeMs` is kept.
+ */
+export function replaceSourceIncidents(
+  source: Incident["source"],
+  batch: Incident[],
+  options: { keep?: (inc: Incident) => boolean; maxAgeMs?: number } = {},
+  now = Date.now(),
+): void {
+  const fresh = new Set(batch.map((inc) => `${inc.source}:${inc.external_id}`));
+  for (const [key, inc] of incidents) {
+    if (inc.source !== source || fresh.has(key)) continue;
+    const tooOld =
+      options.maxAgeMs !== undefined &&
+      now - new Date(inc.started_at).getTime() > options.maxAgeMs;
+    if (tooOld || !options.keep?.(inc)) incidents.delete(key);
+  }
+  for (const inc of batch) {
+    const key = `${inc.source}:${inc.external_id}`;
+    incidents.set(key, { ...inc, id: key });
+  }
+}
+
+/** Forget a source entirely (its incidents and its health record). */
+export function clearSource(source: Incident["source"]): void {
+  for (const [key, inc] of incidents) if (inc.source === source) incidents.delete(key);
+  sourceHealth.delete(source);
+}
+
 /* ── Fetch logging & source health ── */
 
 export function recordFetch(log: FetchLog): void {
