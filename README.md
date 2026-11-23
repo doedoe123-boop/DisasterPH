@@ -75,52 +75,66 @@ Built with Next.js 16, React 19, MapLibre GL JS, and Tailwind CSS 4.
 src/
 ├── app/
 │   ├── api/
-│   │   ├── incidents/          # GET /api/incidents, /api/incidents/[id]
-│   │   ├── advisories/         # GET /api/advisories
-│   │   └── source-status/      # GET /api/source-status
+│   │   ├── incidents/            # GET /api/incidents, /api/incidents/[id]
+│   │   ├── advisories/           # GET /api/advisories
+│   │   ├── source-status/        # GET /api/source-status
+│   │   ├── reports/              # Community reports (moderated)
+│   │   ├── moderator/            # Moderator session
+│   │   └── push/                 # Web Push subscriptions and dispatch
+│   ├── archive/                  # Disaster event archive
+│   ├── pulse/                    # Alert list and alert details
+│   ├── shelters/                 # Evacuation centers
 │   ├── globals.css
 │   ├── layout.tsx
-│   └── page.tsx
+│   └── page.tsx                  # Place-first live map homepage
 ├── components/disasterph/
-│   ├── disasterph-dashboard.tsx  # Main orchestration (all state lives here)
-│   ├── mapbox-map.tsx            # MapLibre map with markers, popups, flyTo
+│   ├── disasterph-command.tsx    # Homepage orchestration (state lives here)
+│   ├── area-bar.tsx              # "Your area" selector and "Use my location"
 │   ├── command-map.tsx           # Map wrapper with sidebar/focus controls
-│   ├── saved-places.tsx          # "My Places" panel with risk indicators
-│   ├── risk-summary.tsx          # Per-place risk assessment
+│   ├── mapbox-map.tsx            # MapLibre map, markers, popups, camera
+│   ├── header.tsx                # Top bar, navigation, 911 button
+│   ├── emergency-contacts.tsx    # Emergency hotlines
+│   ├── hazard-empty-state.tsx    # Explains empty hazard filters
+│   ├── notification-bell.tsx
 │   ├── prep-guidance.tsx         # "What To Do" safety tips
-│   ├── incident-details.tsx      # Selected incident panel
-│   ├── help-actions.tsx          # Emergency call/link/share/copy buttons
-│   ├── official-advisory-panel.tsx
-│   ├── alert-feed.tsx            # Live feed list
-│   ├── floating-incident-card.tsx
-│   ├── mobile-bottom-sheet.tsx
-│   └── header.tsx                # Top bar with filter pills
+│   ├── page-skeletons.tsx
+│   └── sw-registrar.tsx          # Service worker registration
 ├── hooks/
 │   ├── use-incidents.ts          # Polling hook (60s)
-│   ├── use-advisories.ts         # Polling hook (120s)
+│   ├── use-selected-area.ts      # Chosen area (localStorage)
 │   ├── use-saved-places.ts       # localStorage-backed saved places
-│   └── use-source-status.ts
+│   ├── use-alert-center.ts
+│   ├── use-network-status.ts
+│   ├── useLocale.ts
+│   └── useTheme.ts
 ├── lib/
-│   ├── ingest/                   # Source-specific scrapers + scheduler
+│   ├── ingest/                   # Source fetchers + scheduler
 │   │   ├── eonet.ts              # NASA EONET events
 │   │   ├── pagasa.ts             # PAGASA tropical cyclone bulletins
 │   │   ├── phivolcs.ts           # PHIVOLCS earthquake bulletins
 │   │   ├── store.ts              # In-memory store with TTL cache
 │   │   ├── scheduler.ts          # Auto-polling orchestrator
-│   │   ├── regions.ts            # PH region reverse-geocoding
+│   │   ├── regions.ts            # Region metadata for incidents
 │   │   └── types.ts              # Ingestion types
-│   ├── risk-summary.ts           # Haversine proximity + risk computation
+│   ├── geo/ph-regions.ts         # PSGC region lookup (incl. offshore)
+│   ├── area.ts                   # Selected-area matching
+│   ├── hotlines.ts               # Emergency and agency numbers
+│   ├── incidents.ts              # Filtering, sorting, stats, PHT times
+│   ├── i18n.ts                   # English and Filipino strings
+│   ├── map-camera.ts             # Camera rules (fit, focus, padding)
+│   ├── mapbox.ts                 # Map constants (bounds, colors, camera)
+│   ├── terrain.ts                # Opt-in 3D terrain
+│   ├── risk-summary.ts           # Proximity risk computation
 │   ├── prep-guidance.ts          # Per-hazard preparation tips
-│   ├── help-actions.ts           # Dynamic help action generator
-│   ├── incidents.ts              # Filtering, sorting, stats
-│   ├── map.ts                    # GeoJSON utilities
-│   └── mapbox.ts                 # Map constants (bounds, colors, camera)
+│   └── …                         # Reports, push, moderation, rate limits
 ├── types/
 │   └── incident.ts               # Core type definitions
 └── data/
-    └── mock-incidents.ts         # Development mock data
+    ├── ph-regions.json           # Region boundaries (see LICENSE file)
+    └── archive-events.ts         # Archive page data
 docs/                             # Product, architecture, and planning docs
-laravel-stubs/                    # Reference Laravel implementation stubs
+supabase/                         # SQL migrations
+scripts/                          # Data build scripts (region boundaries)
 ```
 
 ---
