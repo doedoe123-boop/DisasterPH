@@ -142,6 +142,7 @@ export const copy = {
         publishedBy: "Data from",
         publishers: {
           PHIVOLCS: "PHIVOLCS earthquake information",
+          PHIVOLCS_VOLCANO: "PHIVOLCS volcano bulletin",
           USGS: "USGS earthquake catalogue",
           PAGASA: "PAGASA",
           NASA_EONET: "NASA EONET",
@@ -165,6 +166,23 @@ export const copy = {
       expiredIncident: "This incident may have expired or is no longer active.",
       noDescription: "No detailed description available for this event.",
       viewFullDetail: "View full detail",
+      volcano: {
+        heading: "PHIVOLCS volcano bulletin",
+        bulletinDate: "Bulletin of {date}",
+        stale: "This is the latest bulletin DisasterPH could read, from {date}. Check PHIVOLCS for newer advisories.",
+        mismatch: "PHIVOLCS's current alert level differs from this bulletin. Check PHIVOLCS for the latest advisory.",
+        notAllowed: "Should not be allowed",
+        hazards: "Possible hazards",
+        monitoring: "Monitoring (past 24 hours)",
+        params: {
+          Seismicity: "Seismicity",
+          "Sulfur Dioxide Flux": "Sulfur dioxide flux",
+          Plume: "Plume",
+          "Ground Deformation": "Ground deformation",
+        },
+        readBulletin: "Read the full bulletin",
+        alertLevel: "Alert Level",
+      },
     },
     hazardEmpty: {
       typhoonNone:
@@ -175,8 +193,10 @@ export const copy = {
         "Tropical cyclone status from PAGASA is not available right now. Check the official bulletin.",
       floodNotCovered:
         "DisasterPH does not show PAGASA flood advisories yet. Check PAGASA's flood information.",
-      volcanoNotCovered:
-        "No volcano events in this feed. DisasterPH does not show PHIVOLCS volcano bulletins yet.",
+      volcanoNone:
+        "Every volcano PHIVOLCS monitors is at Alert Level 0 (normal), according to PHIVOLCS (checked {time}).",
+      volcanoUnknown:
+        "PHIVOLCS volcano alert levels are not available right now. Check PHIVOLCS directly.",
       landslideNotCovered:
         "DisasterPH does not track landslide advisories yet. Follow your local DRRMO for landslide warnings.",
       pagasaTcLink: "PAGASA tropical cyclone bulletin",
@@ -496,6 +516,7 @@ export const copy = {
         publishedBy: "Datos mula sa",
         publishers: {
           PHIVOLCS: "Impormasyon sa lindol ng PHIVOLCS",
+          PHIVOLCS_VOLCANO: "Volcano bulletin ng PHIVOLCS",
           USGS: "USGS earthquake catalogue",
           PAGASA: "PAGASA",
           NASA_EONET: "NASA EONET",
@@ -519,6 +540,23 @@ export const copy = {
       expiredIncident: "Maaaring tapos na o hindi na aktibo ang abisong ito.",
       noDescription: "Walang detalyadong paliwanag para sa abisong ito.",
       viewFullDetail: "Tingnan ang buong detalye",
+      volcano: {
+        heading: "Volcano bulletin ng PHIVOLCS",
+        bulletinDate: "Bulletin noong {date}",
+        stale: "Ito ang pinakabagong bulletin na nabasa ng DisasterPH, mula {date}. Tingnan ang PHIVOLCS para sa mas bagong abiso.",
+        mismatch: "Iba ang kasalukuyang alert level ng PHIVOLCS sa bulletin na ito. Tingnan ang PHIVOLCS para sa pinakabagong abiso.",
+        notAllowed: "Hindi dapat payagan",
+        hazards: "Mga posibleng panganib",
+        monitoring: "Pagmamanman (nakaraang 24 oras)",
+        params: {
+          Seismicity: "Mga lindol ng bulkan",
+          "Sulfur Dioxide Flux": "Sulfur dioxide",
+          Plume: "Usok (plume)",
+          "Ground Deformation": "Pagbabago ng lupa",
+        },
+        readBulletin: "Basahin ang buong bulletin (Filipino)",
+        alertLevel: "Antas ng Alerto",
+      },
     },
     hazardEmpty: {
       typhoonNone:
@@ -529,8 +567,10 @@ export const copy = {
         "Hindi available ngayon ang status ng bagyo mula sa PAGASA. Tingnan ang opisyal na bulletin.",
       floodNotCovered:
         "Hindi pa ipinapakita ng DisasterPH ang mga flood advisory ng PAGASA. Tingnan ang flood information ng PAGASA.",
-      volcanoNotCovered:
-        "Walang pangyayaring may kinalaman sa bulkan sa feed na ito. Hindi pa ipinapakita ng DisasterPH ang mga volcano bulletin ng PHIVOLCS.",
+      volcanoNone:
+        "Nasa Alert Level 0 (normal) ang lahat ng bulkang binabantayan ng PHIVOLCS, ayon sa PHIVOLCS (sinuri noong {time}).",
+      volcanoUnknown:
+        "Hindi available ngayon ang alert level ng mga bulkan mula sa PHIVOLCS. Tingnan nang direkta ang PHIVOLCS.",
       landslideNotCovered:
         "Hindi pa sinusubaybayan ng DisasterPH ang mga landslide advisory. Sundin ang inyong lokal na DRRMO para sa babala sa pagguho ng lupa.",
       pagasaTcLink: "Tropical cyclone bulletin ng PAGASA",

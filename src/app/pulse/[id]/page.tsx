@@ -25,6 +25,7 @@ import { getPrepTips } from "@/lib/prep-guidance";
 import type { Incident } from "@/types/incident";
 import { AppHeader } from "@/components/disasterph/header";
 import { PrepGuidance } from "@/components/disasterph/prep-guidance";
+import { VolcanoBulletin } from "@/components/disasterph/volcano-bulletin";
 import { PulseDetailSkeleton } from "@/components/disasterph/page-skeletons";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -149,17 +150,9 @@ function estimateAffectedAreas(incident: Incident): string[] {
     if (incident.region) areas.push(incident.region);
   }
 
-  // Volcano: nearby municipalities
+  // Volcano: the province(s) named in the PHIVOLCS bulletin, not a guess.
   if (incident.event_type === "volcano") {
-    const volcanoMap: Record<string, string[]> = {
-      mayon: ["Albay", "Legazpi", "Daraga", "Camalig"],
-      taal: ["Batangas", "Agoncillo", "Laurel", "Talisay"],
-      pinatubo: ["Zambales", "Pampanga", "Tarlac"],
-    };
-    const title = incident.title.toLowerCase();
-    for (const [key, vals] of Object.entries(volcanoMap)) {
-      if (title.includes(key)) return vals;
-    }
+    return typeof m.province === "string" && m.province ? [m.province] : [];
   }
 
   return areas.length > 0 ? areas : [];
@@ -387,6 +380,11 @@ export default function PulseDetailPage() {
                       i18n.common.noDescription}
                   </p>
                 </div>
+
+                {/* Official PHIVOLCS volcano bulletin */}
+                {incident.event_type === "volcano" && incident.source === "PHIVOLCS" && (
+                  <VolcanoBulletin incident={incident} locale={locale} />
+                )}
 
                 {/* What to do */}
                 {prepTips.length > 0 && (

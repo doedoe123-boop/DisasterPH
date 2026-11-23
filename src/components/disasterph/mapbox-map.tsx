@@ -904,7 +904,8 @@ function buildPopupMeta(incident: Incident): string {
     if (m.signal_number != null) parts.push(`Signal #${m.signal_number}`);
     if (m.wind_speed_kph != null) parts.push(`${m.wind_speed_kph} kph`);
   } else if (incident.event_type === "volcano") {
-    if (m.alert_level) parts.push(`Alert: ${String(m.alert_level)}`);
+    if (m.alert_level != null) parts.push(`Alert Level ${String(m.alert_level)}`);
+    if (m.pdz_radius_km != null) parts.push(`${String(m.pdz_radius_km)} km danger zone`);
   }
 
   return parts.join(" · ");
@@ -921,26 +922,14 @@ function earthquakeImpactRadiusKm(incident: Incident): number {
   return 25;
 }
 
-/** Volcano danger/exclusion zone radius based on alert level */
+/**
+ * Permanent Danger Zone radius from the PHIVOLCS bulletin (e.g. 4 km, 6 km).
+ * No circle when the bulletin gives none (Taal's PDZ is the whole volcano
+ * island) — a guessed radius could look official.
+ */
 function volcanoExclusionRadiusKm(incident: Incident): number {
-  const alert = String(incident.metadata?.alert_level ?? "");
-  switch (alert) {
-    case "red":
-    case "warning":
-      return 14;
-    case "orange":
-    case "watch":
-      return 8;
-    case "yellow":
-    case "advisory":
-      return 4;
-    default:
-      return incident.severity === "critical"
-        ? 14
-        : incident.severity === "warning"
-          ? 8
-          : 4;
-  }
+  const km = Number(incident.metadata?.pdz_radius_km);
+  return Number.isFinite(km) && km > 0 && km <= 30 ? km : 0;
 }
 
 /** Generate a polygon approximating a circle on the globe */

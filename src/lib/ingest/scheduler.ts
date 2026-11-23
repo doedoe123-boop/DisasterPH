@@ -11,6 +11,7 @@ import type { Incident } from "@/types/incident";
 import { fetchEonetEvents } from "./eonet";
 import { EQ_MIN_MAGNITUDE, EQ_WINDOW_DAYS, fetchPhivolcsEvents } from "./phivolcs";
 import { fetchUsgsEvents } from "./usgs";
+import { BULLETIN_STALE_MS, fetchPhivolcsVolcanoes } from "./phivolcs-volcano";
 import { fetchPagasaEvents, type SourceFetchResult } from "./pagasa";
 
 /** Cache TTL: 3 min in prod, 30 s in dev. */
@@ -41,6 +42,7 @@ export async function ensureFreshData(): Promise<void> {
     try {
       await Promise.allSettled([
         ingestEarthquakes(),
+        ingestVolcanoes(),
         ingestSource("PAGASA", fetchPagasaEvents),
         ingestSource("EONET", fetchEonetEvents),
       ]);
@@ -84,12 +86,57 @@ export const earthquakeFetchers = {
   usgs: fetchUsgsEvents,
 };
 
+/** Volcano alert levels; replaceable in tests. */
+export const volcanoFetchers = { phivolcs: fetchPhivolcsVolcanoes };
+
+/**
+ * PHIVOLCS volcano alert levels, reported under their own status entry
+ * ("PHIVOLCS_VOLCANO"). On failure the last known levels stay up; each one
+ * shows its bulletin date, so it never looks fresher than it is.
+ */
+async function ingestVolcanoes(): Promise<void> {
+  const start = Date.now();
+  try {
+    const { events, note } = await volcanoFetchers.phivolcs();
+    replaceSourceIncidents("PHIVOLCS", events, { eventType: "volcano" });
+    recordFetch({
+      source: "PHIVOLCS_VOLCANO",
+      fetched_at: new Date().toISOString(),
+      success: true,
+      latency_ms: Date.now() - start,
+      event_count: events.length,
+      note,
+    });
+  } catch (error) {
+    // Keep the last known levels, but let them age: re-flag stale bulletins.
+    const now = Date.now();
+    const kept = getIncidents()
+      .filter((i) => i.source === "PHIVOLCS" && i.event_type === "volcano")
+      .map((i) => {
+        const date = i.metadata.bulletin_date;
+        const issued = typeof date === "string" ? Date.parse(`${date}T00:00:00+08:00`) : NaN;
+        const stale = !Number.isFinite(issued) || now - issued > BULLETIN_STALE_MS;
+        return { ...i, metadata: { ...i.metadata, bulletin_stale: stale } };
+      });
+    replaceSourceIncidents("PHIVOLCS", kept, { eventType: "volcano" });
+    recordFetch({
+      source: "PHIVOLCS_VOLCANO",
+      fetched_at: new Date().toISOString(),
+      success: false,
+      latency_ms: Date.now() - start,
+      event_count: 0,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
+
 async function ingestEarthquakes(): Promise<void> {
   const start = Date.now();
   try {
     const events = await earthquakeFetchers.phivolcs();
     const now = Date.now();
     replaceSourceIncidents("PHIVOLCS", events, {
+      eventType: "earthquake",
       // The PHIVOLCS page lists only the current month; keep last month's
       // quakes (still within the window) after the month rolls over.
       keep: (inc) => phtMonth(new Date(inc.started_at).getTime()) !== phtMonth(now),
@@ -122,7 +169,7 @@ async function ingestEarthquakes(): Promise<void> {
     const events = (await earthquakeFetchers.usgs()).filter(
       (u) => !phivolcs.some((p) => sameQuake(p, u)),
     );
-    replaceSourceIncidents("USGS", events, { maxAgeMs: EQ_WINDOW_MS });
+    replaceSourceIncidents("USGS", events, { eventType: "earthquake", maxAgeMs: EQ_WINDOW_MS });
     recordFetch({
       source: "USGS",
       fetched_at: new Date().toISOString(),
