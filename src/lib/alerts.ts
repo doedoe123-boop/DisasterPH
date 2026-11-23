@@ -57,10 +57,19 @@ function buildCurrentSnapshot(
   };
 }
 
+/**
+ * "New event" alerts are raised only for events that started recently.
+ * Otherwise every warning-level event the browser has not seen before fires,
+ * however old — on a first visit, or whenever a source changes its ids.
+ * Escalations of known events always alert.
+ */
+export const NEW_ALERT_MAX_AGE_MS = 6 * 3_600_000;
+
 export function evaluateAlertEngine(
   incidents: Incident[],
   placeRisks: PlaceRiskSummary[],
   previousSnapshots: Record<string, AlertSnapshot>,
+  now = Date.now(),
 ): AlertEngineResult {
   const nextSnapshots: Record<string, AlertSnapshot> = {};
   const events: AlertEvent[] = [];
@@ -79,7 +88,9 @@ export function evaluateAlertEngine(
     let trigger: AlertEvent["trigger"] | null = null;
 
     if (!previous) {
-      if (severityRank[incident.severity] >= severityRank.warning) {
+      const started = new Date(incident.started_at).getTime();
+      const recent = Number.isFinite(started) && now - started <= NEW_ALERT_MAX_AGE_MS;
+      if (recent && severityRank[incident.severity] >= severityRank.warning) {
         trigger =
           incident.severity === "critical" ? "new-critical" : "new-warning";
       }

@@ -33,8 +33,9 @@ function sourceLabel(incident: Incident): string {
   const labels: Record<string, string> = {
     EONET: "NASA EONET",
     PAGASA: "PAGASA",
-    // Earthquake records come from the USGS catalogue (see ingest/phivolcs.ts).
-    PHIVOLCS: "USGS",
+    PHIVOLCS: "PHIVOLCS",
+    // Fallback earthquake source while PHIVOLCS is unavailable.
+    USGS: "USGS",
   };
   return labels[incident.source] ?? incident.source;
 }

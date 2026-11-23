@@ -141,6 +141,7 @@ export const copy = {
         heading: "Source",
         publishedBy: "Data from",
         publishers: {
+          PHIVOLCS: "PHIVOLCS earthquake information",
           USGS: "USGS earthquake catalogue",
           PAGASA: "PAGASA",
           NASA_EONET: "NASA EONET",
@@ -149,7 +150,7 @@ export const copy = {
         updated: "Last updated by source",
         record: "View this event's source record",
         usgsNote:
-          "Recorded event from the USGS catalogue. For official Philippine earthquake information, see PHIVOLCS.",
+          "Shown from the USGS catalogue because PHIVOLCS could not be reached. For official Philippine earthquake information, see PHIVOLCS.",
         referenceOnly:
           "Reference only. This is not an official Philippine advisory.",
         agencyLink: "Official information from",
@@ -494,6 +495,7 @@ export const copy = {
         heading: "Pinagmulan",
         publishedBy: "Datos mula sa",
         publishers: {
+          PHIVOLCS: "Impormasyon sa lindol ng PHIVOLCS",
           USGS: "USGS earthquake catalogue",
           PAGASA: "PAGASA",
           NASA_EONET: "NASA EONET",
@@ -502,7 +504,7 @@ export const copy = {
         updated: "Huling update ng pinagmulan",
         record: "Tingnan ang source record ng pangyayaring ito",
         usgsNote:
-          "Naitalang pangyayari mula sa USGS catalogue. Para sa opisyal na impormasyon sa lindol sa Pilipinas, tingnan ang PHIVOLCS.",
+          "Mula sa USGS catalogue dahil hindi maabot ang PHIVOLCS. Para sa opisyal na impormasyon sa lindol sa Pilipinas, tingnan ang PHIVOLCS.",
         referenceOnly:
           "Para sa sanggunian lamang. Hindi ito opisyal na abiso sa Pilipinas.",
         agencyLink: "Opisyal na impormasyon mula sa",

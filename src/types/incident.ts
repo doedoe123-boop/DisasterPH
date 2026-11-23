@@ -1,4 +1,5 @@
-export type IncidentSource = "EONET" | "PAGASA" | "PHIVOLCS";
+/** "USGS" appears only as a labelled fallback when PHIVOLCS is unavailable. */
+export type IncidentSource = "EONET" | "PAGASA" | "PHIVOLCS" | "USGS";
 
 export type IncidentEventType =
   | "typhoon"
