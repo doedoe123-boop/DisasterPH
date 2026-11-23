@@ -183,12 +183,34 @@ export const copy = {
         readBulletin: "Read the full bulletin",
         alertLevel: "Alert Level",
       },
+      typhoon: {
+        heading: "PAGASA tropical cyclone bulletin",
+        bulletinNo: "Bulletin #{no}",
+        issued: "Issued {time}",
+        stale: "This is the latest bulletin DisasterPH could read, issued {time}. PAGASA may have issued newer bulletins.",
+        position: "Position",
+        movement: "Movement",
+        strength: "Strength",
+        signals: "Wind signals",
+        signalNo: "Wind Signal No. {n}",
+        noSignals: "No wind signals are raised in this bulletin.",
+        luzon: "Luzon",
+        visayas: "Visayas",
+        mindanao: "Mindanao",
+        whatToDo: "What to do (PAGASA, Signal No. {n})",
+        precautions: "Precautions (PAGASA, Signal No. {n})",
+        forecast: "Forecast positions (PAGASA)",
+        officialBulletin: "Official bulletin",
+        pdf: "Bulletin (PDF)",
+        trackMap: "Track map",
+        signalMap: "Wind signal map",
+      },
     },
     hazardEmpty: {
       typhoonNone:
         "No active tropical cyclone in the Philippine Area of Responsibility, according to PAGASA's bulletin page (checked {time}).",
       typhoonActive:
-        "PAGASA has an active tropical cyclone bulletin. DisasterPH does not show its details yet, so read the official bulletin.",
+        "PAGASA has an active tropical cyclone bulletin, but DisasterPH could not read it. Read the official bulletin.",
       typhoonUnknown:
         "Tropical cyclone status from PAGASA is not available right now. Check the official bulletin.",
       floodNotCovered:
@@ -557,12 +579,34 @@ export const copy = {
         readBulletin: "Basahin ang buong bulletin (Filipino)",
         alertLevel: "Antas ng Alerto",
       },
+      typhoon: {
+        heading: "Tropical cyclone bulletin ng PAGASA",
+        bulletinNo: "Bulletin #{no}",
+        issued: "Inilabas {time}",
+        stale: "Ito ang pinakabagong bulletin na nabasa ng DisasterPH, inilabas {time}. Maaaring may mas bagong bulletin na ang PAGASA.",
+        position: "Lokasyon",
+        movement: "Galaw",
+        strength: "Lakas",
+        signals: "Mga wind signal",
+        signalNo: "Wind Signal No. {n}",
+        noSignals: "Walang nakataas na wind signal sa bulletin na ito.",
+        luzon: "Luzon",
+        visayas: "Visayas",
+        mindanao: "Mindanao",
+        whatToDo: "Ano ang gagawin (PAGASA, Signal No. {n})",
+        precautions: "Pag-iingat (PAGASA, Signal No. {n})",
+        forecast: "Inaasahang lokasyon (PAGASA)",
+        officialBulletin: "Opisyal na bulletin",
+        pdf: "Bulletin (PDF)",
+        trackMap: "Mapa ng daanan",
+        signalMap: "Mapa ng wind signal",
+      },
     },
     hazardEmpty: {
       typhoonNone:
         "Walang aktibong bagyo sa Philippine Area of Responsibility, ayon sa bulletin page ng PAGASA (sinuri noong {time}).",
       typhoonActive:
-        "May aktibong tropical cyclone bulletin ang PAGASA. Hindi pa ipinapakita ng DisasterPH ang mga detalye nito, kaya basahin ang opisyal na bulletin.",
+        "May aktibong tropical cyclone bulletin ang PAGASA, pero hindi ito mabasa ng DisasterPH. Basahin ang opisyal na bulletin.",
       typhoonUnknown:
         "Hindi available ngayon ang status ng bagyo mula sa PAGASA. Tingnan ang opisyal na bulletin.",
       floodNotCovered:

@@ -1,6 +1,6 @@
 import type { Incident, SavedPlace } from "@/types/incident";
 import { computePlaceRisk } from "@/lib/risk-summary";
-import { REGION_NAMES } from "@/lib/geo/ph-regions";
+import { REGION_NAMES, locateRegion, matchingRegion } from "@/lib/geo/ph-regions";
 
 /**
  * The area a visitor chose to focus on. "all" shows the whole country.
@@ -41,9 +41,16 @@ export function resolveArea(area: SelectedArea, places: SavedPlace[]): SelectedA
   return area;
 }
 
+/** Regions under a PAGASA wind signal ("A|B|C"), from the bulletin's areas. */
+function signalRegions(incident: Incident): string[] {
+  const v = incident.metadata?.signal_regions;
+  return typeof v === "string" && v ? v.split("|") : [];
+}
+
 /**
  * Whether an incident concerns the area: same region (offshore events count
- * for their nearest region), or, for a saved place, within that place's
+ * for their nearest region; typhoons count for every region under one of
+ * their wind signals), or, for a saved place, within that place's
  * monitoring radius or region (same rules as the risk summary).
  */
 export function incidentInArea(
@@ -56,11 +63,17 @@ export function incidentInArea(
     return (
       incident.region === area.region ||
       (typeof incident.metadata?.near_region === "string" &&
-        incident.metadata.near_region === area.region)
+        incident.metadata.near_region === area.region) ||
+      signalRegions(incident).includes(area.region)
     );
   }
   const place = places.find((p) => p.id === area.placeId);
   if (!place) return true;
+  const regions = signalRegions(incident);
+  if (regions.length) {
+    const placeRegion = matchingRegion(locateRegion(place.latitude, place.longitude));
+    if (placeRegion && regions.includes(placeRegion)) return true;
+  }
   return computePlaceRisk(place, [incident]).monitoredIncidents.length > 0;
 }
 

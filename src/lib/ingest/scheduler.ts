@@ -12,7 +12,7 @@ import { fetchEonetEvents } from "./eonet";
 import { EQ_MIN_MAGNITUDE, EQ_WINDOW_DAYS, fetchPhivolcsEvents } from "./phivolcs";
 import { fetchUsgsEvents } from "./usgs";
 import { BULLETIN_STALE_MS, fetchPhivolcsVolcanoes } from "./phivolcs-volcano";
-import { fetchPagasaEvents, type SourceFetchResult } from "./pagasa";
+import { TC_BULLETIN_STALE_MS, fetchPagasaEvents, type SourceFetchResult } from "./pagasa";
 
 /** Cache TTL: 3 min in prod, 30 s in dev. */
 const CACHE_TTL_MS =
@@ -43,7 +43,7 @@ export async function ensureFreshData(): Promise<void> {
       await Promise.allSettled([
         ingestEarthquakes(),
         ingestVolcanoes(),
-        ingestSource("PAGASA", fetchPagasaEvents),
+        ingestPagasa(),
         ingestSource("EONET", fetchEonetEvents),
       ]);
       setLastRefresh(now);
@@ -85,6 +85,54 @@ export const earthquakeFetchers = {
   phivolcs: fetchPhivolcsEvents,
   usgs: fetchUsgsEvents,
 };
+
+/** PAGASA tropical cyclone bulletins; replaceable in tests. */
+export const pagasaFetchers = { bulletin: fetchPagasaEvents };
+
+/**
+ * Typhoon events are the set PAGASA currently publishes: a storm that leaves
+ * (or a "no active tropical cyclone" page) removes its event. If the page
+ * could not be read with confidence, or the fetch failed, the last known
+ * storms stay and are re-flagged stale by their bulletin time.
+ */
+async function ingestPagasa(): Promise<void> {
+  const start = Date.now();
+  const keepLastKnown = () => {
+    const now = Date.now();
+    const kept = getIncidents()
+      .filter((i) => i.source === "PAGASA" && i.event_type === "typhoon")
+      .map((i) => ({
+        ...i,
+        metadata: { ...i.metadata, bulletin_stale: now - Date.parse(i.updated_at) > TC_BULLETIN_STALE_MS },
+      }));
+    replaceSourceIncidents("PAGASA", kept, { eventType: "typhoon" });
+  };
+  try {
+    const result = await pagasaFetchers.bulletin();
+    if (result.uncertain && result.events.length === 0) keepLastKnown();
+    else replaceSourceIncidents("PAGASA", result.events, { eventType: "typhoon" });
+    recordFetch({
+      source: "PAGASA",
+      fetched_at: new Date().toISOString(),
+      success: true,
+      latency_ms: Date.now() - start,
+      event_count: result.events.length,
+      note: result.note,
+      ...(result.bulletin_state && { bulletin_state: result.bulletin_state }),
+      ...(result.uncertain && { uncertain: true }),
+    });
+  } catch (error) {
+    keepLastKnown();
+    recordFetch({
+      source: "PAGASA",
+      fetched_at: new Date().toISOString(),
+      success: false,
+      latency_ms: Date.now() - start,
+      event_count: 0,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
 
 /** Volcano alert levels; replaceable in tests. */
 export const volcanoFetchers = { phivolcs: fetchPhivolcsVolcanoes };
