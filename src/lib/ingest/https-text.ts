@@ -64,34 +64,45 @@ const PHIVOLCS_CA = [...tls.rootCertificates, GLOBALSIGN_GCC_R46_OV_TLS_CA_2025]
 const ALLOWED_HOSTS = /(^|\.)phivolcs\.dost\.gov\.ph$/;
 
 /** Decompress per Content-Encoding, capping the decompressed size. */
-export function decodeBody(body: Buffer, encoding: string | undefined, maxBytes: number): string {
+export function decompressBody(body: Buffer, encoding: string | undefined, maxBytes: number): Buffer {
   const opts = { maxOutputLength: maxBytes };
   switch ((encoding ?? "identity").trim().toLowerCase()) {
     case "gzip":
     case "x-gzip":
-      return zlib.gunzipSync(body, opts).toString("utf8");
+      return zlib.gunzipSync(body, opts);
     case "deflate":
-      return zlib.inflateSync(body, opts).toString("utf8");
+      return zlib.inflateSync(body, opts);
     case "br":
-      return zlib.brotliDecompressSync(body, opts).toString("utf8");
+      return zlib.brotliDecompressSync(body, opts);
     case "identity":
     case "":
-      return body.toString("utf8");
+      return body;
     default:
       throw new Error(`Unsupported content encoding: ${encoding}`);
   }
 }
 
+/** Decompress per Content-Encoding and read as UTF-8. */
+export function decodeBody(body: Buffer, encoding: string | undefined, maxBytes: number): string {
+  return decompressBody(body, encoding, maxBytes).toString("utf8");
+}
+
+export interface PhivolcsResponse {
+  status: number;
+  contentType: string;
+  body: Buffer;
+}
+
 /**
- * GET a PHIVOLCS page as text over verified HTTPS. No redirects are
- * followed. The server compresses even when not asked (gzip, ~74 KB for the
- * 2.6 MB earthquake page), so responses are decompressed; both the
- * compressed and decompressed sizes are capped at `maxBytes`.
+ * GET a PHIVOLCS URL over verified HTTPS. No redirects are followed. The
+ * server compresses even when not asked (gzip, ~74 KB for the 2.6 MB
+ * earthquake page), so responses are decompressed; both the compressed and
+ * decompressed sizes are capped at `maxBytes`.
  */
-export function fetchPhivolcsText(
+export function fetchPhivolcs(
   url: string,
-  { timeoutMs = 20_000, maxBytes = 12 * 1024 * 1024 } = {},
-): Promise<{ status: number; text: string }> {
+  { timeoutMs = 20_000, maxBytes = 12 * 1024 * 1024, accept = "text/html" } = {},
+): Promise<PhivolcsResponse> {
   const target = new URL(url);
   if (target.protocol !== "https:" || !ALLOWED_HOSTS.test(target.hostname)) {
     return Promise.reject(new Error(`Not a PHIVOLCS https URL: ${target.origin}`));
@@ -103,7 +114,7 @@ export function fetchPhivolcsText(
         ca: PHIVOLCS_CA,
         timeout: timeoutMs,
         headers: {
-          Accept: "text/html",
+          Accept: accept,
           "Accept-Encoding": "gzip, deflate",
           "User-Agent": "DisasterPH (public disaster information site)",
         },
@@ -121,8 +132,12 @@ export function fetchPhivolcsText(
         });
         res.on("end", () => {
           try {
-            const text = decodeBody(Buffer.concat(chunks), res.headers["content-encoding"], maxBytes);
-            resolve({ status: res.statusCode ?? 0, text });
+            const body = decompressBody(Buffer.concat(chunks), res.headers["content-encoding"], maxBytes);
+            resolve({
+              status: res.statusCode ?? 0,
+              contentType: String(res.headers["content-type"] ?? ""),
+              body,
+            });
           } catch (error) {
             reject(error);
           }
@@ -133,4 +148,13 @@ export function fetchPhivolcsText(
     req.on("timeout", () => req.destroy(new Error(`PHIVOLCS request timed out after ${timeoutMs} ms`)));
     req.on("error", reject);
   });
+}
+
+/** GET a PHIVOLCS page as UTF-8 text (see fetchPhivolcs). */
+export async function fetchPhivolcsText(
+  url: string,
+  options: { timeoutMs?: number; maxBytes?: number } = {},
+): Promise<{ status: number; text: string }> {
+  const res = await fetchPhivolcs(url, options);
+  return { status: res.status, text: res.body.toString("utf8") };
 }

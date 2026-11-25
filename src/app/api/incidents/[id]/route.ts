@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ensureFreshData } from "@/lib/ingest/scheduler";
 import { getIncidentById } from "@/lib/ingest/store";
+import { withEqBulletin } from "@/lib/ingest/phivolcs-eq-bulletin";
 
 export const dynamic = "force-dynamic";
 
@@ -17,5 +18,7 @@ export async function GET(
     return NextResponse.json({ error: "Incident not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ data: incident });
+  // PHIVOLCS earthquakes: add the bulletin's details (felt intensities,
+  // expected damage and aftershocks, map). Unchanged if it can't be read.
+  return NextResponse.json({ data: await withEqBulletin(incident) });
 }
