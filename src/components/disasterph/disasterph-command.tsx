@@ -216,10 +216,11 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
     return <CommandCenterSkeleton />;
   }
 
-  // Bottom padding = the fixed bars (hotlines bar, and the phone tab bar
-  // below md), so nothing sits under them.
+  // Bottom padding = the fixed bars, so nothing sits under them: the hotline
+  // bar (its measured height, --hotline-bar-h; 3rem until measured) plus,
+  // below md, the phone tab bar (3.5rem).
   return (
-    <main className="flex h-screen flex-col overflow-hidden bg-background text-foreground pb-[calc(6.25rem+env(safe-area-inset-bottom))] md:pb-11">
+    <main className="flex h-screen flex-col overflow-hidden bg-background text-foreground pb-[calc(var(--hotline-bar-h,3rem)+3.5rem+env(safe-area-inset-bottom))] md:pb-[var(--hotline-bar-h,3rem)]">
       {/* ── Global Header ── */}
       <AppHeader />
 

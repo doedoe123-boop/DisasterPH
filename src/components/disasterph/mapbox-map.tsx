@@ -177,7 +177,8 @@ export default function MapLibreMapComponent({
 
       map.addControl(
         new maplibregl.AttributionControl({ compact: true }),
-        "bottom-left",
+        // Bottom-right, under the zoom buttons: the legend uses the bottom-left.
+        "bottom-right",
       );
 
       map.on("load", () => {
@@ -186,6 +187,11 @@ export default function MapLibreMapComponent({
         // Theme-aware sky atmosphere
         applySky(map);
         applyBaseLabels(map);
+        // Narrow maps: start the attribution collapsed to its "i" button (tap
+        // to read it); expanded it covers the middle of a phone map.
+        if (map.getContainer().clientWidth < 640) {
+          map.getContainer().querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
+        }
 
         setRotateGestures(map, false);
         fitNational(map, leftInsetRef.current, 0, bottomInsetRef.current);
