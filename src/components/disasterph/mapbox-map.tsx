@@ -22,6 +22,15 @@ import { eventLabel, severityText, t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
 import { MapLegend } from "@/components/disasterph/map-legend";
 import { applyBaseLabels } from "@/lib/map-labels";
+import {
+  QUAKE_SPLIT_ZOOM,
+  ensureEventLayers,
+  eventAt,
+  firstLabelLayer,
+  quakeShownAlone,
+  setEventData,
+  sourceFor,
+} from "@/lib/map-event-layers";
 
 // Type-only imports — the real module is loaded at runtime via import()
 type MapLibreModule = typeof import("maplibre-gl");
@@ -42,6 +51,8 @@ interface Props {
   /** Height in pixels of a panel over the bottom of the map (the phone list
    *  panel); 0 when nothing covers it. */
   bottomInset?: number;
+  /** Changes each time an event is chosen from the list: bring it into view again. */
+  focusRequest?: number;
 }
 
 /** Flat, north-up view of the whole country inside the unobstructed area. */
@@ -81,11 +92,11 @@ export default function MapLibreMapComponent({
   onSelectIncident,
   leftInset,
   bottomInset = 0,
+  focusRequest = 0,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
   const mlRef = useRef<MapLibreModule | null>(null);
-  const markersRef = useRef<Map<string, MlMarker>>(new Map());
   const communityMarkersRef = useRef<Map<string, MlMarker>>(new Map());
   const popupRef = useRef<MlPopup | null>(null);
   // Read by long-lived map handlers; updated after commit.
@@ -119,13 +130,25 @@ export default function MapLibreMapComponent({
   useEffect(() => {
     incidentsRef.current = incidents;
   }, [incidents]);
+  // Cluster label word ("max" / "pinakamalakas") for layers re-added after a style swap.
+  const clusterWord = t(locale).common.legend.clusterMax;
+  const clusterWordRef = useRef(clusterWord);
+  useEffect(() => {
+    clusterWordRef.current = clusterWord;
+  }, [clusterWord]);
+  // Latest callbacks for the map's own event handlers (registered once).
+  const onSelectRef = useRef(onSelectIncident);
+  const onHoverRef = useRef(onHoverIncident);
+  useEffect(() => {
+    onSelectRef.current = onSelectIncident;
+    onHoverRef.current = onHoverIncident;
+  }, [onSelectIncident, onHoverIncident]);
 
   // ── Initialize map (runtime-only import) ──
   useEffect(() => {
     if (!containerRef.current) return;
     let cancelled = false;
     let themeHandler: ((e: Event) => void) | null = null;
-    const markers = markersRef.current;
     const communityMarkers = communityMarkersRef.current;
 
     async function init() {
@@ -213,6 +236,9 @@ export default function MapLibreMapComponent({
       });
 
       mapRef.current = map;
+      // Read-only handle for automated browser checks (markers are drawn on a
+      // canvas, so tests query the map's rendered features).
+      (containerRef.current as HTMLDivElement & { __map?: MlMap }).__map = map;
 
       themeHandler = (e: Event) => {
         const theme = (e as CustomEvent).detail.theme;
@@ -220,7 +246,7 @@ export default function MapLibreMapComponent({
         map.once("styledata", () => {
           applySky(map);
           applyBaseLabels(map);
-          addAllSourcesAndLayers(map, incidentsRef.current);
+          addAllSourcesAndLayers(map, incidentsRef.current, clusterWordRef.current);
           // Style swaps drop sources; restore terrain if it was on.
           if (terrainRef.current && TERRAIN_CONFIG) enableTerrain(map, TERRAIN_CONFIG, false);
         });
@@ -232,8 +258,6 @@ export default function MapLibreMapComponent({
 
     return () => {
       cancelled = true;
-      markers.forEach((marker) => marker.remove());
-      markers.clear();
       communityMarkers.forEach((marker) => marker.remove());
       communityMarkers.clear();
       popupRef.current?.remove();
@@ -262,45 +286,67 @@ export default function MapLibreMapComponent({
     return () => observer.disconnect();
   }, [mapReady]);
 
-  // ── Sync markers ──
+  // ── Event markers as map layers (clustered earthquakes; see map-event-layers.ts) ──
   useEffect(() => {
     const map = mapRef.current;
-    const ml = mlRef.current;
-    if (!map || !ml || !mapReady) return;
+    if (!map || !mapReady) return;
+    ensureEventLayers(map, incidents, clusterWord);
+    setEventData(map, incidents);
+  }, [incidents, mapReady, clusterWord]);
 
-    const existingIds = new Set(markersRef.current.keys());
-    const newIds = new Set(incidents.map((i) => i.id));
+  // Taps and hover on markers and clusters (registered once per map).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    let hovered: string | null = null;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    existingIds.forEach((id) => {
-      if (!newIds.has(id)) {
-        markersRef.current.get(id)?.remove();
-        markersRef.current.delete(id);
-      }
-    });
-
-    incidents.forEach((incident) => {
-      const existing = markersRef.current.get(incident.id);
-      if (existing) {
-        existing.setLngLat([incident.longitude, incident.latitude]);
-        existing.getElement().setAttribute("aria-label", markerLabel(incident, locale));
+    const onClick = async (e: { point: { x: number; y: number } }) => {
+      const hit = eventAt(map, e.point);
+      if (!hit) return;
+      const props = hit.properties ?? {};
+      if (props.cluster) {
+        // Zoom in until the cluster splits.
+        const source = map.getSource("events-quakes") as import("maplibre-gl").GeoJSONSource;
+        try {
+          const zoom = await source.getClusterExpansionZoom(Number(props.cluster_id));
+          const [lng, lat] = (hit.geometry as GeoJSON.Point).coordinates;
+          userMovedRef.current = true;
+          map.easeTo({ center: [lng, lat], zoom, duration: reduceMotion ? 0 : 500 });
+        } catch {
+          /* cluster gone after a data refresh */
+        }
         return;
       }
-
-      const el = createMarkerElement(incident, markerLabel(incident, locale));
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        onSelectIncident(incident);
-      });
-      el.addEventListener("mouseenter", () => onHoverIncident(incident.id));
-      el.addEventListener("mouseleave", () => onHoverIncident(null));
-
-      const marker = new ml.Marker({ element: el, anchor: "center" })
-        .setLngLat([incident.longitude, incident.latitude])
-        .addTo(map);
-
-      markersRef.current.set(incident.id, marker);
-    });
-  }, [incidents, mapReady, onSelectIncident, onHoverIncident, locale]);
+      const incident = incidentsRef.current.find((i) => i.id === props.id);
+      if (incident) onSelectRef.current(incident);
+    };
+    const onMove = (e: { point: { x: number; y: number } }) => {
+      const hit = eventAt(map, e.point);
+      map.getCanvas().style.cursor = hit ? "pointer" : "";
+      const id = hit && !hit.properties?.cluster ? String(hit.properties?.id) : null;
+      if (id !== hovered) {
+        hovered = id;
+        onHoverRef.current(id);
+      }
+    };
+    const canvas = map.getCanvas();
+    const onLeave = () => {
+      canvas.style.cursor = "";
+      if (hovered) {
+        hovered = null;
+        onHoverRef.current(null);
+      }
+    };
+    map.on("click", onClick);
+    map.on("mousemove", onMove);
+    canvas.addEventListener("mouseleave", onLeave);
+    return () => {
+      map.off("click", onClick);
+      map.off("mousemove", onMove);
+      canvas.removeEventListener("mouseleave", onLeave);
+    };
+  }, [mapReady]);
 
   // ── Volcano Permanent Danger Zones (radius from the PHIVOLCS bulletin) ──
   useEffect(() => {
@@ -316,31 +362,24 @@ export default function MapLibreMapComponent({
     syncTyphoonTracks(map, incidents);
   }, [incidents, mapReady]);
 
-  // ── Update visual states ──
+  // ── Selected and hovered markers: feature-state (white, thicker outline) ──
+  const shownStateRef = useRef<{ selected: string | null; hover: string | null }>({ selected: null, hover: null });
   useEffect(() => {
-    markersRef.current.forEach((marker, id) => {
-      const el = marker.getElement();
-      const inner = el.querySelector<HTMLElement>(".marker-inner");
-      const isSelected = id === selectedIncidentId;
-      const isHovered = id === hoveredIncidentId;
-
-      el.classList.toggle("marker-selected", isSelected);
-      el.classList.toggle("marker-hovered", isHovered);
-
-      if (isSelected) {
-        el.style.zIndex = "30";
-        if (inner)
-          inner.style.filter = "drop-shadow(0 0 4px rgba(34,211,238,0.4))";
-      } else if (isHovered) {
-        el.style.zIndex = "20";
-        if (inner)
-          inner.style.filter = "drop-shadow(0 0 3px rgba(255,255,255,0.25))";
-      } else {
-        el.style.zIndex = "10";
-        if (inner) inner.style.filter = "";
-      }
-    });
-    // incidents/mapReady: markers created after a selection still get the highlight.
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    const set = (id: string | null, key: "selected" | "hover", value: boolean) => {
+      if (!id) return;
+      const source = sourceFor(incidentsRef.current.find((i) => i.id === id));
+      if (source && map.getSource(source)) map.setFeatureState({ source, id }, { [key]: value });
+    };
+    const shown = shownStateRef.current;
+    set(shown.selected, "selected", false);
+    set(shown.hover, "hover", false);
+    const selected = selectedIncidentId || null;
+    set(selected, "selected", true);
+    set(hoveredIncidentId, "hover", true);
+    shownStateRef.current = { selected, hover: hoveredIncidentId };
+    // incidents: a refresh re-creates features, so state is re-applied.
   }, [selectedIncidentId, hoveredIncidentId, incidents, mapReady]);
 
   // ── Popup: the hovered event, otherwise the selected one ──
@@ -420,19 +459,24 @@ export default function MapLibreMapComponent({
     const lngLat: [number, number] = [incident.longitude, incident.latitude];
     const { clientWidth: w, clientHeight: h } = map.getContainer();
     const padding = mapPadding(w, h, leftInsetRef.current, bottomInsetRef.current);
-    if (isInView(map.project(lngLat), w, h, padding)) return;
+    // An earthquake inside a cluster isn't visible on its own: zoom in far
+    // enough for the cluster to split.
+    const inCluster = incident.event_type === "earthquake" && !quakeShownAlone(map, incident.id);
+    if (!inCluster && isInView(map.project(lngLat), w, h, padding)) return;
 
     userMovedRef.current = true;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     map.easeTo({
       center: lngLat,
-      zoom: focusZoom(map.getZoom()),
+      zoom: inCluster ? Math.max(focusZoom(map.getZoom()), QUAKE_SPLIT_ZOOM) : focusZoom(map.getZoom()),
       // Centre the pin in the unobstructed area. (offset, not padding:
       // easeTo's padding would persist on the map after the move.)
       offset: [(padding.left - padding.right) / 2, (padding.top - padding.bottom) / 2],
-      duration: 700,
+      duration: reduceMotion ? 0 : 700,
       essential: false,
     });
-  }, [selectedIncidentId, mapReady]);
+    // focusRequest: choosing the same event again from the list re-runs this.
+  }, [selectedIncidentId, mapReady, focusRequest]);
 
   // Apply the terrain toggle (no DEM request happens until it is turned on).
   useEffect(() => {
@@ -469,7 +513,8 @@ export default function MapLibreMapComponent({
       // Read by the legend, the top-left buttons and MapLibre's bottom controls.
       style={{ "--map-left-inset": `${leftInset}px`, "--map-bottom-inset": `${bottomInset}px` } as CSSProperties}
     >
-      <div ref={containerRef} className="h-full w-full" />
+      <div ref={containerRef} className="h-full w-full" data-map-container />
+      <p className="sr-only">{mapCopy.keyboardNote}</p>
       <MapLegend locale={locale} />
       {mapReady && !mapFailed && (
         <div
@@ -633,7 +678,7 @@ function syncHazardZones(map: MlMap, incidents: Incident[]) {
         "fill-color": ["get", "color"],
         "fill-opacity": 0.08,
       },
-    });
+    }, belowEvents(map));
     map.addLayer({
       id: ZONE_STROKE,
       type: "line",
@@ -644,7 +689,7 @@ function syncHazardZones(map: MlMap, incidents: Incident[]) {
         "line-width": 1.5,
         "line-dasharray": [4, 3],
       },
-    });
+    }, belowEvents(map));
   }
 }
 
@@ -739,7 +784,7 @@ function syncTyphoonTracks(map: MlMap, incidents: Incident[]) {
         "line-opacity": 0.7,
       },
       layout: { "line-cap": "round", "line-join": "round" },
-    });
+    }, belowEvents(map));
     map.addLayer({
       id: TRACK_LINE_FORECAST,
       type: "line",
@@ -752,68 +797,19 @@ function syncTyphoonTracks(map: MlMap, incidents: Incident[]) {
         "line-dasharray": [4, 4],
       },
       layout: { "line-cap": "round", "line-join": "round" },
-    });
+    }, belowEvents(map));
   }
 }
 
-function addAllSourcesAndLayers(map: MlMap, incidents: Incident[]) {
+function addAllSourcesAndLayers(map: MlMap, incidents: Incident[], clusterWord: string) {
+  ensureEventLayers(map, incidents, clusterWord);
   syncHazardZones(map, incidents);
   syncTyphoonTracks(map, incidents);
 }
 
-/** Accessible name: hazard type, then the title ("Earthquake: M5.1 · …"). */
-function markerLabel(incident: Incident, locale: "en" | "fil"): string {
-  return `${eventLabel(incident.event_type, locale)}: ${incident.title}`;
-}
-
-function createMarkerElement(incident: Incident, label: string): HTMLDivElement {
-  const color = HAZARD_COLORS[incident.event_type];
-  const ringColor = SEVERITY_RING[incident.severity];
-
-  // Severity-scaled sizing
-  const size =
-    incident.severity === "critical"
-      ? 34
-      : incident.severity === "warning"
-        ? 30
-        : incident.severity === "watch"
-          ? 26
-          : 22;
-
-  const el = document.createElement("div");
-  el.className = "mapbox-marker";
-  el.dataset.incidentId = incident.id;
-  // Attribute, not markup: feed text is never parsed as HTML.
-  el.setAttribute("aria-label", label);
-  el.style.width = `${size}px`;
-  el.style.height = `${size}px`;
-  el.style.cursor = "pointer";
-  // No inline position: MapLibre's .maplibregl-marker class makes the
-  // element absolute. An inline "relative" put markers in normal flow, so
-  // each one was drawn lower by the heights of the markers before it.
-
-  el.innerHTML = `
-    <div style="position:absolute;inset:-4px;border-radius:50%;border:1.5px solid ${ringColor};opacity:0.4;animation:marker-ping 2.5s cubic-bezier(0,0,0.2,1) infinite;pointer-events:none;"></div>
-    <div class="marker-inner" style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid ${color};box-shadow:0 0 6px ${color}44;display:flex;align-items:center;justify-content:center;transition:transform 0.2s ease,filter 0.2s ease;">
-      <span style="font-size:11px;font-weight:700;color:#000;text-shadow:0 1px 2px rgba(0,0,0,0.5);">${getMarkerLabel(incident)}</span>
-    </div>`;
-
-  return el;
-}
-
-function getMarkerLabel(incident: Incident): string {
-  if (incident.event_type === "earthquake") {
-    const mag = incident.metadata?.magnitude;
-    return mag ? `${Number(mag).toFixed(1)}` : "EQ";
-  }
-  const labels: Record<string, string> = {
-    typhoon: "TY",
-    flood: "FL",
-    volcano: "VO",
-    landslide: "LS",
-    wildfire: "WF",
-  };
-  return labels[incident.event_type] ?? "??";
+/** Zones and tracks are drawn under the base map's labels (and the markers above them). */
+function belowEvents(map: MlMap): string | undefined {
+  return firstLabelLayer(map);
 }
 
 /** Create an element with inline style and plain-text content. */

@@ -92,6 +92,9 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
   const [focusMode, setFocusMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [listOpen, setListOpen] = useState(false);
+  // Bumped whenever an event is chosen from the list, so the map brings it
+  // into view even if it was already selected (e.g. after zooming out).
+  const [focusRequest, setFocusRequest] = useState(0);
   // Height of the collapsed list panel (measured), kept clear when fitting the country.
   const [sheetPeek, setSheetPeek] = useState(0);
   const narrow = useNarrowScreen();
@@ -303,6 +306,7 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
                   onSelect={(incident) => {
                     setSelectedIncidentId(incident.id);
                     setSheetOpen(true);
+                    setFocusRequest((n) => n + 1);
                   }}
                   filter={activeFilter}
                   sourceStatuses={sourceStatuses}
@@ -427,6 +431,7 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
               lowbarExpanded
               // Keep the collapsed list panel clear when fitting the country.
               mapBottomInset={narrow && !focusMode ? sheetPeek : 0}
+              focusRequest={focusRequest}
               // Focus-mode incident card: absolute left-4 (16px) + w-[320px].
               mapLeftInset={focusMode && sheetOpen && selectedIncident ? 336 : 0}
             />
@@ -443,6 +448,7 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
                 onSelect={(incident) => {
                   setSelectedIncidentId(incident.id);
                   setListOpen(false); // show the map with the event
+                  setFocusRequest((n) => n + 1);
                 }}
                 filter={activeFilter}
                 sourceStatuses={sourceStatuses}
