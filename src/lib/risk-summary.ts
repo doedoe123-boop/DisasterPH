@@ -56,11 +56,11 @@ function riskLevelFromSeverity(
   severity: IncidentSeverity | null,
   nearestKm: number | null,
 ): PlaceRiskSummary["riskLevel"] {
-  if (!severity || nearestKm === null) return "safe";
+  if (!severity || nearestKm === null) return "none";
   if (severity === "critical" && nearestKm < 50) return "danger";
   if (severity === "critical" || severity === "warning") return "at-risk";
   if (severity === "watch") return "monitor";
-  return "safe";
+  return "none";
 }
 
 function monitoringRadiusForIncident(incident: Incident) {
@@ -81,6 +81,12 @@ function effectiveRadiusForIncident(incident: Incident): number {
 
 export type MatchReason = "region" | "proximity" | "both";
 
+/** Regions under one of a typhoon's PAGASA wind signals ("A|B|C"). */
+function signalRegions(incident: Incident): string[] {
+  const v = incident.metadata?.signal_regions;
+  return typeof v === "string" && v ? v.split("|") : [];
+}
+
 function incidentMatchesPlace(place: SavedPlace, incident: Incident) {
   const placeRegion = regionForMatching(place.latitude, place.longitude);
   const distanceKm = haversineKm(
@@ -90,6 +96,9 @@ function incidentMatchesPlace(place: SavedPlace, incident: Incident) {
     incident.longitude,
   );
   // Offshore incidents carry their nearest region in metadata.near_region.
+  // Typhoons also match every region under one of their wind signals, even
+  // when the centre is far offshore.
+  const underSignal = signalRegions(incident).includes(placeRegion);
   const sameRegion =
     placeRegion === incident.region ||
     (typeof incident.metadata?.near_region === "string" &&
@@ -102,11 +111,12 @@ function incidentMatchesPlace(place: SavedPlace, incident: Incident) {
     (incident.severity !== "advisory" ||
       distanceKm <= monitoringRadiusForIncident(incident));
 
-  const match = effectiveRegionMatch || withinRadius;
+  const match = effectiveRegionMatch || withinRadius || underSignal;
+  const regionMatch = effectiveRegionMatch || underSignal;
   const reason: MatchReason | null = match
-    ? effectiveRegionMatch && withinRadius
+    ? regionMatch && withinRadius
       ? "both"
-      : effectiveRegionMatch
+      : regionMatch
         ? "region"
         : "proximity"
     : null;
@@ -114,7 +124,7 @@ function incidentMatchesPlace(place: SavedPlace, incident: Incident) {
   return {
     distanceKm,
     placeRegion,
-    sameRegion: effectiveRegionMatch,
+    sameRegion: regionMatch,
     withinRadius,
     match,
     reason,
@@ -129,7 +139,7 @@ function buildMatchingSummary(
   const incidents = matchedWithReasons.map((m) => m.incident);
 
   if (incidents.length === 0) {
-    return `Watching ${placeRegion} with no active nearby hazards.`;
+    return `No matching events for ${placeRegion} in DisasterPH's sources.`;
   }
 
   const regionalCount = matchedWithReasons.filter(
@@ -213,7 +223,7 @@ export function computeAllPlaceRisks(
     danger: 4,
     "at-risk": 3,
     monitor: 2,
-    safe: 1,
+    none: 1,
   };
 
   return places

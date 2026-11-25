@@ -1,6 +1,6 @@
 import type { Incident, SavedPlace } from "@/types/incident";
 import { computePlaceRisk } from "@/lib/risk-summary";
-import { REGION_NAMES, locateRegion, matchingRegion } from "@/lib/geo/ph-regions";
+import { REGION_NAMES } from "@/lib/geo/ph-regions";
 
 /**
  * The area a visitor chose to focus on. "all" shows the whole country.
@@ -69,11 +69,7 @@ export function incidentInArea(
   }
   const place = places.find((p) => p.id === area.placeId);
   if (!place) return true;
-  const regions = signalRegions(incident);
-  if (regions.length) {
-    const placeRegion = matchingRegion(locateRegion(place.latitude, place.longitude));
-    if (placeRegion && regions.includes(placeRegion)) return true;
-  }
+  // Same rule as saved-place alerts (risk-summary.ts), including wind signals.
   return computePlaceRisk(place, [incident]).monitoredIncidents.length > 0;
 }
 

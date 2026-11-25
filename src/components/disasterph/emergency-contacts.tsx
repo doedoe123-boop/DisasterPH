@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Phone } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
+import { SiteDisclaimer } from "./site-disclaimer";
 import {
   AGENCY_LINES,
   EMERGENCY_NUMBER,
@@ -90,6 +91,7 @@ export function EmergencyContacts() {
                     <AgencyCard key={line.id} line={line} />
                   ))}
                 </div>
+                <SiteDisclaimer className="mt-4" />
               </div>
             </motion.div>
           )}

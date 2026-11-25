@@ -75,6 +75,8 @@ export interface SavedPlace {
   longitude: number;
   /** Free-text note, e.g. "Lola's house" */
   note?: string;
+  /** Where it is, in words, e.g. "Guiuan, Eastern Samar" */
+  locality?: string;
   createdAt: string;
 }
 
@@ -85,7 +87,8 @@ export interface PlaceRiskSummary {
   highestSeverity: IncidentSeverity | null;
   /** Distance to nearest incident in km */
   nearestDistanceKm: number | null;
-  riskLevel: "safe" | "monitor" | "at-risk" | "danger";
+  /** "none" means no matching event, which is not the same as safe. */
+  riskLevel: "none" | "monitor" | "at-risk" | "danger";
   strongestIncident: Incident | null;
   freshestUpdateAt: string | null;
   placeRegion: string;

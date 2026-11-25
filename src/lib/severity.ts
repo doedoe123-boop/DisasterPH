@@ -1,6 +1,5 @@
 import type {
   IncidentSeverity,
-  PlaceRiskSummary,
   SeverityTone,
   SourceHealthStatus,
 } from "@/types/incident";
@@ -91,18 +90,4 @@ export function toneFromSeverity(severity: IncidentSeverity): SeverityTone {
 
 export function visualFromSeverity(severity: IncidentSeverity) {
   return severityVisual[toneFromSeverity(severity)];
-}
-
-export function visualFromRiskLevel(riskLevel: PlaceRiskSummary["riskLevel"]) {
-  switch (riskLevel) {
-    case "danger":
-      return severityVisual.red;
-    case "at-risk":
-      return severityVisual.orange;
-    case "monitor":
-      return severityVisual.yellow;
-    case "safe":
-    default:
-      return severityVisual.safe;
-  }
 }

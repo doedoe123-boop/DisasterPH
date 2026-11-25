@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatDateTime } from "@/lib/incidents";
 import { formatPHT, sourceInfo } from "@/lib/source-info";
 import { EMERGENCY_NUMBER, agencyLine } from "@/lib/hotlines";
+import { SiteDisclaimer } from "@/components/disasterph/site-disclaimer";
 import { eventLabel, severityText, t, type Locale } from "@/lib/i18n";
 import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { visualFromSeverity } from "@/lib/severity";
@@ -484,6 +485,7 @@ export default function PulseDetailPage() {
                   </div>
                 </a>
                 )}
+                <SiteDisclaimer className="px-1" />
               </aside>
             </motion.div>
 
