@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
 import { ServiceWorkerRegistrar } from "@/components/disasterph/sw-registrar";
+import { ServerLocaleProvider } from "@/hooks/useLocale";
 import { LOCALE_KEY, normalizeLocale } from "@/lib/i18n";
 import { THEME_KEY, type Theme } from "@/lib/theme";
 import "./globals.css";
@@ -82,7 +83,7 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href="/icon.svg" />
       </head>
       <body className="min-h-full bg-[var(--bg-base)] text-[var(--text-primary)]">
-        {children}
+        <ServerLocaleProvider locale={locale}>{children}</ServerLocaleProvider>
         <Analytics />
         <ServiceWorkerRegistrar />
       </body>

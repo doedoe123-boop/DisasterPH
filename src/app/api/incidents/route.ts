@@ -1,32 +1,11 @@
 import { NextResponse } from "next/server";
-import { ensureFreshData } from "@/lib/ingest/scheduler";
-import { getIncidents, getSourceHealth } from "@/lib/ingest/store";
-import { buildDashboardStats, filterIncidentsByType } from "@/lib/incidents";
+import { buildIncidentsPayload } from "@/lib/incidents-payload";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  await ensureFreshData();
-
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type");
-  const source = searchParams.get("source");
-
-  const sourceHealth = getSourceHealth();
-  let incidents = getIncidents();
-  incidents = filterIncidentsByType(incidents, type);
-  if (source) {
-    incidents = incidents.filter((i) => i.source === source);
-  }
-
-  return NextResponse.json({
-    data: incidents,
-    meta: {
-      count: incidents.length,
-      filters: { type: type ?? "all", source: source ?? "all" },
-      stats: buildDashboardStats(incidents, sourceHealth),
-      sources: sourceHealth,
-      generated_at: new Date().toISOString(),
-    },
-  });
+  return NextResponse.json(
+    await buildIncidentsPayload(searchParams.get("type"), searchParams.get("source")),
+  );
 }

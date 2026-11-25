@@ -922,3 +922,14 @@ select {
 [data-theme="day"] .shelter-call-link:hover {
   color: hsl(195 86% 30%);
 }
+
+/* MapLibre's bottom controls (attribution, zoom) sit above the phone list panel. */
+.map-root .maplibregl-ctrl-bottom-left,
+.map-root .maplibregl-ctrl-bottom-right {
+  bottom: var(--map-bottom-inset, 0px);
+}
+
+/* Sources line warning (a source delayed, or offline) on the light theme. */
+[data-theme="day"] .sources-line-warn {
+  color: hsl(28 85% 28%);
+}

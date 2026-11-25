@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DashboardStats, Incident, SourceStatus } from "@/types/incident";
 
-interface IncidentsPayload {
+export interface IncidentsPayload {
   data: Incident[];
   meta: {
     count: number;
@@ -31,18 +31,27 @@ const STALE_MS = 5 * 60_000;
 const INCIDENT_CACHE_KEY = "disasterph-incidents-cache";
 const RETRY_MS = 4_000;
 
-export function useIncidents(filter?: string): UseIncidentsResult {
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({
-    activeAlerts: 0,
-    criticalAlerts: 0,
-    sourcesOnline: 0,
-    regionsTracked: 0,
-  });
-  const [sourceStatuses, setSourceStatuses] = useState<SourceStatus[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+/**
+ * Live incidents, polled every minute. `initial` is the payload the server
+ * rendered the page with: the list shows immediately (no loading state, no
+ * fetch on mount), and polling continues from there.
+ */
+export function useIncidents(filter?: string, initial?: IncidentsPayload): UseIncidentsResult {
+  const [incidents, setIncidents] = useState<Incident[]>(initial?.data ?? []);
+  const [stats, setStats] = useState<DashboardStats>(
+    initial?.meta.stats ?? {
+      activeAlerts: 0,
+      criticalAlerts: 0,
+      sourcesOnline: 0,
+      regionsTracked: 0,
+    },
+  );
+  const [sourceStatuses, setSourceStatuses] = useState<SourceStatus[]>(initial?.meta.sources ?? []);
+  const [isLoading, setIsLoading] = useState(!initial);
   const [error, setError] = useState<string | null>(null);
-  const [generatedAt, setGeneratedAt] = useState<string | null>(null);
+  const [generatedAt, setGeneratedAt] = useState<string | null>(initial?.meta.generated_at ?? null);
+  const hasInitial = useRef(Boolean(initial));
+  const initialRef = useRef(initial);
   const abortRef = useRef<AbortController | null>(null);
   const retryTimerRef = useRef<number | null>(null);
   const [staleAt, setStaleAt] = useState<string | null>(null);
@@ -94,7 +103,8 @@ export function useIncidents(filter?: string): UseIncidentsResult {
       }
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
-      hydrateFromCache();
+      // Never replace server-rendered data with an older cached copy.
+      if (!hasInitial.current) hydrateFromCache();
       setError(
         err instanceof Error ? err.message : "Failed to fetch incidents",
       );
@@ -116,6 +126,18 @@ export function useIncidents(filter?: string): UseIncidentsResult {
     // rather than synchronously in the effect body.
     queueMicrotask(() => {
       if (cancelled) return;
+      if (hasInitial.current) {
+        // Server-rendered data stays on screen. Keep it for offline use, and
+        // check once for anything newer: a page restored by Back or served
+        // from the offline cache can be minutes old.
+        try {
+          window.localStorage.setItem(cacheKey, JSON.stringify(initialRef.current));
+        } catch {
+          /* storage full or blocked */
+        }
+        void fetchData();
+        return;
+      }
       hydrateFromCache();
       void fetchData();
     });
@@ -126,7 +148,7 @@ export function useIncidents(filter?: string): UseIncidentsResult {
       if (retryTimerRef.current) window.clearTimeout(retryTimerRef.current);
       abortRef.current?.abort();
     };
-  }, [fetchData, hydrateFromCache]);
+  }, [fetchData, hydrateFromCache, cacheKey]);
 
   // Staleness is time-dependent, so it is recomputed when data changes and
   // every 30 s rather than read from the clock during render.

@@ -39,13 +39,16 @@ interface Props {
   /** Width in pixels of a panel floating over the left edge of the map
    *  (the focus-mode incident card); 0 when nothing covers the map. */
   leftInset: number;
+  /** Height in pixels of a panel over the bottom of the map (the phone list
+   *  panel); 0 when nothing covers it. */
+  bottomInset?: number;
 }
 
 /** Flat, north-up view of the whole country inside the unobstructed area. */
-function fitNational(map: MlMap, leftInset: number, duration: number) {
+function fitNational(map: MlMap, leftInset: number, duration: number, bottomInset = 0) {
   const { clientWidth: w, clientHeight: h } = map.getContainer();
   map.fitBounds(PH_BOUNDS, {
-    padding: mapPadding(w, h, leftInset),
+    padding: mapPadding(w, h, leftInset, bottomInset),
     pitch: DEFAULT_CAMERA.pitch,
     bearing: DEFAULT_CAMERA.bearing,
     duration,
@@ -77,6 +80,7 @@ export default function MapLibreMapComponent({
   onHoverIncident,
   onSelectIncident,
   leftInset,
+  bottomInset = 0,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -89,9 +93,16 @@ export default function MapLibreMapComponent({
   useEffect(() => {
     leftInsetRef.current = leftInset;
   }, [leftInset]);
+  const bottomInsetRef = useRef(bottomInset);
   // Set once the resident pans/zooms/selects; until then layout changes
   // re-fit the national view instead of leaving it off-centre.
   const userMovedRef = useRef(false);
+  // Re-fit when the phone list panel appears or goes (until the resident moves the map).
+  useEffect(() => {
+    bottomInsetRef.current = bottomInset;
+    const map = mapRef.current;
+    if (map && !userMovedRef.current) fitNational(map, leftInsetRef.current, 0, bottomInset);
+  }, [bottomInset]);
   const [mapReady, setMapReady] = useState(false);
   // Set when MapLibre cannot load or start. "unsupported" = no WebGL2 (a
   // retry cannot help); "error" = e.g. a failed chunk load (retry may help).
@@ -166,7 +177,8 @@ export default function MapLibreMapComponent({
 
       map.addControl(
         new maplibregl.AttributionControl({ compact: true }),
-        "bottom-left",
+        // Bottom-right, under the zoom buttons: the legend uses the bottom-left.
+        "bottom-right",
       );
 
       map.on("load", () => {
@@ -175,9 +187,14 @@ export default function MapLibreMapComponent({
         // Theme-aware sky atmosphere
         applySky(map);
         applyBaseLabels(map);
+        // Narrow maps: start the attribution collapsed to its "i" button (tap
+        // to read it); expanded it covers the middle of a phone map.
+        if (map.getContainer().clientWidth < 640) {
+          map.getContainer().querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
+        }
 
         setRotateGestures(map, false);
-        fitNational(map, leftInsetRef.current, 0);
+        fitNational(map, leftInsetRef.current, 0, bottomInsetRef.current);
 
         setMapReady(true);
       });
@@ -239,7 +256,7 @@ export default function MapLibreMapComponent({
     // resident moves the map; after that, leave their camera alone.
     const observer = new ResizeObserver(() => {
       map.resize();
-      if (!userMovedRef.current) fitNational(map, leftInsetRef.current, 0);
+      if (!userMovedRef.current) fitNational(map, leftInsetRef.current, 0, bottomInsetRef.current);
     });
     observer.observe(container);
     return () => observer.disconnect();
@@ -402,7 +419,7 @@ export default function MapLibreMapComponent({
 
     const lngLat: [number, number] = [incident.longitude, incident.latitude];
     const { clientWidth: w, clientHeight: h } = map.getContainer();
-    const padding = mapPadding(w, h, leftInsetRef.current);
+    const padding = mapPadding(w, h, leftInsetRef.current, bottomInsetRef.current);
     if (isInView(map.project(lngLat), w, h, padding)) return;
 
     userMovedRef.current = true;
@@ -443,18 +460,21 @@ export default function MapLibreMapComponent({
       setTerrainOn(false);
     }
     userMovedRef.current = false;
-    fitNational(map, leftInsetRef.current, 600);
+    fitNational(map, leftInsetRef.current, 600, bottomInsetRef.current);
   };
 
   return (
-    <div className="relative h-full w-full">
+    <div
+      className="map-root relative h-full w-full"
+      // Read by the legend, the top-left buttons and MapLibre's bottom controls.
+      style={{ "--map-left-inset": `${leftInset}px`, "--map-bottom-inset": `${bottomInset}px` } as CSSProperties}
+    >
       <div ref={containerRef} className="h-full w-full" />
       <MapLegend locale={locale} />
       {mapReady && !mapFailed && (
         <div
           // The inset panel (focus-mode card) is only shown at lg and up.
           className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5 lg:left-[calc(var(--map-left-inset)+0.75rem)]"
-          style={{ "--map-left-inset": `${leftInset}px` } as CSSProperties}
         >
           <button
             className="flex items-center gap-1.5 rounded-lg border border-overlay/15 bg-[var(--bg-panel)]/90 px-2.5 py-1.5 text-[12px] font-medium text-[var(--text-primary)] shadow transition hover:bg-[var(--bg-panel)]"

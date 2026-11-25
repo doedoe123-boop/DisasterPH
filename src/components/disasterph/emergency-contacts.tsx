@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Phone } from "lucide-react";
 import { t } from "@/lib/i18n";
@@ -46,6 +46,22 @@ export function EmergencyContacts() {
   const [open, setOpen] = useState(false);
   const { locale } = useLocale();
   const copy = t(locale).hotlines;
+  // The collapsed bar's real height (it varies with font size, zoom and
+  // screen) as --hotline-bar-h, so pages can keep their content above it.
+  const barRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+    const root = document.documentElement;
+    const update = () => root.style.setProperty("--hotline-bar-h", `${Math.ceil(bar.getBoundingClientRect().height)}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(bar);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--hotline-bar-h");
+    };
+  }, []);
 
   return (
     <>
@@ -98,6 +114,7 @@ export function EmergencyContacts() {
         </AnimatePresence>
 
         <button
+          ref={barRef}
           className="flex w-full items-center justify-between border-t border-overlay/10 bg-[var(--bg-panel)] backdrop-blur-sm px-4 py-3 md:px-5 text-left transition hover:bg-[var(--bg-panel-elevated)] active:bg-[var(--bg-panel-elevated)]"
           onClick={() => setOpen(!open)}
           type="button"
