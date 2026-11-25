@@ -1,7 +1,7 @@
 "use client";
 
 import { displayRegion } from "@/lib/geo/ph-regions";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -27,8 +27,8 @@ import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
 import { visualFromSeverity } from "@/lib/severity";
 import type { Incident, IncidentEventType } from "@/types/incident";
-import { useIncidents } from "@/hooks/use-incidents";
-import { HazardEmptyState } from "@/components/disasterph/hazard-empty-state";
+import { useIncidents, type IncidentsPayload } from "@/hooks/use-incidents";
+import { EventList, EventSheet, LIST_LIMIT } from "@/components/disasterph/event-list";
 import { useAlertCenter } from "@/hooks/use-alert-center";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
 import { useSelectedArea } from "@/hooks/use-selected-area";
@@ -61,21 +61,26 @@ interface FilterChip {
   accentClass?: string;
 }
 
-/* ── Motion variants ── */
-const fadeSlideUp = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -4 },
-};
+/** Phones and tablets get the list as a panel over the map (below lg). */
+const NARROW = "(max-width: 1023.98px)";
+function subscribeNarrow(onChange: () => void) {
+  const mq = window.matchMedia(NARROW);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+function useNarrowScreen(): boolean {
+  return useSyncExternalStore(subscribeNarrow, () => window.matchMedia(NARROW).matches, () => false);
+}
 
-const staggerContainer = {
-  animate: { transition: { staggerChildren: 0.04 } },
-};
 
-/** Maximum incidents listed in the main feed. */
-const FEED_LIMIT = 20;
+/** Start of the day, Philippine time, `days` ago (same on server and browser). */
+function phtDayStart(days: number): number {
+  const PHT = 8 * 3_600_000;
+  const now = Date.now();
+  return Math.floor((now + PHT) / 86_400_000) * 86_400_000 - PHT - days * 86_400_000;
+}
 
-export function DisasterPHCommand() {
+export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
   const [activeFilter, setActiveFilter] = useState<
     IncidentEventType | "all" | "critical"
   >("all");
@@ -86,10 +91,13 @@ export function DisasterPHCommand() {
   );
   const [focusMode, setFocusMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [lowbarOpen, setLowbarOpen] = useState(true);
+  const [listOpen, setListOpen] = useState(false);
+  // Height of the collapsed list panel (measured), kept clear when fitting the country.
+  const [sheetPeek, setSheetPeek] = useState(0);
+  const narrow = useNarrowScreen();
 
   // ── Live data hooks ──
-  const { incidents, isLoading, generatedAt, sourceStatuses } = useIncidents();
+  const { incidents, isLoading, generatedAt, sourceStatuses } = useIncidents(undefined, initial);
   const { places } = useSavedPlaces();
   const { isOnline } = useNetworkStatus();
   const { locale } = useLocale();
@@ -112,12 +120,8 @@ export function DisasterPHCommand() {
     [selectedIncident],
   );
 
-  // ── 10-day window filter (rounded to midnight for SSR/hydration stability) ──
-  const tenDayCutoff = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.getTime() - 10 * 24 * 60 * 60 * 1000;
-  }, []);
+  // ── 10-day window, from midnight Philippine time (server and browser agree) ──
+  const tenDayCutoff = useMemo(() => phtDayStart(10), []);
   const allRecentIncidents = useMemo(() => {
     return incidents.filter(
       (i) => new Date(i.updated_at).getTime() >= tenDayCutoff,
@@ -212,13 +216,15 @@ export function DisasterPHCommand() {
     return <CommandCenterSkeleton />;
   }
 
+  // Bottom padding = the fixed bars (hotlines bar, and the phone tab bar
+  // below md), so nothing sits under them.
   return (
-    <main className="flex h-screen flex-col overflow-hidden bg-background text-foreground pb-[env(safe-area-inset-bottom)] md:pb-0">
+    <main className="flex h-screen flex-col overflow-hidden bg-background text-foreground pb-[calc(6.25rem+env(safe-area-inset-bottom))] md:pb-11">
       {/* ── Global Header ── */}
       <AppHeader />
 
       {/* ── Offline warning ── */}
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {!isOnline && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
@@ -237,8 +243,8 @@ export function DisasterPHCommand() {
 
       {/* ── Body: Sidebar + Main ── */}
       <div className="flex min-h-0 flex-1 flex-col md:flex-row overflow-hidden">
-        {/* ── Left Sidebar: Recent Signals ── */}
-        <AnimatePresence>
+        {/* ── Left Sidebar: the event list on wide screens ── */}
+        <AnimatePresence initial={false}>
           {sidebarOpen && !focusMode && (
             <motion.aside
               initial={{ width: 0, opacity: 0 }}
@@ -289,97 +295,24 @@ export function DisasterPHCommand() {
               </div>
 
               <div className="flex-1 overflow-y-auto scrollbar-none">
-                {/* The one event list on wide screens: follows the filter tabs. */}
-                {filteredIncidents.length === 0 ? (
-                  <HazardEmptyState
-                    filter={activeFilter}
-                    locale={locale}
-                    sourceStatuses={sourceStatuses}
-                  />
-                ) : (
-                  <motion.div
-                    className="flex flex-col"
-                    variants={staggerContainer}
-                    initial="initial"
-                    animate="animate"
+                <EventList
+                  incidents={filteredIncidents}
+                  locale={locale}
+                  selectedId={selectedIncidentId || null}
+                  onSelect={(incident) => {
+                    setSelectedIncidentId(incident.id);
+                    setSheetOpen(true);
+                  }}
+                  filter={activeFilter}
+                  sourceStatuses={sourceStatuses}
+                />
+                {filteredIncidents.length > LIST_LIMIT && (
+                  <Link
+                    href="/pulse"
+                    className="flex min-h-11 items-center justify-center text-[13px] font-semibold text-cyan-400"
                   >
-                    {filteredIncidents.slice(0, 30).map((incident) => {
-                      const Icon =
-                        HAZARD_ICON[incident.event_type] ?? AlertTriangle;
-                      const isSelected = selectedIncident?.id === incident.id;
-
-                      return (
-                        <motion.div
-                          key={incident.id}
-                          variants={fadeSlideUp}
-                          transition={{ duration: 0.2 }}
-                          className={`flex items-stretch border-b border-overlay/5 transition-all ${
-                            isSelected
-                              ? "bg-overlay/8 border-l-2 border-l-orange-400"
-                              : "hover:bg-overlay/4 border-l-2 border-l-transparent"
-                          }`}
-                        >
-                        {/* Row: show this event on the map */}
-                        <button
-                          type="button"
-                          aria-pressed={isSelected}
-                          className="flex min-w-0 flex-1 items-start gap-3.5 py-4 pl-5 pr-1 text-left"
-                          onClick={() => {
-                            setSelectedIncidentId(incident.id);
-                            setSheetOpen(true);
-                          }}
-                        >
-                          <div
-                            className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                              incident.severity === "critical"
-                                ? "bg-red-500/15 text-red-400 shadow-[0_0_8px_rgba(255,93,93,0.1)]"
-                                : incident.severity === "warning"
-                                  ? "bg-orange-500/15 text-orange-400"
-                                  : "bg-[var(--bg-chip)] text-[var(--text-dim)]"
-                            }`}
-                          >
-                            <Icon className="h-[18px] w-[18px]" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="break-words text-[14px] font-semibold text-[var(--text-primary)] leading-snug">
-                              {incident.title}
-                            </p>
-                            <div className="mt-1 flex items-center gap-2">
-                              <span
-                                className={`text-[11px] font-bold uppercase tracking-wider ${
-                                  incident.severity === "critical"
-                                    ? "text-red-400"
-                                    : incident.severity === "warning"
-                                      ? "text-orange-400"
-                                      : "text-[var(--text-dim)]"
-                                }`}
-                              >
-                                {severityText(incident.severity, locale)}
-                              </span>
-                              <span className="text-[var(--text-dim)] opacity-50">
-                                ·
-                              </span>
-                              <span
-                                className="text-[12px] text-[var(--text-dim)]"
-                                suppressHydrationWarning
-                              >
-                                {eventTimeWithAge(incident, locale, { compact: true })}
-                              </span>
-                            </div>
-                          </div>
-                        </button>
-                        {/* Separate link to the full event page */}
-                        <Link
-                          href={`/pulse/${encodeURIComponent(incident.id)}`}
-                          aria-label={`${i18n.common.viewFullDetail}: ${incident.title}`}
-                          className="flex w-11 shrink-0 items-center justify-center text-[var(--text-dim)] transition hover:text-[var(--text-primary)]"
-                        >
-                          <ArrowUpRight aria-hidden className="h-4 w-4" />
-                        </Link>
-                        </motion.div>
-                      );
-                    })}
-                  </motion.div>
+                    {i18n.common.eventSheet.all.replace("{n}", String(filteredIncidents.length))}
+                  </Link>
                 )}
               </div>
             </motion.aside>
@@ -392,7 +325,7 @@ export function DisasterPHCommand() {
         >
           {/* ── Your area (place-first entry point) ── */}
           {!focusMode && (
-            <div className="bg-[var(--bg-panel)]">
+            <div className="border-b border-overlay/8 bg-[var(--bg-panel)]">
               <AreaBar
                 area={area}
                 count={recentIncidents.length}
@@ -403,7 +336,7 @@ export function DisasterPHCommand() {
                 warningCount={criticalCount}
               />
               <div className="px-4 pb-2.5 md:px-5">
-                <SourcesLine statuses={sourceStatuses} locale={locale} />
+                <SourcesLine statuses={sourceStatuses} locale={locale} offline={!isOnline} checkedAt={generatedAt} />
               </div>
             </div>
           )}
@@ -411,9 +344,7 @@ export function DisasterPHCommand() {
           {/* ── Filter Bar ── */}
           {!focusMode && (
             <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
+              initial={false}
               className="border-b border-overlay/10 bg-[var(--bg-panel)] px-4 md:px-5 py-2.5 md:py-3"
             >
               <div className="flex items-center gap-2 md:gap-3">
@@ -473,9 +404,7 @@ export function DisasterPHCommand() {
             className={
               focusMode
                 ? "fixed inset-0 z-[1200] h-[100dvh] w-screen bg-background"
-                : lowbarOpen
-                  ? "relative h-[45vh] shrink-0 md:h-auto md:min-h-0 md:flex-1"
-                  : "relative min-h-0 flex-1 md:h-auto md:min-h-0 md:flex-1"
+                : "relative min-h-0 flex-1"
             }
           >
             <CommandMap
@@ -494,11 +423,30 @@ export function DisasterPHCommand() {
               onToggleFocus={() => setFocusMode((f) => !f)}
               sidebarExpanded={sidebarOpen}
               onToggleSidebar={() => setSidebarOpen((s) => !s)}
-              lowbarExpanded={lowbarOpen}
-              onToggleLowbar={() => setLowbarOpen((s) => !s)}
+              lowbarExpanded
+              // Keep the collapsed list panel clear when fitting the country.
+              mapBottomInset={narrow && !focusMode ? sheetPeek : 0}
               // Focus-mode incident card: absolute left-4 (16px) + w-[320px].
               mapLeftInset={focusMode && sheetOpen && selectedIncident ? 336 : 0}
             />
+
+            {/* ── Phones and tablets: the event list as a panel over the map ── */}
+            {!focusMode && (
+              <EventSheet
+                open={listOpen}
+                onToggle={() => setListOpen((v) => !v)}
+                onPeekHeight={setSheetPeek}
+                incidents={filteredIncidents}
+                locale={locale}
+                selectedId={selectedIncidentId || null}
+                onSelect={(incident) => {
+                  setSelectedIncidentId(incident.id);
+                  setListOpen(false); // show the map with the event
+                }}
+                filter={activeFilter}
+                sourceStatuses={sourceStatuses}
+              />
+            )}
 
             {/* ── Focus Mode: Compact Incident Card ── */}
             <AnimatePresence>
@@ -657,116 +605,6 @@ export function DisasterPHCommand() {
             </AnimatePresence>
           </section>
 
-          {/* ── Detail Feed (below map) ── */}
-          {!focusMode && lowbarOpen && (
-            <section className="flex-1 md:flex-none md:shrink-0 border-t border-overlay/10 bg-[var(--bg-panel)] overflow-y-auto lg:hidden">
-              {/* Section heading */}
-              <div className="sticky top-0 z-10 flex items-center gap-2 md:gap-3 border-b border-overlay/8 px-4 md:px-5 py-2.5 md:py-3 bg-[var(--bg-panel)]">
-                <div className="flex items-center gap-1.5 text-[var(--text-dim)]">
-                  <Activity className="h-4 w-4" />
-                  <span className="text-[12px] font-bold uppercase tracking-[0.15em]">
-                    Feed
-                  </span>
-                </div>
-                <span className="ml-auto text-[13px] font-medium text-[var(--text-dim)]">
-                  {filteredIncidents.length > FEED_LIMIT
-                    ? i18n.common.showingOf
-                        .replace("{shown}", String(FEED_LIMIT))
-                        .replace("{total}", String(filteredIncidents.length))
-                    : `${filteredIncidents.length} ${i18n.common.recent.toLowerCase()}`}
-                </span>
-                <button
-                  type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-dim)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
-                  onClick={() => setLowbarOpen(false)}
-                  title={i18n.controls.closeFeed}
-                  aria-label={i18n.controls.closeFeed}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Incident cards */}
-              <div className="md:max-h-72 md:overflow-y-auto pb-16 md:pb-0">
-                {filteredIncidents.length === 0 ? (
-                  <HazardEmptyState
-                    filter={activeFilter}
-                    locale={locale}
-                    sourceStatuses={sourceStatuses}
-                  />
-                ) : (
-                  <motion.div
-                    variants={staggerContainer}
-                    initial="initial"
-                    animate="animate"
-                  >
-                    {filteredIncidents.slice(0, FEED_LIMIT).map((incident) => {
-                      const sv = visualFromSeverity(incident.severity);
-                      const Icon =
-                        HAZARD_ICON[incident.event_type] ?? AlertTriangle;
-
-                      return (
-                        <motion.div
-                          key={incident.id}
-                          variants={fadeSlideUp}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <Link
-                            href={`/pulse/${encodeURIComponent(incident.id)}`}
-                            className={`group flex items-start gap-3 md:gap-4 border-b border-overlay/5 px-4 md:px-5 py-3.5 md:py-4 transition-all active:bg-overlay/[0.06] hover:bg-overlay/[0.04] border-l-3 ${sv.accent} ${
-                              incident.severity === "critical"
-                                ? "card-glow-critical"
-                                : ""
-                            }`}
-                          >
-                            <div
-                              className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                                incident.severity === "critical"
-                                  ? "bg-red-500/15 text-red-400"
-                                  : incident.severity === "warning"
-                                    ? "bg-orange-500/15 text-orange-400"
-                                    : "bg-amber-500/10 text-amber-400"
-                              }`}
-                            >
-                              <Icon className="h-5 w-5" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2.5">
-                                <span
-                                  className={`rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider ${sv.badge}`}
-                                >
-                                  {severityText(incident.severity, locale)}
-                                </span>
-                                <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-dim)]">
-                                  {eventLabel(incident.event_type, locale)}
-                                </span>
-                              </div>
-                              <p className="mt-1.5 text-[16px] font-semibold leading-snug text-[var(--text-primary)] group-hover:text-orange-500 transition-colors">
-                                {incident.title}
-                              </p>
-                              <p className="mt-1 text-[13px] leading-5 text-[var(--text-muted)]">
-                                {plainAlertInterpretation(incident, locale)}
-                              </p>
-                              <div className="mt-1.5 flex items-center gap-3 text-[13px] text-[var(--text-muted)]">
-                                <span>{displayRegion(incident.region, locale)}</span>
-                                <span className="text-[var(--text-dim)] opacity-50">
-                                  ·
-                                </span>
-                                <span suppressHydrationWarning>
-                                  {eventTimeWithAge(incident, locale)}
-                                </span>
-                              </div>
-                            </div>
-                            <ArrowUpRight className="mt-3 h-5 w-5 shrink-0 text-[var(--text-dim)] transition group-hover:text-[var(--text-primary)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                          </Link>
-                        </motion.div>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </div>
-            </section>
-          )}
         </div>
       </div>
 

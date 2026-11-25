@@ -38,7 +38,7 @@ export function MapLegend({ locale }: { locale: Locale }) {
   return (
     // Spans from below the top-left map buttons to the bottom, so the open
     // panel never covers them; it scrolls when the map is short.
-    <div className="map-legend pointer-events-none absolute bottom-3 left-3 top-24 z-10 flex max-w-[calc(100%-1.5rem)] flex-col items-start justify-end lg:left-[calc(var(--map-left-inset)+0.75rem)]">
+    <div className="map-legend pointer-events-none absolute bottom-[calc(var(--map-bottom-inset,0px)+0.75rem)] left-3 top-24 z-10 flex max-w-[calc(100%-1.5rem)] flex-col items-start justify-end lg:left-[calc(var(--map-left-inset)+0.75rem)]">
       <div
         id={panelId}
         role="group"

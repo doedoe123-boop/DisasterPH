@@ -173,6 +173,14 @@ export const copy = {
         openInMaps: "Open in Google Maps",
       },
       noneActive: "None active",
+      eventSheet: {
+        one: "1 event, newest first",
+        many: "{n} events, newest first",
+        none: "No events for this filter",
+        show: "Show list",
+        hide: "Hide list",
+        all: "See all {n} on the alert list",
+      },
       sourcesLine: {
         checking: "Sources: checking…",
         count: "Sources: {live} of {total} live",
@@ -180,6 +188,8 @@ export const copy = {
         problem: "{name} {state}, last update {age}",
         problemNever: "{name} {state}, no data yet",
         usgsBackup: "USGS backup in use for earthquakes",
+        offline: "Sources: can't be checked while offline (last checked {age})",
+        offlineNever: "Sources: can't be checked while offline",
         names: {
           PHIVOLCS: "PHIVOLCS earthquakes",
           PHIVOLCS_VOLCANO: "PHIVOLCS volcanoes",
@@ -661,6 +671,14 @@ export const copy = {
         openInMaps: "Buksan sa Google Maps", // NEEDS NATIVE REVIEW
       },
       noneActive: "Walang aktibo", // NEEDS NATIVE REVIEW
+      eventSheet: {
+        one: "1 pangyayari, pinakabago muna", // NEEDS NATIVE REVIEW
+        many: "{n} pangyayari, pinakabago muna", // NEEDS NATIVE REVIEW
+        none: "Walang pangyayari para sa filter na ito", // NEEDS NATIVE REVIEW
+        show: "Ipakita ang listahan", // NEEDS NATIVE REVIEW
+        hide: "Itago ang listahan", // NEEDS NATIVE REVIEW
+        all: "Tingnan ang lahat ng {n} sa listahan ng abiso", // NEEDS NATIVE REVIEW
+      },
       sourcesLine: {
         checking: "Mga source: sinusuri…", // NEEDS NATIVE REVIEW
         count: "Mga source: {live} sa {total} ang live", // NEEDS NATIVE REVIEW
@@ -668,6 +686,8 @@ export const copy = {
         problem: "{name} {state}, huling update {age}", // NEEDS NATIVE REVIEW
         problemNever: "{name} {state}, wala pang datos", // NEEDS NATIVE REVIEW
         usgsBackup: "Ginagamit ang USGS bilang backup para sa lindol", // NEEDS NATIVE REVIEW
+        offline: "Mga source: hindi masuri habang offline (huling suri {age})", // NEEDS NATIVE REVIEW
+        offlineNever: "Mga source: hindi masuri habang offline", // NEEDS NATIVE REVIEW
         names: {
           PHIVOLCS: "Lindol ng PHIVOLCS", // NEEDS NATIVE REVIEW
           PHIVOLCS_VOLCANO: "Bulkan ng PHIVOLCS", // NEEDS NATIVE REVIEW
