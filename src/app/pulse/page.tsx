@@ -1,7 +1,7 @@
 "use client";
 
 import { displayRegion } from "@/lib/geo/ph-regions";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -93,11 +93,36 @@ function dataPills(incident: Incident): string[] {
   return pills;
 }
 
+/* ── Progressive loading ── */
+/** Cards rendered at first, and added each time the reader nears the end. */
+const PAGE_SIZE = 12;
+
+/**
+ * Calls onVisible when it comes within ~600px of the viewport, so the next
+ * cards are ready before the reader reaches the end of the list.
+ */
+function LoadMoreSentinel({ onVisible }: { onVisible: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const callback = useRef(onVisible);
+  useEffect(() => {
+    callback.current = onVisible;
+  }, [onVisible]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) callback.current();
+      },
+      { rootMargin: "0px 0px 600px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return <div ref={ref} aria-hidden className="h-px w-full" />;
+}
+
 /* ── Motion variants ── */
-const containerVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
-};
 
 const cardVariants = {
   hidden: { opacity: 0, y: 16, scale: 0.97 },
@@ -161,6 +186,16 @@ export default function PulseFeedPage() {
     }
     return result;
   }, [incidents, typeFilter, severityFilter, search]);
+
+  // How many cards are rendered. Resets to the first page when the filters
+  // change (tracked by key, so no state update inside an effect).
+  const filterKey = `${typeFilter}|${severityFilter}|${search.trim().toLowerCase()}`;
+  const [paging, setPaging] = useState({ key: filterKey, count: PAGE_SIZE });
+  const visibleCount = paging.key === filterKey ? paging.count : PAGE_SIZE;
+  const shown = filtered.slice(0, visibleCount);
+  const remaining = filtered.length - shown.length;
+  const showMore = () =>
+    setPaging({ key: filterKey, count: Math.min(visibleCount + PAGE_SIZE, filtered.length) });
 
   if (isLoading && incidents.length === 0) {
     return <PulseFeedSkeleton />;
@@ -267,16 +302,30 @@ export default function PulseFeedPage() {
 
         {/* ── Event cards grid ── */}
         {filtered.length > 0 && (
-          <motion.div
-            className="mt-6 md:mt-8 grid gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-          >
-            {filtered.map((incident) => (
-              <EventCard key={incident.id} incident={incident} />
-            ))}
-          </motion.div>
+          <>
+            <div className="mt-6 md:mt-8 grid gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {shown.map((incident) => (
+                <EventCard key={incident.id} incident={incident} />
+              ))}
+            </div>
+            {remaining > 0 && (
+              <div className="mt-6 flex flex-col items-center gap-2">
+                <LoadMoreSentinel key={visibleCount} onVisible={showMore} />
+                <p className="text-[12px] text-[var(--text-dim)]" aria-live="polite">
+                  {i18n.common.showingOf
+                    .replace("{shown}", String(shown.length))
+                    .replace("{total}", String(filtered.length))}
+                </p>
+                <button
+                  type="button"
+                  onClick={showMore}
+                  className="rounded-lg border border-overlay/10 bg-[var(--bg-panel)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-overlay/[0.06]"
+                >
+                  {i18n.common.showMore.replace("{n}", String(Math.min(PAGE_SIZE, remaining)))}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {/* ── Empty state ── */}
@@ -313,7 +362,14 @@ function EventCard({ incident }: { incident: Incident }) {
   const glowClass = SEVERITY_GLOW[incident.severity] ?? "";
 
   return (
-    <motion.div variants={cardVariants} whileTap={{ scale: 0.98 }} className="h-full">
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: "0px 0px -40px 0px" }}
+      whileTap={{ scale: 0.98 }}
+      className="h-full"
+    >
       <Link
         href={`/pulse/${encodeURIComponent(incident.id)}`}
         className={`group flex h-full flex-col rounded-xl border bg-[var(--bg-panel)] p-4 md:p-5 transition-all duration-200 border-l-3 ${sv.accent} ${glowClass} active:bg-overlay/[0.06] hover:bg-[var(--bg-card-hover)] hover:border-overlay/20 hover:shadow-[var(--shadow-elevated)] ${
