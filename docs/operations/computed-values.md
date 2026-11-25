@@ -3,7 +3,7 @@
 Everything a visitor sees is either **copied from an agency** (PHIVOLCS, PAGASA,
 NASA EONET, USGS) or **computed by DisasterPH**. This list covers the second
 kind: what we compute, from what, where in the code, and what it is based on.
-Review it whenever a rule changes. Last reviewed: 2026-11-25 (map Phase 1).
+Review it whenever a rule changes. Last reviewed: 2026-11-25 (map Phase 1b).
 
 Legend for "Basis":
 - **Official**: follows a published agency rule or table (source linked).
@@ -31,7 +31,8 @@ uses these four words. They exist to sort and colour events consistently.
 |---|---|---|---|
 | Region of an event ("Western Visayas") | Point-in-polygon on simplified region outlines (about 1 km accuracy) | `src/lib/geo/ph-regions.ts` `locateRegion`, `src/lib/ingest/regions.ts` | Ours, outlines from faeldon/philippines-json-maps (MIT) |
 | "Offshore" / nearest region | Outside every outline: nearest region boundary within 100 km (`NEAR_KM`) | same | Ours. The outlines are simplified, so points just off the coast may count as inland and vice versa |
-| Earthquake location text ("012 km S 49° E of Valderrama (Antique)") | Copied verbatim | `phivolcs.ts` | Official (PHIVOLCS) |
+| Earthquake location text ("012 km S 49° E of Valderrama (Antique)") | Copied verbatim into the description and `metadata.source_place` | `phivolcs.ts` | Official (PHIVOLCS) |
+| Earthquake title ("M5.1 · Valderrama, Antique (12 km SE)") | Place and province copied from the agency text; quadrant bearing (S 49° E) rounded to 8 compass points (SE); raw text used when the pattern doesn't match | `src/lib/quake-place.ts` | Official place, our rounding of the bearing |
 | Volcano province | Copied from the bulletin | `phivolcs-volcano.ts` | Official |
 | Provinces under a wind signal | Copied from the PAGASA bulletin; matched to our province list | `pagasa.ts` `findProvinces` | Official text, our matching |
 | "Areas named in the bulletin" (event page) | Wind-signal provinces or the volcano province only | `src/app/pulse/[id]/page.tsx` `bulletinAreas` | Official |
@@ -57,6 +58,7 @@ uses these four words. They exist to sort and colour events consistently.
 | Ages ("5h ago") | Now minus the source's time | `src/lib/incidents.ts` `formatRelativeTime` | Ours |
 | Volcano bulletin "stale" flag | Bulletin older than 2 days | `phivolcs-volcano.ts` `BULLETIN_STALE_MS` | Ours (bulletins are daily) |
 | Typhoon bulletin "stale" flag | Bulletin older than 9 hours | `pagasa.ts` `TC_BULLETIN_STALE_MS` | Ours (PAGASA issues every 3 to 6 hours) |
+| Sources line ("Sources: 4 of 4 live · updated 2m ago") | Counts the 4 primary sources whose status is healthy; "updated" is the oldest last success among them; any other source is named with its state and last success | `src/components/disasterph/sources-line.tsx` | Ours, from the health below |
 | Source health (Healthy / Delayed / Degraded) | Last success under 5 min old = healthy, over 15 min = delayed, over 30 min = degraded; a failed fetch = degraded (3 in a row = offline, shown as degraded); content that couldn't be read reliably = degraded | `src/lib/ingest/store.ts` `recordFetch`, `getSourceHealth` | Ours |
 | Which events are listed | Earthquakes M3.0+ from the last 7 days; feed and counts use the last 10 days | `phivolcs.ts` `EQ_MIN_MAGNITUDE`, `EQ_WINDOW_DAYS`; `disasterph-command.tsx` | Ours |
 | New-event alerts | Only events started within 6 hours alert as "new"; escalations always alert | `src/lib/alerts.ts` `NEW_ALERT_MAX_AGE_MS` | Ours |
@@ -71,6 +73,14 @@ uses these four words. They exist to sort and colour events consistently.
 | Marker colour, size, ring | Colour = hazard type, size and ring = our severity label | `mapbox-map.tsx` `createMarkerElement`, `src/lib/mapbox.ts` | Ours |
 | ~~Earthquake "felt area" circle~~ | Removed in map Phase 1: 25 to 200 km guessed from magnitude | — | Was ours, looked official |
 | ~~Typhoon wind circle~~ | Removed in map Phase 1: wind speed × 0.8 km | — | Was ours, looked official |
+
+## Tabs and labels
+
+| Value | How | Code | Basis |
+|---|---|---|---|
+| Flood and Landslide tabs | Hidden unless a source reports one (these hazards aren't monitored; only NASA EONET reports them, rarely) | `disasterph-command.tsx`, `src/app/pulse/page.tsx` | Ours |
+| Typhoon tab "None active" | Shown when no tropical cyclone is listed anywhere (PAGASA is read every 3 min) | `disasterph-command.tsx` | Ours, from PAGASA data |
+| Base-map labels | English name, else Latin-script, else local name; place labels outside a box around the Philippines hidden | `src/lib/map-labels.ts` | Ours (display), names from OpenStreetMap via OpenFreeMap |
 
 ## Text shown as guidance
 

@@ -55,11 +55,9 @@ export const copy = {
   en: {
     nav: {
       live: "Map",
-      liveSub: "Live map",
       pulse: "Alerts",
-      pulseSub: "Alert list",
-      sanctuary: "Evacuation",
-      sanctuarySub: "Evacuation centers",
+      sanctuary: "Evacuation centers",
+      sanctuaryShort: "Evacuation",
       commandCenter: "Disaster information for the Philippines",
       language: "Language",
       liveBadge: "Live",
@@ -173,6 +171,23 @@ export const copy = {
       viewFullDetail: "View full detail",
       mapPopup: {
         openInMaps: "Open in Google Maps",
+      },
+      noneActive: "None active",
+      sourcesLine: {
+        checking: "Sources: checking…",
+        count: "Sources: {live} of {total} live",
+        updated: "updated {age}",
+        problem: "{name} {state}, last update {age}",
+        problemNever: "{name} {state}, no data yet",
+        usgsBackup: "USGS backup in use for earthquakes",
+        names: {
+          PHIVOLCS: "PHIVOLCS earthquakes",
+          PHIVOLCS_VOLCANO: "PHIVOLCS volcanoes",
+          PAGASA: "PAGASA",
+          EONET: "NASA EONET",
+          USGS: "USGS",
+        },
+        states: { delayed: "delayed", degraded: "having problems", unavailable: "not reached yet" },
       },
       legend: {
         title: "Legend",
@@ -528,11 +543,9 @@ export const copy = {
   fil: {
     nav: {
       live: "Mapa",
-      liveSub: "Live na mapa",
       pulse: "Mga Abiso",
-      pulseSub: "Listahan ng abiso",
-      sanctuary: "Evacuation",
-      sanctuarySub: "Mga evacuation center",
+      sanctuary: "Mga evacuation center",
+      sanctuaryShort: "Evacuation",
       commandCenter: "Impormasyon sa sakuna sa Pilipinas",
       language: "Wika",
       liveBadge: "Live",
@@ -646,6 +659,23 @@ export const copy = {
       viewFullDetail: "Tingnan ang buong detalye",
       mapPopup: {
         openInMaps: "Buksan sa Google Maps", // NEEDS NATIVE REVIEW
+      },
+      noneActive: "Walang aktibo", // NEEDS NATIVE REVIEW
+      sourcesLine: {
+        checking: "Mga source: sinusuri…", // NEEDS NATIVE REVIEW
+        count: "Mga source: {live} sa {total} ang live", // NEEDS NATIVE REVIEW
+        updated: "na-update {age}", // NEEDS NATIVE REVIEW
+        problem: "{name} {state}, huling update {age}", // NEEDS NATIVE REVIEW
+        problemNever: "{name} {state}, wala pang datos", // NEEDS NATIVE REVIEW
+        usgsBackup: "Ginagamit ang USGS bilang backup para sa lindol", // NEEDS NATIVE REVIEW
+        names: {
+          PHIVOLCS: "Lindol ng PHIVOLCS", // NEEDS NATIVE REVIEW
+          PHIVOLCS_VOLCANO: "Bulkan ng PHIVOLCS", // NEEDS NATIVE REVIEW
+          PAGASA: "PAGASA",
+          EONET: "NASA EONET",
+          USGS: "USGS",
+        },
+        states: { delayed: "naantala", degraded: "may problema", unavailable: "hindi pa naaabot" }, // NEEDS NATIVE REVIEW
       },
       legend: {
         title: "Gabay sa mapa", // NEEDS NATIVE REVIEW

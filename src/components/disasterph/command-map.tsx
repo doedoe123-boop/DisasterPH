@@ -174,7 +174,7 @@ export function CommandMap({
       </div>
 
       {!focusMode && !lowbarExpanded && (
-        <div className="absolute bottom-[calc(7.5rem+env(safe-area-inset-bottom))] left-1/2 z-20 -translate-x-1/2 md:bottom-12 md:left-auto md:right-3 md:translate-x-0">
+        <div className="absolute bottom-[calc(7.5rem+env(safe-area-inset-bottom))] left-1/2 z-20 -translate-x-1/2 md:bottom-12 md:left-auto md:right-3 md:translate-x-0 lg:hidden">
           <button
             className="flex h-9 items-center gap-1.5 rounded-xl border border-overlay/10 bg-[var(--bg-panel)] px-3 text-[13px] font-medium text-[var(--text-primary)] shadow-[var(--shadow-card)] backdrop-blur transition hover:border-overlay/20 hover:bg-overlay/8 active:scale-[0.98]"
             onClick={onToggleLowbar}

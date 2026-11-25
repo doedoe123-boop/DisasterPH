@@ -43,6 +43,8 @@ export interface SourceStatus {
   source: SourceKey;
   status: SourceHealthStatus;
   last_fetch_at: string;
+  /** Last successful fetch (null if none yet). */
+  last_success_at?: string | null;
   latency_ms: number;
   notes: string;
   /** PAGASA only: what the official bulletin page says about tropical cyclones. */

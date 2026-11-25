@@ -22,8 +22,22 @@ import type { Incident } from "@/types/incident";
  * The table applies to "offshore tectonic earthquakes only and shallow inland
  * earthquakes that might generate sea level disturbance", so the bands are
  * applied to every earthquake DisasterPH lists (all are in or near the
- * Philippines). The inequality signs were lost in the PDF's text layer; the
- * reading above is the only one consistent with the table's rows.
+ * Philippines); there is deliberately no offshore test.
+ *
+ * Source: PHIVOLCS, "Philippine Tsunami Information" (Tsunami Ready
+ * Philippines National Workshop, Quezon City, 11 December 2025), slide
+ * "Criteria Table Based on Preliminary Magnitude and Depth" (Local Tsunami).
+ * https://oceanexpert.org/downloadFile/61117
+ * Last verified: 2026-11-25.
+ *
+ * Read directly from the slide: the magnitude bands (6.5, 7.0, 7.5, 8.0),
+ * the depth values (50, 60, 70, 100 km), and ">" in the "No Tsunami Threat"
+ * rows (e.g. "6.5 M < 7.0, D > 50 km").
+ * INFERRED (the ≤ / ≥ glyphs are missing from the PDF's text layer):
+ *   - "≤" for depth in the advisory/warning rows (e.g. "D ≤ 50 km"), as the
+ *     complement of the ">" rows;
+ *   - "≥" on the lower magnitude bound (e.g. "6.5 ≤ M < 7.0") and "M ≥ 8.0".
+ * Re-check against PHIVOLCS if a newer criteria table is published.
  */
 export const PHIVOLCS_TSUNAMI_URL = "https://tsunami.phivolcs.dost.gov.ph/";
 
