@@ -78,10 +78,10 @@ export const copy = {
       locationDenied: "Location permission was not given. Choose your area from the list.",
       locationUnavailable: "Your location could not be determined. Choose your area from the list.",
       locationOffshore: "Your location is not within a Philippine region. Choose your area from the list.",
-      summaryOne: "{n} recent event affects {area}",
-      summaryMany: "{n} recent events affect {area}",
+      summaryOne: "{n} recent event in or near {area}",
+      summaryMany: "{n} recent events in or near {area}",
       summaryWarning: "{n} at warning level or higher",
-      summaryNone: "No recent events from DisasterPH's sources affect {area} in the last 10 days.",
+      summaryNone: "No recent events from DisasterPH's sources in or near {area} in the last 10 days.",
       summaryCaveat: "This is not an official all-clear. Follow PAGASA, PHIVOLCS, and your local DRRMO.",
       summaryPlaceOne: "{n} recent event near {area}",
       summaryPlaceMany: "{n} recent events near {area}",
@@ -161,7 +161,7 @@ export const copy = {
           "Reference only. This is not an official Philippine advisory.",
         agencyLink: "Official information from",
       },
-      affectedAreas: "Affected Areas",
+      affectedAreas: "Areas named in the bulletin",
       nearbyIncidents: "Nearby incidents",
       nearestHazard: "Nearest hazard",
       strongestNearby: "Strongest nearby",
@@ -171,6 +171,24 @@ export const copy = {
       expiredIncident: "This incident may have expired or is no longer active.",
       noDescription: "No detailed description available for this event.",
       viewFullDetail: "View full detail",
+      mapPopup: {
+        openInMaps: "Open in Google Maps",
+      },
+      legend: {
+        title: "Legend",
+        earthquake: "Earthquake (number = magnitude)",
+        volcano: "Volcano (PHIVOLCS alert level)",
+        typhoon: "Tropical cyclone",
+        size: "Bigger marker = higher severity",
+        ringTitle: "Ring colour = severity",
+        dangerZone: "Volcano danger zone (radius from PHIVOLCS)",
+        track: "Storm track (NASA EONET); dashed = forecast",
+        note: "Tap a marker for details. Severity is also written in each popup and list item.",
+      },
+      tsunami: {
+        pointer: "DisasterPH doesn't show tsunami warnings. This earthquake's magnitude and depth are in the range where PHIVOLCS may issue a tsunami advisory or warning.",
+        link: "Check PHIVOLCS Tsunami Information",
+      },
       quake: {
         heading: "PHIVOLCS earthquake bulletin",
         bulletinNo: "Earthquake Information No. {no}",
@@ -533,10 +551,10 @@ export const copy = {
       locationDenied: "Hindi pinayagan ang lokasyon. Piliin ang inyong lugar sa listahan.",
       locationUnavailable: "Hindi matukoy ang inyong lokasyon. Piliin ang inyong lugar sa listahan.",
       locationOffshore: "Wala sa loob ng isang rehiyon ng Pilipinas ang inyong lokasyon. Piliin ang inyong lugar sa listahan.",
-      summaryOne: "{n} kamakailang pangyayari ang may kinalaman sa {area}",
-      summaryMany: "{n} kamakailang pangyayari ang may kinalaman sa {area}",
+      summaryOne: "{n} kamakailang pangyayari sa loob o malapit sa {area}", // NEEDS NATIVE REVIEW
+      summaryMany: "{n} kamakailang pangyayari sa loob o malapit sa {area}", // NEEDS NATIVE REVIEW
       summaryWarning: "{n} na babala o mas mataas",
-      summaryNone: "Walang kamakailang pangyayari mula sa mga pinagmulan ng DisasterPH na may kinalaman sa {area} sa nakalipas na 10 araw.",
+      summaryNone: "Walang kamakailang pangyayari mula sa mga pinagmulan ng DisasterPH sa loob o malapit sa {area} sa nakalipas na 10 araw.", // NEEDS NATIVE REVIEW
       summaryCaveat: "Hindi ito opisyal na abiso na ligtas na. Sundin ang PAGASA, PHIVOLCS, at ang inyong lokal na DRRMO.",
       summaryPlaceOne: "{n} kamakailang pangyayari malapit sa {area}",
       summaryPlaceMany: "{n} kamakailang pangyayari malapit sa {area}",
@@ -616,7 +634,7 @@ export const copy = {
           "Para sa sanggunian lamang. Hindi ito opisyal na abiso sa Pilipinas.",
         agencyLink: "Opisyal na impormasyon mula sa",
       },
-      affectedAreas: "Mga Apektadong Lugar",
+      affectedAreas: "Mga lugar na binanggit sa bulletin", // NEEDS NATIVE REVIEW
       nearbyIncidents: "Mga kalapit na insidente",
       nearestHazard: "Pinakamalapit na panganib",
       strongestNearby: "Pinakamalakas sa paligid",
@@ -626,7 +644,25 @@ export const copy = {
       expiredIncident: "Maaaring tapos na o hindi na aktibo ang abisong ito.",
       noDescription: "Walang detalyadong paliwanag para sa abisong ito.",
       viewFullDetail: "Tingnan ang buong detalye",
-      quake: {
+      mapPopup: {
+        openInMaps: "Buksan sa Google Maps", // NEEDS NATIVE REVIEW
+      },
+      legend: {
+        title: "Gabay sa mapa", // NEEDS NATIVE REVIEW
+        earthquake: "Lindol (numero = magnitude)", // NEEDS NATIVE REVIEW
+        volcano: "Bulkan (alert level ng PHIVOLCS)", // NEEDS NATIVE REVIEW
+        typhoon: "Bagyo", // NEEDS NATIVE REVIEW
+        size: "Mas malaking marker = mas mataas na antas", // NEEDS NATIVE REVIEW
+        ringTitle: "Kulay ng bilog = antas", // NEEDS NATIVE REVIEW
+        dangerZone: "Danger zone ng bulkan (radius mula sa PHIVOLCS)", // NEEDS NATIVE REVIEW
+        track: "Dinaanan ng bagyo (NASA EONET); putol-putol = forecast", // NEEDS NATIVE REVIEW
+        note: "Pindutin ang marker para sa detalye. Nakasulat din ang antas sa bawat popup at listahan.", // NEEDS NATIVE REVIEW
+      },
+      tsunami: {
+        pointer: "Hindi nagpapakita ang DisasterPH ng tsunami warning. Pasok ang lakas at lalim ng lindol na ito sa saklaw kung saan maaaring maglabas ang PHIVOLCS ng tsunami advisory o warning.", // NEEDS NATIVE REVIEW
+        link: "Tingnan ang Tsunami Information ng PHIVOLCS", // NEEDS NATIVE REVIEW
+      },
+      quake: { // NEEDS NATIVE REVIEW (whole quake block, added in PR #38)
         heading: "Earthquake bulletin ng PHIVOLCS",
         bulletinNo: "Earthquake Information Blg. {no}",
         issued: "Inilabas {time}",

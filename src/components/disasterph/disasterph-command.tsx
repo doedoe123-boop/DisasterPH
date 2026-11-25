@@ -18,9 +18,9 @@ import {
 } from "lucide-react";
 import {
   filterIncidentsByType,
-  formatRelativeTime,
-  formatShortTime,
+  formatDateTime,
 } from "@/lib/incidents";
+import { eventTimeWithAge } from "@/lib/event-time";
 import { eventLabel, severityText, t } from "@/lib/i18n";
 import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
@@ -211,7 +211,7 @@ export function DisasterPHCommand() {
             <WifiOff className="h-4 w-4 shrink-0" />
             <span suppressHydrationWarning>
               {i18n.common.offlineShowingCached}
-              {generatedAt ? ` from ${formatShortTime(generatedAt)}` : ""}.
+              {generatedAt ? ` from ${formatDateTime(generatedAt)}` : ""}.
             </span>
           </motion.div>
         )}
@@ -342,7 +342,7 @@ export function DisasterPHCommand() {
                                 className="text-[12px] text-[var(--text-dim)]"
                                 suppressHydrationWarning
                               >
-                                {formatRelativeTime(incident.updated_at, locale)}
+                                {eventTimeWithAge(incident, locale, { compact: true })}
                               </span>
                             </div>
                           </div>
@@ -571,7 +571,7 @@ export function DisasterPHCommand() {
                             ·
                           </span>
                           <span suppressHydrationWarning>
-                            {formatRelativeTime(selectedIncident.updated_at, locale)}
+                            {eventTimeWithAge(selectedIncident, locale)}
                           </span>
                         </div>
 
@@ -750,7 +750,7 @@ export function DisasterPHCommand() {
                                   ·
                                 </span>
                                 <span suppressHydrationWarning>
-                                  {formatRelativeTime(incident.updated_at, locale)}
+                                  {eventTimeWithAge(incident, locale)}
                                 </span>
                               </div>
                             </div>

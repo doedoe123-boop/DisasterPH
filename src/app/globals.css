@@ -759,6 +759,22 @@ select {
 }
 
 /* ── Day-mode popup overrides ── */
+/* Links inside map popups: full-width 44px tap target. */
+.bantay-popup .popup-link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #22d3ee;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+[data-theme="day"] .bantay-popup .popup-link {
+  color: hsl(194 80% 28%);
+}
+
 [data-theme="day"] .bantay-popup .maplibregl-popup-content {
   background: rgba(255, 255, 255, 0.97);
   border: 1px solid rgba(0, 0, 0, 0.1);

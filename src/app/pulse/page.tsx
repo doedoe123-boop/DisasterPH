@@ -17,7 +17,8 @@ import {
   Clock,
   Activity,
 } from "lucide-react";
-import { filterIncidentsByType, formatRelativeTime } from "@/lib/incidents";
+import { filterIncidentsByType } from "@/lib/incidents";
+import { eventTimeWithAge } from "@/lib/event-time";
 import { eventLabel, severityText, t } from "@/lib/i18n";
 import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { visualFromSeverity } from "@/lib/severity";
@@ -427,7 +428,7 @@ function EventCard({ incident }: { incident: Incident }) {
                 suppressHydrationWarning
               >
                 <Clock className="h-3.5 w-3.5" />
-                {formatRelativeTime(incident.updated_at, locale)}
+                {eventTimeWithAge(incident, locale)}
               </span>
             </div>
           </div>
