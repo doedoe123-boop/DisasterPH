@@ -201,11 +201,13 @@ export const copy = {
       },
       legend: {
         title: "Legend",
-        earthquake: "Earthquake (number = magnitude)",
-        volcano: "Volcano (PHIVOLCS alert level)",
-        typhoon: "Tropical cyclone",
-        size: "Bigger marker = higher severity",
-        ringTitle: "Ring colour = severity",
+        earthquake: "Earthquake: size and number = magnitude",
+        cluster: "Nearby earthquakes: how many, and the largest (tap to zoom in)",
+        clusterMax: "max",
+        volcano: "Volcano: PHIVOLCS alert level (number)",
+        volcanoLevels: "Alert levels 1 to 5",
+        typhoon: "Tropical cyclone: highest wind signal",
+        ringTitle: "Earthquake ring colour = severity",
         dangerZone: "Volcano danger zone (radius from PHIVOLCS)",
         track: "Storm track (NASA EONET); dashed = forecast",
         note: "Tap a marker for details. Severity is also written in each popup and list item.",
@@ -306,6 +308,7 @@ export const copy = {
       terrainFailed: "Terrain could not load. Showing the 2D map.",
       resetView: "Reset map view",
       resetViewTitle: "Show all of the Philippines, flat and north-up",
+      keyboardNote: "Map of events. To choose an event with the keyboard, use the event list.",
     },
     notification: {
       enabledTitle: "Alerts active",
@@ -699,11 +702,13 @@ export const copy = {
       },
       legend: {
         title: "Gabay sa mapa", // NEEDS NATIVE REVIEW
-        earthquake: "Lindol (numero = magnitude)", // NEEDS NATIVE REVIEW
-        volcano: "Bulkan (alert level ng PHIVOLCS)", // NEEDS NATIVE REVIEW
-        typhoon: "Bagyo", // NEEDS NATIVE REVIEW
-        size: "Mas malaking marker = mas mataas na antas", // NEEDS NATIVE REVIEW
-        ringTitle: "Kulay ng bilog = antas", // NEEDS NATIVE REVIEW
+        earthquake: "Lindol: laki at numero = magnitude", // NEEDS NATIVE REVIEW
+        cluster: "Magkakalapit na lindol: ilan, at ang pinakamalakas (pindutin para lumapit)", // NEEDS NATIVE REVIEW
+        clusterMax: "max",
+        volcano: "Bulkan: alert level ng PHIVOLCS (numero)", // NEEDS NATIVE REVIEW
+        volcanoLevels: "Alert level 1 hanggang 5", // NEEDS NATIVE REVIEW
+        typhoon: "Bagyo: pinakamataas na wind signal", // NEEDS NATIVE REVIEW
+        ringTitle: "Kulay ng gilid ng lindol = antas", // NEEDS NATIVE REVIEW
         dangerZone: "Danger zone ng bulkan (radius mula sa PHIVOLCS)", // NEEDS NATIVE REVIEW
         track: "Dinaanan ng bagyo (NASA EONET); putol-putol = forecast", // NEEDS NATIVE REVIEW
         note: "Pindutin ang marker para sa detalye. Nakasulat din ang antas sa bawat popup at listahan.", // NEEDS NATIVE REVIEW
@@ -804,6 +809,7 @@ export const copy = {
       terrainFailed: "Hindi ma-load ang anyong-lupa. Ipinapakita ang 2D na mapa.",
       resetView: "Ibalik ang mapa",
       resetViewTitle: "Ipakita ang buong Pilipinas, patag at nakaharap sa hilaga",
+      keyboardNote: "Mapa ng mga pangyayari. Para pumili gamit ang keyboard, gamitin ang listahan ng pangyayari.", // NEEDS NATIVE REVIEW
     },
     notification: {
       enabledTitle: "Aktibo ang mga alerto",

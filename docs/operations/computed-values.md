@@ -3,7 +3,7 @@
 Everything a visitor sees is either **copied from an agency** (PHIVOLCS, PAGASA,
 NASA EONET, USGS) or **computed by DisasterPH**. This list covers the second
 kind: what we compute, from what, where in the code, and what it is based on.
-Review it whenever a rule changes. Last reviewed: 2026-11-25 (map Phase 1c).
+Review it whenever a rule changes. Last reviewed: 2026-11-25 (map Phase 2a).
 
 Legend for "Basis":
 - **Official**: follows a published agency rule or table (source linked).
@@ -70,7 +70,11 @@ uses these four words. They exist to sort and colour events consistently.
 |---|---|---|---|
 | Volcano danger-zone circle | Radius from the PHIVOLCS bulletin's Permanent Danger Zone; no circle if the bulletin gives none (e.g. Taal) | `src/components/disasterph/mapbox-map.tsx` `volcanoExclusionRadiusKm` | Official radius, our circle drawing |
 | Storm track line | NASA EONET positions; dashed where EONET marks them as forecast | `mapbox-map.tsx` `syncTyphoonTracks` | Official (NASA EONET) |
-| Marker colour, size, ring | Colour = hazard type, size and ring = our severity label | `mapbox-map.tsx` `createMarkerElement`, `src/lib/mapbox.ts` | Ours |
+| Earthquake marker | Circle sized by magnitude, magnitude written on it, ring colour = our severity label | `src/lib/map-event-layers.ts` | Official magnitude; ring colour ours |
+| Earthquake clusters | Nearby quakes grouped (MapLibre clustering, radius 38 px, none from zoom 9); label = count and largest magnitude | `src/lib/map-event-layers.ts` | Ours (display); magnitudes official |
+| Volcano marker | Triangle with the PHIVOLCS alert level number; colour per level 1-5 | `src/lib/map-event-layers.ts` | Official level; colours ours |
+| Tropical cyclone marker | Circle with the highest PAGASA wind signal number ("TC" if none) | `src/lib/map-event-layers.ts` | Official signal |
+| Base-map labels hidden near markers | A place name that would overlap a marker is not drawn | `src/lib/map-event-layers.ts` (blocker layers) | Ours (display) |
 | ~~Earthquake "felt area" circle~~ | Removed in map Phase 1: 25 to 200 km guessed from magnitude | — | Was ours, looked official |
 | ~~Typhoon wind circle~~ | Removed in map Phase 1: wind speed × 0.8 km | — | Was ours, looked official |
 

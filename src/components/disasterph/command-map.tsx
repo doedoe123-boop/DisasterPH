@@ -87,6 +87,8 @@ interface CommandMapProps {
   mapLeftInset?: number;
   /** Pixels of the map covered at the bottom by the phone list panel. */
   mapBottomInset?: number;
+  /** Changes each time an event is chosen from the list. */
+  focusRequest?: number;
 }
 
 export function CommandMap({
@@ -104,6 +106,7 @@ export function CommandMap({
   onToggleLowbar = () => {},
   mapLeftInset = 0,
   mapBottomInset = 0,
+  focusRequest = 0,
 }: CommandMapProps) {
   const { locale } = useLocale();
   const controls = t(locale).controls;
@@ -119,6 +122,7 @@ export function CommandMap({
         onSelectIncident={onSelectIncident}
         leftInset={mapLeftInset}
         bottomInset={mapBottomInset}
+        focusRequest={focusRequest}
       />
 
       {/* Map controls */}

@@ -3,15 +3,26 @@
 import { useId, useState } from "react";
 import { ChevronDown, ChevronUp, Info } from "lucide-react";
 import { HAZARD_COLORS, SEVERITY_RING } from "@/lib/mapbox";
+import { VOLCANO_LEVEL_COLORS, VOLCANO_LEVEL_TEXT } from "@/lib/map-event-layers";
 import { severityText, t, type Locale } from "@/lib/i18n";
 
-/** A small copy of a map marker: coloured disc with its label. */
-function MarkerSwatch({ color, label, size = 22 }: { color: string; label: string; size?: number }) {
+/** A small copy of the volcano marker: triangle with the alert level. */
+function TriangleSwatch({ level }: { level: number }) {
+  return (
+    <svg aria-hidden width="22" height="20" viewBox="0 0 22 20" className="shrink-0">
+      <path d="M11 1.5 L20.5 18.5 L1.5 18.5 Z" fill={VOLCANO_LEVEL_COLORS[level]} stroke="#fff" strokeWidth="1.5" strokeLinejoin="round" />
+      <text x="11" y="16" textAnchor="middle" fontSize="9" fontWeight="700" fill={VOLCANO_LEVEL_TEXT[level]}>{level}</text>
+    </svg>
+  );
+}
+
+/** A small copy of a map marker: coloured disc with its label (and ring). */
+function MarkerSwatch({ color, label, ring = color, size = 22 }: { color: string; label: string; ring?: string; size?: number }) {
   return (
     <span
       aria-hidden
       className="inline-flex shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-black"
-      style={{ width: size, height: size, background: color, border: `2px solid ${color}` }}
+      style={{ width: size, height: size, background: color, border: `2px solid ${ring}` }}
     >
       {label}
     </span>
@@ -19,9 +30,8 @@ function MarkerSwatch({ color, label, size = 22 }: { color: string; label: strin
 }
 
 /**
- * What the map's marks mean. Describes the current marker design: colour =
- * hazard type, size and ring = severity (also written as text in every popup
- * and list row, so colour is never the only cue).
+ * What the map's marks mean (marker design in src/lib/map-event-layers.ts).
+ * Every mark carries a number or shape, so colour is never the only cue.
  */
 export function MapLegend({ locale }: { locale: Locale }) {
   const copy = t(locale).common.legend;
@@ -49,23 +59,31 @@ export function MapLegend({ locale }: { locale: Locale }) {
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-dim)]">{copy.title}</p>
         <ul className="space-y-1.5">
           <li className="flex items-center gap-2">
-            <MarkerSwatch color={HAZARD_COLORS.earthquake} label="4.6" />
+            <MarkerSwatch color={HAZARD_COLORS.earthquake} ring={SEVERITY_RING.watch} label="4.6" />
             <span>{copy.earthquake}</span>
           </li>
           <li className="flex items-center gap-2">
-            <MarkerSwatch color={HAZARD_COLORS.volcano} label="VO" />
+            <span
+              aria-hidden
+              className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
+              style={{ background: "#1f2937", border: `2px solid ${HAZARD_COLORS.earthquake}` }}
+            >
+              12
+            </span>
+            <span>{copy.cluster}</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <TriangleSwatch level={3} />
             <span>{copy.volcano}</span>
           </li>
-          <li className="flex items-center gap-2">
-            <MarkerSwatch color={HAZARD_COLORS.typhoon} label="TY" />
-            <span>{copy.typhoon}</span>
+          <li className="flex items-center gap-1 pl-[30px]" aria-label={copy.volcanoLevels}>
+            {[1, 2, 3, 4, 5].map((level) => (
+              <TriangleSwatch key={level} level={level} />
+            ))}
           </li>
           <li className="flex items-center gap-2">
-            <span className="flex w-[22px] shrink-0 items-end justify-center gap-0.5" aria-hidden>
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-[var(--text-dim)]" />
-              <span className="inline-block h-4 w-4 rounded-full bg-[var(--text-dim)]" />
-            </span>
-            <span>{copy.size}</span>
+            <MarkerSwatch color={HAZARD_COLORS.typhoon} label="2" />
+            <span>{copy.typhoon}</span>
           </li>
         </ul>
         <p className="mt-2.5 text-[11px] font-semibold text-[var(--text-muted)]">{copy.ringTitle}</p>
