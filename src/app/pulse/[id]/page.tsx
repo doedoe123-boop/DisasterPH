@@ -28,6 +28,7 @@ import { AppHeader } from "@/components/disasterph/header";
 import { PrepGuidance } from "@/components/disasterph/prep-guidance";
 import { VolcanoBulletin } from "@/components/disasterph/volcano-bulletin";
 import { TyphoonBulletin } from "@/components/disasterph/typhoon-bulletin";
+import { QuakeBulletin } from "@/components/disasterph/quake-bulletin";
 import { PulseDetailSkeleton } from "@/components/disasterph/page-skeletons";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -115,37 +116,8 @@ function estimateAffectedAreas(incident: Incident): string[] {
     return m.affected_areas.map(String);
   }
 
-  // Earthquake: estimate nearby provinces based on region
-  if (incident.event_type === "earthquake") {
-    const regionMap: Record<string, string[]> = {
-      "Davao Region": [
-        "General Santos",
-        "Sarangani",
-        "South Cotabato",
-        "Sultan Kudarat",
-      ],
-      CALABARZON: ["Batangas", "Laguna", "Cavite", "Quezon"],
-      "Central Visayas": ["Cebu", "Bohol", "Siquijor"],
-      "Eastern Visayas": ["Leyte", "Southern Leyte", "Samar"],
-      "Western Visayas": ["Iloilo", "Negros Occidental", "Antique"],
-      "Bicol Region": ["Albay", "Sorsogon", "Camarines Sur"],
-      "National Capital Region": ["Metro Manila", "Rizal", "Bulacan"],
-      "Central Luzon": ["Pampanga", "Tarlac", "Zambales", "Bataan"],
-      "Northern Mindanao": ["Bukidnon", "Misamis Oriental", "Cagayan de Oro"],
-      SOCCSKSARGEN: [
-        "General Santos",
-        "Sarangani",
-        "South Cotabato",
-        "Sultan Kudarat",
-      ],
-    };
-    const found = Object.entries(regionMap).find(
-      ([key]) =>
-        incident.region.toLowerCase().includes(key.toLowerCase()) ||
-        key.toLowerCase().includes(incident.region.toLowerCase()),
-    );
-    if (found) return found[1];
-  }
+  // Earthquakes: no guessed provinces. Where the shaking was felt comes from
+  // the PHIVOLCS bulletin (QuakeBulletin), not from the region name.
 
   // Typhoon: provinces under a PAGASA wind signal, from the bulletin.
   if (incident.event_type === "typhoon" && typeof m.signal_provinces === "string" && m.signal_provinces) {
@@ -385,6 +357,11 @@ export default function PulseDetailPage() {
                       i18n.common.noDescription}
                   </p>
                 </div>
+
+                {/* Official PHIVOLCS earthquake bulletin: felt intensities, damage, map */}
+                {incident.event_type === "earthquake" && incident.source === "PHIVOLCS" && (
+                  <QuakeBulletin incident={incident} locale={locale} />
+                )}
 
                 {/* Official PHIVOLCS volcano bulletin */}
                 {incident.event_type === "volcano" && incident.source === "PHIVOLCS" && (

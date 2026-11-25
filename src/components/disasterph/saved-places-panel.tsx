@@ -163,7 +163,7 @@ export function SavedPlacesPanel({
         <p className="text-[13px] leading-5 text-[var(--text-muted)]">
           {copy.intro} {copy.storedLocally}
         </p>
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[12.5px] leading-5 text-amber-200">
+        <p className="place-caveat rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[12.5px] leading-5 text-amber-200">
           {copy.caveat}
         </p>
 
@@ -178,7 +178,7 @@ export function SavedPlacesPanel({
               return (
                 <li key={place.id} className="rounded-xl border border-overlay/8 bg-[var(--bg-panel)] p-3">
                   <div className="flex items-start gap-3">
-                    <Icon aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+                    <Icon aria-hidden className="place-accent mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
                     <div className="min-w-0 flex-1">
                       <p className="text-[14px] font-semibold">{place.label}</p>
                       <p className="text-[12px] text-[var(--text-dim)]">
@@ -246,7 +246,7 @@ export function SavedPlacesPanel({
           <p className="text-[12.5px] text-[var(--text-dim)]">{copy.limit.replace("{n}", String(MAX_PLACES))}</p>
         ) : (
           <button
-            className="flex items-center gap-1.5 rounded-lg border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-[13px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
+            className="place-accent flex items-center gap-1.5 rounded-lg border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-[13px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
             onClick={() => {
               setMessage(null);
               setAdding(true);

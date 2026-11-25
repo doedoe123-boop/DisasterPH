@@ -872,6 +872,21 @@ select {
   color: hsl(31 72% 38%);
 }
 
+/* Saved-places caveat: pale amber text is unreadable on the light theme. */
+[data-theme="day"] .place-caveat {
+  border-color: hsl(36 90% 45% / 0.45);
+  background: hsl(41 100% 93%);
+  color: hsl(28 85% 24%);
+}
+
+[data-theme="day"] .place-accent { color: hsl(194 80% 28%); }
+
+/* Earthquake intensity badges and the damage-expected box on the light theme. */
+[data-theme="day"] .quake-int-strong { color: hsl(0 72% 36%); background: hsl(0 85% 95%); }
+[data-theme="day"] .quake-int-mid { color: hsl(22 90% 33%); background: hsl(28 100% 94%); }
+[data-theme="day"] .quake-int-low { color: hsl(32 85% 28%); background: hsl(43 100% 92%); }
+[data-theme="day"] .quake-damage-yes { background: hsl(0 85% 96%); border-color: hsl(0 70% 60% / 0.45); }
+
 [data-theme="day"] .shelter-cyan-panel {
   border-color: hsl(192 82% 56% / 0.34);
   background: hsl(192 90% 94%);
