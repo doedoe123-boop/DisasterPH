@@ -11,14 +11,16 @@ import {
   HAZARD_COLORS,
   SEVERITY_RING,
 } from "@/lib/mapbox";
-import { eventTypeLabel, formatShortTime } from "@/lib/incidents";
+import { eventTimeFull } from "@/lib/event-time";
+import { PHIVOLCS_TSUNAMI_URL, showTsunamiPointer } from "@/lib/tsunami-check";
 import { loadMapLibre } from "@/lib/maplibre-loader";
 import { Mountain, LocateFixed } from "lucide-react";
 import { TERRAIN_CONFIG, TERRAIN_SOURCE, disableTerrain, enableTerrain } from "@/lib/terrain";
 import { focusZoom, isInView, mapPadding } from "@/lib/map-camera";
 import { displayRegion } from "@/lib/geo/ph-regions";
-import { t } from "@/lib/i18n";
+import { eventLabel, severityText, t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
+import { MapLegend } from "@/components/disasterph/map-legend";
 
 // Type-only imports — the real module is loaded at runtime via import()
 type MapLibreModule = typeof import("maplibre-gl");
@@ -279,7 +281,7 @@ export default function MapLibreMapComponent({
     });
   }, [incidents, mapReady, onSelectIncident, onHoverIncident]);
 
-  // ── Hazard zone overlays (earthquake impact / volcano exclusion) ──
+  // ── Volcano Permanent Danger Zones (radius from the PHIVOLCS bulletin) ──
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
@@ -339,6 +341,8 @@ export default function MapLibreMapComponent({
         offset: 16,
         className: "bantay-popup",
         maxWidth: "260px",
+        // Opened by hover too: never move keyboard focus into it.
+        focusAfterOpen: false,
       })
         .setLngLat([incident.longitude, incident.latitude])
         // Built with DOM nodes + textContent: feed text never becomes markup.
@@ -441,6 +445,7 @@ export default function MapLibreMapComponent({
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
+      <MapLegend locale={locale} />
       {mapReady && !mapFailed && (
         <div
           // The inset panel (focus-mode card) is only shown at lg and up.
@@ -562,18 +567,14 @@ function syncHazardZones(map: MlMap, incidents: Incident[]) {
   const ZONE_STROKE = "hazard-zones-stroke";
 
   const features = incidents
-    .filter((i) => i.event_type === "earthquake" || i.event_type === "volcano")
+    // Only the volcano Permanent Danger Zone, with the radius PHIVOLCS gives.
+    // (Earthquakes have no circle: a felt area guessed from magnitude would
+    // look official. Where shaking was felt comes from the PHIVOLCS bulletin.)
+    .filter((i) => i.event_type === "volcano")
     .map((i) => {
-      const radiusKm =
-        i.event_type === "earthquake"
-          ? earthquakeImpactRadiusKm(i)
-          : volcanoExclusionRadiusKm(i);
+      const radiusKm = volcanoExclusionRadiusKm(i);
       if (radiusKm <= 0) return null;
-
-      const color =
-        i.event_type === "earthquake"
-          ? HAZARD_COLORS.earthquake
-          : HAZARD_COLORS.volcano;
+      const color = HAZARD_COLORS.volcano;
 
       return {
         type: "Feature" as const,
@@ -627,12 +628,8 @@ function syncTyphoonTracks(map: MlMap, incidents: Incident[]) {
   const TRACK_SOURCE = "typhoon-tracks";
   const TRACK_LINE_OBSERVED = "typhoon-track-observed";
   const TRACK_LINE_FORECAST = "typhoon-track-forecast";
-  const WIND_SOURCE = "typhoon-wind";
-  const WIND_FILL = "typhoon-wind-fill";
-  const WIND_STROKE = "typhoon-wind-stroke";
 
   const trackFeatures: GeoJSON.Feature[] = [];
-  const windFeatures: GeoJSON.Feature[] = [];
 
   for (const incident of incidents) {
     if (incident.event_type !== "typhoon") continue;
@@ -694,30 +691,11 @@ function syncTyphoonTracks(map: MlMap, incidents: Incident[]) {
         },
       });
     }
-
-    const windKph = Number(incident.metadata?.wind_speed_kph ?? 0);
-    if (windKph > 30) {
-      const radiusKm = windKph * 0.8;
-      windFeatures.push({
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "Polygon",
-          coordinates: [
-            circlePolygon(incident.longitude, incident.latitude, radiusKm),
-          ],
-        },
-      });
-    }
   }
 
   const trackGeoJson: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
     features: trackFeatures,
-  };
-  const windGeoJson: GeoJSON.FeatureCollection = {
-    type: "FeatureCollection",
-    features: windFeatures,
   };
 
   if (map.getSource(TRACK_SOURCE)) {
@@ -750,30 +728,6 @@ function syncTyphoonTracks(map: MlMap, incidents: Incident[]) {
         "line-dasharray": [4, 4],
       },
       layout: { "line-cap": "round", "line-join": "round" },
-    });
-  }
-
-  if (map.getSource(WIND_SOURCE)) {
-    (map.getSource(WIND_SOURCE) as import("maplibre-gl").GeoJSONSource).setData(
-      windGeoJson,
-    );
-  } else {
-    map.addSource(WIND_SOURCE, { type: "geojson", data: windGeoJson });
-    map.addLayer({
-      id: WIND_FILL,
-      type: "fill",
-      source: WIND_SOURCE,
-      paint: { "fill-color": "#39d0ff", "fill-opacity": 0.06 },
-    });
-    map.addLayer({
-      id: WIND_STROKE,
-      type: "line",
-      source: WIND_SOURCE,
-      paint: {
-        "line-color": "#39d0ff",
-        "line-opacity": 0.25,
-        "line-width": 1.5,
-      },
     });
   }
 }
@@ -850,12 +804,12 @@ function buildPopupContent(incident: Incident, locale: "en" | "fil"): HTMLElemen
     textEl(
       "span",
       "font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);",
-      eventTypeLabel[incident.event_type] ?? String(incident.event_type),
+      eventLabel(incident.event_type, locale),
     ),
     textEl(
       "span",
       `font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:${SEVERITY_RING[incident.severity] ?? "inherit"};margin-left:auto;`,
-      String(incident.severity),
+      severityText(incident.severity, locale),
     ),
   );
   root.append(header);
@@ -879,7 +833,7 @@ function buildPopupContent(incident: Incident, locale: "en" | "fil"): HTMLElemen
     textEl(
       "div",
       "font-size:11px;color:var(--text-muted);margin-top:3px;",
-      `${displayRegion(incident.region, locale)} · ${formatShortTime(incident.updated_at)}`,
+      `${displayRegion(incident.region, locale)} · ${eventTimeFull(incident, locale)}`,
     ),
   );
   // The source agency's own location text (e.g. "045 km S 31° W of …"):
@@ -888,7 +842,30 @@ function buildPopupContent(incident: Incident, locale: "en" | "fil"): HTMLElemen
   if (typeof place === "string" && place.trim() && !incident.title.includes(place.trim())) {
     root.append(textEl("div", "font-size:11px;color:var(--text-dim);margin-top:2px;", place.trim()));
   }
+
+  const copy = t(locale).common;
+  if (showTsunamiPointer(incident)) {
+    root.append(textEl("div", "font-size:11px;line-height:1.4;color:var(--text-primary);margin-top:6px;", copy.tsunami.pointer));
+    root.append(popupLink(PHIVOLCS_TSUNAMI_URL, copy.tsunami.link));
+  }
+  // Event coordinates only (never the visitor's location).
+  const lat = incident.latitude.toFixed(4);
+  const lng = incident.longitude.toFixed(4);
+  root.append(
+    popupLink(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, copy.mapPopup.openInMaps),
+  );
   return root;
+}
+
+/** External link in a popup: new tab, 44px-tall tap target, text only. */
+function popupLink(href: string, label: string): HTMLAnchorElement {
+  const a = document.createElement("a");
+  a.href = href;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  a.className = "popup-link";
+  a.textContent = label;
+  return a;
 }
 
 /** Short metric line for the popup (plain text). */
@@ -909,17 +886,6 @@ function buildPopupMeta(incident: Incident): string {
   }
 
   return parts.join(" · ");
-}
-
-/** Earthquake felt-impact radius based on magnitude (approx) */
-function earthquakeImpactRadiusKm(incident: Incident): number {
-  const mag = Number(incident.metadata?.magnitude ?? 0);
-  if (mag < 4) return 0;
-  // Rough felt-area approximation: grows exponentially with magnitude
-  if (mag >= 7) return 200;
-  if (mag >= 6) return 120;
-  if (mag >= 5) return 60;
-  return 25;
 }
 
 /**

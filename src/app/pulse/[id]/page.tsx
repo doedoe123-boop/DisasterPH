@@ -15,8 +15,8 @@ import {
   Globe,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { formatDateTime } from "@/lib/incidents";
-import { formatPHT, sourceInfo } from "@/lib/source-info";
+import { eventTimeFull } from "@/lib/event-time";
+import { sourceInfo } from "@/lib/source-info";
 import { EMERGENCY_NUMBER, agencyLine } from "@/lib/hotlines";
 import { SiteDisclaimer } from "@/components/disasterph/site-disclaimer";
 import { eventLabel, severityText, t, type Locale } from "@/lib/i18n";
@@ -29,6 +29,7 @@ import { PrepGuidance } from "@/components/disasterph/prep-guidance";
 import { VolcanoBulletin } from "@/components/disasterph/volcano-bulletin";
 import { TyphoonBulletin } from "@/components/disasterph/typhoon-bulletin";
 import { QuakeBulletin } from "@/components/disasterph/quake-bulletin";
+import { PHIVOLCS_TSUNAMI_URL, showTsunamiPointer } from "@/lib/tsunami-check";
 import { PulseDetailSkeleton } from "@/components/disasterph/page-skeletons";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -68,14 +69,8 @@ function technicalData(
         label: locale === "fil" ? "Mga Ulat ng Naramdaman" : "Felt Reports",
         value: String(m.felt_reports),
       });
-    // This feed has no tsunami assessment; never show Yes/No.
-    rows.push({
-      label: "Tsunami",
-      value:
-        locale === "fil"
-          ? "Walang assessment dito — tingnan ang PHIVOLCS"
-          : "Not assessed here — check PHIVOLCS",
-    });
+    // No tsunami row: no source DisasterPH reads states a tsunami status.
+    // Strong shallow quakes get a pointer to PHIVOLCS instead (TsunamiPointer).
   } else if (incident.event_type === "typhoon") {
     if (m.signal_number != null)
       rows.push({
@@ -106,33 +101,20 @@ function technicalData(
   return rows;
 }
 
-/** Estimate affected areas from region and event type */
-function estimateAffectedAreas(incident: Incident): string[] {
-  const areas: string[] = [];
+/**
+ * Areas the official bulletin itself names: provinces under a PAGASA wind
+ * signal, or the province in a PHIVOLCS volcano bulletin. Nothing is inferred
+ * from the region (earthquake felt areas are in QuakeBulletin).
+ */
+function bulletinAreas(incident: Incident): string[] {
   const m = incident.metadata;
-
-  // Use explicitly listed areas from metadata if available
-  if (m.affected_areas && Array.isArray(m.affected_areas)) {
-    return m.affected_areas.map(String);
-  }
-
-  // Earthquakes: no guessed provinces. Where the shaking was felt comes from
-  // the PHIVOLCS bulletin (QuakeBulletin), not from the region name.
-
-  // Typhoon: provinces under a PAGASA wind signal, from the bulletin.
   if (incident.event_type === "typhoon" && typeof m.signal_provinces === "string" && m.signal_provinces) {
     return m.signal_provinces.split("|");
   }
-  if (incident.event_type === "typhoon" || incident.event_type === "flood") {
-    if (incident.region) areas.push(incident.region);
+  if (incident.event_type === "volcano" && typeof m.province === "string" && m.province) {
+    return [m.province];
   }
-
-  // Volcano: the province(s) named in the PHIVOLCS bulletin, not a guess.
-  if (incident.event_type === "volcano") {
-    return typeof m.province === "string" && m.province ? [m.province] : [];
-  }
-
-  return areas.length > 0 ? areas : [];
+  return [];
 }
 
 export default function PulseDetailPage() {
@@ -215,7 +197,7 @@ export default function PulseDetailPage() {
 
   const sv = visualFromSeverity(incident.severity);
   const source = sourceInfo(incident);
-  const affectedAreas = estimateAffectedAreas(incident);
+  const affectedAreas = bulletinAreas(incident);
 
   return (
     <ShareDropdownContext incident={incident}>
@@ -284,7 +266,7 @@ export default function PulseDetailPage() {
                     suppressHydrationWarning
                   >
                     <Clock className="h-4 w-4" />
-                    {formatDateTime(incident.updated_at)}
+                    {eventTimeFull(incident, locale)}
                   </span>
                 </div>
                 {shareDropdown}
@@ -326,7 +308,7 @@ export default function PulseDetailPage() {
                         className="mt-0.5 font-medium text-[var(--text-primary)]"
                         suppressHydrationWarning
                       >
-                        {formatPHT(incident.updated_at)}
+                        {eventTimeFull(incident, locale)}
                       </dd>
                     </div>
                   </dl>
@@ -357,6 +339,22 @@ export default function PulseDetailPage() {
                       i18n.common.noDescription}
                   </p>
                 </div>
+
+                {/* Strong, shallow quakes: point to PHIVOLCS Tsunami Information (no status of our own) */}
+                {showTsunamiPointer(incident) && (
+                  <div className="rounded-xl border border-cyan-400/25 bg-cyan-400/[0.06] p-4 text-sm leading-6 text-[var(--text-primary)]">
+                    <p>{i18n.common.tsunami.pointer}</p>
+                    <a
+                      className="mt-2 inline-flex min-h-11 items-center gap-1.5 font-semibold text-cyan-400 hover:text-cyan-300"
+                      href={PHIVOLCS_TSUNAMI_URL}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      {i18n.common.tsunami.link}
+                    </a>
+                  </div>
+                )}
 
                 {/* Official PHIVOLCS earthquake bulletin: felt intensities, damage, map */}
                 {incident.event_type === "earthquake" && incident.source === "PHIVOLCS" && (
