@@ -85,6 +85,8 @@ interface CommandMapProps {
   onToggleLowbar?: () => void;
   /** Pixels of the map covered on the left by a floating panel. */
   mapLeftInset?: number;
+  /** Pixels of the map covered at the bottom by the phone list panel. */
+  mapBottomInset?: number;
 }
 
 export function CommandMap({
@@ -101,6 +103,7 @@ export function CommandMap({
   lowbarExpanded = true,
   onToggleLowbar = () => {},
   mapLeftInset = 0,
+  mapBottomInset = 0,
 }: CommandMapProps) {
   const { locale } = useLocale();
   const controls = t(locale).controls;
@@ -115,6 +118,7 @@ export function CommandMap({
         onHoverIncident={onHoverIncident}
         onSelectIncident={onSelectIncident}
         leftInset={mapLeftInset}
+        bottomInset={mapBottomInset}
       />
 
       {/* Map controls */}

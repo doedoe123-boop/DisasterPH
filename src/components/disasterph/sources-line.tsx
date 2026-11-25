@@ -14,8 +14,32 @@ const PRIMARY: SourceKey[] = ["PHIVOLCS", "PHIVOLCS_VOLCANO", "PAGASA", "EONET"]
  * the feed health the server already tracks. "Live" means the source's last
  * fetch succeeded within the last 5 minutes.
  */
-export function SourcesLine({ statuses, locale }: { statuses: SourceStatus[]; locale: Locale }) {
+export function SourcesLine({
+  statuses,
+  locale,
+  offline = false,
+  checkedAt = null,
+}: {
+  statuses: SourceStatus[];
+  locale: Locale;
+  /** The device is offline: the sources' state can't be known now. */
+  offline?: boolean;
+  /** When the shown data was fetched. */
+  checkedAt?: string | null;
+}) {
   const copy = t(locale).common.sourcesLine;
+  if (offline) {
+    return (
+      <p className="sources-line-warn flex items-start gap-1.5 text-[12px] leading-5 text-amber-300" role="status" suppressHydrationWarning>
+        <Radio aria-hidden className="mt-[3px] h-3.5 w-3.5 shrink-0" />
+        <span>
+          {checkedAt
+            ? copy.offline.replace("{age}", formatRelativeTime(checkedAt, locale))
+            : copy.offlineNever}
+        </span>
+      </p>
+    );
+  }
   if (statuses.length === 0) {
     return (
       <p className="flex items-center gap-1.5 text-[12px] text-[var(--text-dim)]" role="status">

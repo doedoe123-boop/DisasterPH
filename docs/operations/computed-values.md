@@ -3,7 +3,7 @@
 Everything a visitor sees is either **copied from an agency** (PHIVOLCS, PAGASA,
 NASA EONET, USGS) or **computed by DisasterPH**. This list covers the second
 kind: what we compute, from what, where in the code, and what it is based on.
-Review it whenever a rule changes. Last reviewed: 2026-11-25 (map Phase 1b).
+Review it whenever a rule changes. Last reviewed: 2026-11-25 (map Phase 1c).
 
 Legend for "Basis":
 - **Official**: follows a published agency rule or table (source linked).
@@ -58,7 +58,7 @@ uses these four words. They exist to sort and colour events consistently.
 | Ages ("5h ago") | Now minus the source's time | `src/lib/incidents.ts` `formatRelativeTime` | Ours |
 | Volcano bulletin "stale" flag | Bulletin older than 2 days | `phivolcs-volcano.ts` `BULLETIN_STALE_MS` | Ours (bulletins are daily) |
 | Typhoon bulletin "stale" flag | Bulletin older than 9 hours | `pagasa.ts` `TC_BULLETIN_STALE_MS` | Ours (PAGASA issues every 3 to 6 hours) |
-| Sources line ("Sources: 4 of 4 live · updated 2m ago") | Counts the 4 primary sources whose status is healthy; "updated" is the oldest last success among them; any other source is named with its state and last success | `src/components/disasterph/sources-line.tsx` | Ours, from the health below |
+| Sources line ("Sources: 4 of 4 live · updated 2m ago") | Counts the 4 primary sources whose status is healthy; "updated" is the oldest last success among them; any other source is named with its state and last success. Offline: "can't be checked while offline (last checked …)" | `src/components/disasterph/sources-line.tsx` | Ours, from the health below |
 | Source health (Healthy / Delayed / Degraded) | Last success under 5 min old = healthy, over 15 min = delayed, over 30 min = degraded; a failed fetch = degraded (3 in a row = offline, shown as degraded); content that couldn't be read reliably = degraded | `src/lib/ingest/store.ts` `recordFetch`, `getSourceHealth` | Ours |
 | Which events are listed | Earthquakes M3.0+ from the last 7 days; feed and counts use the last 10 days | `phivolcs.ts` `EQ_MIN_MAGNITUDE`, `EQ_WINDOW_DAYS`; `disasterph-command.tsx` | Ours |
 | New-event alerts | Only events started within 6 hours alert as "new"; escalations always alert | `src/lib/alerts.ts` `NEW_ALERT_MAX_AGE_MS` | Ours |

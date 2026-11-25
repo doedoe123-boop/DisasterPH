@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { createContext, createElement, useContext, useSyncExternalStore, type ReactNode } from "react";
 import {
   getLocale,
   setLocale as persistLocale,
@@ -17,12 +17,20 @@ function subscribe(callback: () => void) {
   };
 }
 
-function getServerSnapshot(): Locale {
-  return "en";
+/**
+ * The language the server rendered the page in (from the locale cookie), so
+ * server HTML and the first client render agree: a Filipino reader gets
+ * Filipino text before any JavaScript runs.
+ */
+const ServerLocaleContext = createContext<Locale>("en");
+
+export function ServerLocaleProvider({ locale, children }: { locale: Locale; children: ReactNode }) {
+  return createElement(ServerLocaleContext.Provider, { value: locale }, children);
 }
 
 export function useLocale() {
-  const locale = useSyncExternalStore(subscribe, getLocale, getServerSnapshot);
+  const serverLocale = useContext(ServerLocaleContext);
+  const locale = useSyncExternalStore(subscribe, getLocale, () => serverLocale);
 
   return {
     locale,
