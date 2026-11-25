@@ -1,6 +1,7 @@
 import type { Incident, IncidentSeverity } from "@/types/incident";
 import { regionMetadata } from "./regions";
 import { fetchPhivolcsText } from "./https-text";
+import { parsePhivolcsPlace, quakeTitle } from "@/lib/quake-place";
 
 /**
  * Earthquakes from PHIVOLCS's own "Latest Earthquake Information" page
@@ -159,7 +160,8 @@ export function phivolcsRowsToIncidents(rows: PhivolcsRow[], now = Date.now()): 
         source: "PHIVOLCS" as const,
         external_id: r.id,
         event_type: "earthquake" as const,
-        title: `Magnitude ${r.magnitude.toFixed(1)} earthquake — ${r.place}`,
+        // Place first ("M5.1 · Valderrama, Antique (12 km SE)"); raw text if unparsed.
+        title: quakeTitle(r.magnitude, r.place, parsePhivolcsPlace(r.place)),
         description: `PHIVOLCS recorded a magnitude ${r.magnitude.toFixed(1)} earthquake ${r.place} at a depth of ${r.depthKm.toFixed(0)} km.`,
         latitude: r.latitude,
         longitude: r.longitude,

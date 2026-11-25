@@ -21,6 +21,7 @@ import {
   formatDateTime,
 } from "@/lib/incidents";
 import { eventTimeWithAge } from "@/lib/event-time";
+import { SourcesLine } from "@/components/disasterph/sources-line";
 import { eventLabel, severityText, t } from "@/lib/i18n";
 import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
@@ -89,8 +90,6 @@ export function DisasterPHCommand() {
 
   // ── Live data hooks ──
   const { incidents, isLoading, generatedAt, sourceStatuses } = useIncidents();
-  // Sources the server currently reports as healthy (not a fixed number).
-  const healthySources = sourceStatuses.filter((s) => s.status === "healthy").length;
   const { places } = useSavedPlaces();
   const { isOnline } = useNetworkStatus();
   const { locale } = useLocale();
@@ -166,8 +165,18 @@ export function DisasterPHCommand() {
     [recentIncidents],
   );
 
+  // Hazards DisasterPH does not monitor yet (only NASA EONET reports them,
+  // rarely): their tab appears only when there is something to show, so a
+  // "0" never reads as "no floods". A zero appears only for monitored hazards.
+  const nationalCount = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const i of allRecentIncidents) counts[i.event_type] = (counts[i.event_type] ?? 0) + 1;
+    return counts;
+  }, [allRecentIncidents]);
+  const UNMONITORED = new Set(["flood", "landslide"]);
+
   // ── Filter bar chips ──
-  const filterChips: FilterChip[] = [
+  const allFilterChips: FilterChip[] = [
     { label: i18n.common.recent, value: "all", icon: Activity },
     {
       // Counts and filters warning- and critical-level events.
@@ -181,6 +190,15 @@ export function DisasterPHCommand() {
     { label: eventLabel("volcano", locale), value: "volcano", icon: Mountain },
     { label: eventLabel("landslide", locale), value: "landslide", icon: TriangleAlert },
   ];
+  const filterChips = allFilterChips.filter(
+    (chip) => !UNMONITORED.has(chip.value) || (nationalCount[chip.value] ?? 0) > 0,
+  );
+
+  /** Badge text: "None active" when no typhoon exists anywhere. */
+  function chipBadge(value: string): string {
+    if (value === "typhoon" && (nationalCount.typhoon ?? 0) === 0) return i18n.common.noneActive;
+    return String(chipCount(value));
+  }
 
   function chipCount(value: string): number {
     // Same 10-day set the feed shows, so the numbers agree.
@@ -245,7 +263,7 @@ export function DisasterPHCommand() {
               </div>
 
               {/* ── Summary counters ── */}
-              <div className="grid grid-cols-3 gap-px border-b border-overlay/8 bg-overlay/5">
+              <div className="grid grid-cols-2 gap-px border-b border-overlay/8 bg-overlay/5">
                 {[
                   {
                     label: i18n.common.recent,
@@ -256,11 +274,6 @@ export function DisasterPHCommand() {
                     label: i18n.common.warningPlus,
                     count: criticalCount,
                     color: "text-red-400",
-                  },
-                  {
-                    label: i18n.common.sourcesHealthy,
-                    count: healthySources,
-                    color: "text-cyan-400",
                   },
                 ].map((s) => (
                   <div
@@ -276,10 +289,13 @@ export function DisasterPHCommand() {
               </div>
 
               <div className="flex-1 overflow-y-auto scrollbar-none">
-                {recentIncidents.length === 0 ? (
-                  <p className="px-5 py-10 text-center text-sm text-[var(--text-dim)]">
-                    {i18n.common.noSignals}
-                  </p>
+                {/* The one event list on wide screens: follows the filter tabs. */}
+                {filteredIncidents.length === 0 ? (
+                  <HazardEmptyState
+                    filter={activeFilter}
+                    locale={locale}
+                    sourceStatuses={sourceStatuses}
+                  />
                 ) : (
                   <motion.div
                     className="flex flex-col"
@@ -287,22 +303,27 @@ export function DisasterPHCommand() {
                     initial="initial"
                     animate="animate"
                   >
-                    {recentIncidents.slice(0, 30).map((incident) => {
+                    {filteredIncidents.slice(0, 30).map((incident) => {
                       const Icon =
                         HAZARD_ICON[incident.event_type] ?? AlertTriangle;
                       const isSelected = selectedIncident?.id === incident.id;
 
                       return (
-                        <motion.button
+                        <motion.div
                           key={incident.id}
-                          type="button"
                           variants={fadeSlideUp}
                           transition={{ duration: 0.2 }}
-                          className={`flex items-start gap-3.5 px-5 py-4 text-left transition-all border-b border-overlay/5 ${
+                          className={`flex items-stretch border-b border-overlay/5 transition-all ${
                             isSelected
                               ? "bg-overlay/8 border-l-2 border-l-orange-400"
                               : "hover:bg-overlay/4 border-l-2 border-l-transparent"
                           }`}
+                        >
+                        {/* Row: show this event on the map */}
+                        <button
+                          type="button"
+                          aria-pressed={isSelected}
+                          className="flex min-w-0 flex-1 items-start gap-3.5 py-4 pl-5 pr-1 text-left"
                           onClick={() => {
                             setSelectedIncidentId(incident.id);
                             setSheetOpen(true);
@@ -320,7 +341,7 @@ export function DisasterPHCommand() {
                             <Icon className="h-[18px] w-[18px]" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-[14px] font-semibold text-[var(--text-primary)] leading-snug">
+                            <p className="break-words text-[14px] font-semibold text-[var(--text-primary)] leading-snug">
                               {incident.title}
                             </p>
                             <div className="mt-1 flex items-center gap-2">
@@ -346,7 +367,16 @@ export function DisasterPHCommand() {
                               </span>
                             </div>
                           </div>
-                        </motion.button>
+                        </button>
+                        {/* Separate link to the full event page */}
+                        <Link
+                          href={`/pulse/${encodeURIComponent(incident.id)}`}
+                          aria-label={`${i18n.common.viewFullDetail}: ${incident.title}`}
+                          className="flex w-11 shrink-0 items-center justify-center text-[var(--text-dim)] transition hover:text-[var(--text-primary)]"
+                        >
+                          <ArrowUpRight aria-hidden className="h-4 w-4" />
+                        </Link>
+                        </motion.div>
                       );
                     })}
                   </motion.div>
@@ -372,6 +402,9 @@ export function DisasterPHCommand() {
                 recentIncidents={allRecentIncidents}
                 warningCount={criticalCount}
               />
+              <div className="px-4 pb-2.5 md:px-5">
+                <SourcesLine statuses={sourceStatuses} locale={locale} />
+              </div>
             </div>
           )}
 
@@ -389,7 +422,7 @@ export function DisasterPHCommand() {
                 </div>
                 <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-1 px-1 md:flex-wrap md:overflow-visible">
                   {filterChips.map((chip) => {
-                    const count = chipCount(chip.value);
+                    const badge = chipBadge(chip.value);
                     const active = activeFilter === chip.value;
 
                     return (
@@ -425,7 +458,7 @@ export function DisasterPHCommand() {
                               : "bg-overlay/8 text-[var(--text-dim)]"
                           }`}
                         >
-                          {count}
+                          {badge}
                         </span>
                       </motion.button>
                     );
@@ -626,7 +659,7 @@ export function DisasterPHCommand() {
 
           {/* ── Detail Feed (below map) ── */}
           {!focusMode && lowbarOpen && (
-            <section className="flex-1 md:flex-none md:shrink-0 border-t border-overlay/10 bg-[var(--bg-panel)] overflow-y-auto">
+            <section className="flex-1 md:flex-none md:shrink-0 border-t border-overlay/10 bg-[var(--bg-panel)] overflow-y-auto lg:hidden">
               {/* Section heading */}
               <div className="sticky top-0 z-10 flex items-center gap-2 md:gap-3 border-b border-overlay/8 px-4 md:px-5 py-2.5 md:py-3 bg-[var(--bg-panel)]">
                 <div className="flex items-center gap-1.5 text-[var(--text-dim)]">
@@ -634,36 +667,6 @@ export function DisasterPHCommand() {
                   <span className="text-[12px] font-bold uppercase tracking-[0.15em]">
                     Feed
                   </span>
-                </div>
-                <div className="flex min-w-0 gap-2 overflow-x-auto scrollbar-none ml-2">
-                  {[
-                    "all",
-                    "earthquake",
-                    "typhoon",
-                    "flood",
-                    "volcano",
-                    "landslide",
-                  ].map((t) => {
-                    const active = activeFilter === t;
-                    return (
-                      <button
-                        key={t}
-                        type="button"
-                        className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-wider transition ${
-                          active
-                            ? "bg-orange-500/15 text-orange-400"
-                            : "text-[var(--text-dim)] hover:bg-overlay/6 hover:text-[var(--text-primary)]"
-                        }`}
-                        onClick={() =>
-                          setActiveFilter(t as IncidentEventType | "all")
-                        }
-                      >
-                        {t === "all"
-                          ? i18n.common.all
-                          : eventLabel(t as IncidentEventType, locale)}
-                      </button>
-                    );
-                  })}
                 </div>
                 <span className="ml-auto text-[13px] font-medium text-[var(--text-dim)]">
                   {filteredIncidents.length > FEED_LIMIT

@@ -816,7 +816,6 @@ select {
   color: hsl(22 100% 34%);
 }
 
-[data-theme="day"] .header-nav-link.is-active .header-nav-subtitle,
 [data-theme="day"] .header-mobile-tab.is-active {
   color: hsl(22 90% 34%);
 }

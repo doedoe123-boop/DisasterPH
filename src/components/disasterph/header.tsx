@@ -10,12 +10,13 @@ import { EMERGENCY_NUMBER } from "@/lib/hotlines";
 import { useTheme } from "@/hooks/useTheme";
 import { NotificationBell } from "@/components/disasterph/notification-bell";
 
+// One label per page; the phone tab bar uses a shorter one where needed.
 const NAV_ITEMS = [
-  { labelKey: "live", subKey: "liveSub", href: "/", icon: Tv },
-  { labelKey: "pulse", subKey: "pulseSub", href: "/pulse", icon: Radio },
+  { labelKey: "live", shortKey: "live", href: "/", icon: Tv },
+  { labelKey: "pulse", shortKey: "pulse", href: "/pulse", icon: Radio },
   {
     labelKey: "sanctuary",
-    subKey: "sanctuarySub",
+    shortKey: "sanctuaryShort",
     href: "/shelters",
     icon: Landmark,
   },
@@ -77,16 +78,11 @@ export function AppHeader() {
                   <Icon
                     className={`h-[20px] w-[20px] ${active ? "text-orange-400" : ""}`}
                   />
-                  <div className="leading-tight">
-                    <span
-                      className={`text-md font-semibold ${active ? "text-orange-300" : ""}`}
-                    >
-                      {i18n.nav[item.labelKey]}
-                    </span>
-                    <p className="header-nav-subtitle text-sm font-medium text-[var(--text-dim)] tracking-wide">
-                      {i18n.nav[item.subKey]}
-                    </p>
-                  </div>
+                  <span
+                    className={`text-md font-semibold leading-tight ${active ? "text-orange-300" : ""}`}
+                  >
+                    {i18n.nav[item.labelKey]}
+                  </span>
                 </span>
               </Link>
             );
@@ -220,7 +216,7 @@ export function AppHeader() {
             >
               <Icon className="h-5 w-5" />
               <span className="text-[10px] font-bold uppercase tracking-wider">
-                {i18n.nav[item.labelKey]}
+                {i18n.nav[item.shortKey]}
               </span>
               {active && (
                 <motion.div

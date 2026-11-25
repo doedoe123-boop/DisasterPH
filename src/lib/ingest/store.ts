@@ -145,6 +145,7 @@ export function getSourceHealth(): SourceStatus[] {
         ? "degraded"
         : status) as SourceStatus["status"],
       last_fetch_at: h.last_fetch_at ?? new Date().toISOString(),
+      last_success_at: h.last_success_at ?? null,
       latency_ms: h.latency_ms,
       notes: h.notes,
       ...(h.bulletin_state && { bulletin_state: h.bulletin_state }),
@@ -158,6 +159,7 @@ export function getSourceHealth(): SourceStatus[] {
         source: src,
         status: "unavailable",
         last_fetch_at: new Date().toISOString(),
+        last_success_at: null,
         latency_ms: 0,
         notes: "Awaiting first fetch.",
       });

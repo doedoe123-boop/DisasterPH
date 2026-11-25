@@ -1,4 +1,5 @@
 import type { Incident, IncidentSeverity } from "@/types/incident";
+import { parseUsgsPlace, quakeTitle } from "@/lib/quake-place";
 import { PH_BOUNDS, regionMetadata } from "./regions";
 
 /*
@@ -58,7 +59,7 @@ export async function fetchUsgsEvents(): Promise<Incident[]> {
       source: "USGS",
       external_id: String(feature.id ?? props.code ?? ""),
       event_type: "earthquake",
-      title: `Magnitude ${mag.toFixed(1)} earthquake — ${place}`,
+      title: quakeTitle(mag, place, parseUsgsPlace(place)),
       description: buildDescription(mag, depthKm, place, props),
       latitude: lat,
       longitude: lon,

@@ -21,6 +21,7 @@ import { displayRegion } from "@/lib/geo/ph-regions";
 import { eventLabel, severityText, t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
 import { MapLegend } from "@/components/disasterph/map-legend";
+import { applyBaseLabels } from "@/lib/map-labels";
 
 // Type-only imports — the real module is loaded at runtime via import()
 type MapLibreModule = typeof import("maplibre-gl");
@@ -173,6 +174,7 @@ export default function MapLibreMapComponent({
 
         // Theme-aware sky atmosphere
         applySky(map);
+        applyBaseLabels(map);
 
         setRotateGestures(map, false);
         fitNational(map, leftInsetRef.current, 0);
@@ -200,6 +202,7 @@ export default function MapLibreMapComponent({
         map.setStyle(theme === "day" ? MAP_STYLE_DAY : MAP_STYLE_NIGHT);
         map.once("styledata", () => {
           applySky(map);
+          applyBaseLabels(map);
           addAllSourcesAndLayers(map, incidentsRef.current);
           // Style swaps drop sources; restore terrain if it was on.
           if (terrainRef.current && TERRAIN_CONFIG) enableTerrain(map, TERRAIN_CONFIG, false);
@@ -262,10 +265,11 @@ export default function MapLibreMapComponent({
       const existing = markersRef.current.get(incident.id);
       if (existing) {
         existing.setLngLat([incident.longitude, incident.latitude]);
+        existing.getElement().setAttribute("aria-label", markerLabel(incident, locale));
         return;
       }
 
-      const el = createMarkerElement(incident);
+      const el = createMarkerElement(incident, markerLabel(incident, locale));
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         onSelectIncident(incident);
@@ -279,7 +283,7 @@ export default function MapLibreMapComponent({
 
       markersRef.current.set(incident.id, marker);
     });
-  }, [incidents, mapReady, onSelectIncident, onHoverIncident]);
+  }, [incidents, mapReady, onSelectIncident, onHoverIncident, locale]);
 
   // ── Volcano Permanent Danger Zones (radius from the PHIVOLCS bulletin) ──
   useEffect(() => {
@@ -737,7 +741,12 @@ function addAllSourcesAndLayers(map: MlMap, incidents: Incident[]) {
   syncTyphoonTracks(map, incidents);
 }
 
-function createMarkerElement(incident: Incident): HTMLDivElement {
+/** Accessible name: hazard type, then the title ("Earthquake: M5.1 · …"). */
+function markerLabel(incident: Incident, locale: "en" | "fil"): string {
+  return `${eventLabel(incident.event_type, locale)}: ${incident.title}`;
+}
+
+function createMarkerElement(incident: Incident, label: string): HTMLDivElement {
   const color = HAZARD_COLORS[incident.event_type];
   const ringColor = SEVERITY_RING[incident.severity];
 
@@ -755,7 +764,7 @@ function createMarkerElement(incident: Incident): HTMLDivElement {
   el.className = "mapbox-marker";
   el.dataset.incidentId = incident.id;
   // Attribute, not markup: feed text is never parsed as HTML.
-  el.setAttribute("aria-label", String(incident.title));
+  el.setAttribute("aria-label", label);
   el.style.width = `${size}px`;
   el.style.height = `${size}px`;
   el.style.cursor = "pointer";

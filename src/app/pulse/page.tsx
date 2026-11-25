@@ -149,14 +149,18 @@ export default function PulseFeedPage() {
 
   const typeFilters = useMemo(
     () =>
-      TYPE_FILTERS.map((filter) => ({
+      TYPE_FILTERS
+        // Flood and landslide aren't monitored yet: show their chip only
+        // when a source actually reports one.
+        .filter((filter) => !(filter.value === "flood" || filter.value === "landslide") || incidents.some((i) => i.event_type === filter.value))
+        .map((filter) => ({
         ...filter,
         label:
           filter.value === "all"
             ? i18n.common.all
             : eventLabel(filter.value, locale),
       })),
-    [i18n.common.all, locale],
+    [i18n.common.all, locale, incidents],
   );
 
   const severityFilters = useMemo(
