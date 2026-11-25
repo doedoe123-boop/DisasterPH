@@ -20,8 +20,10 @@ import {
   ChevronRight,
   Lock,
   ShieldAlert,
+  ExternalLink,
 } from "lucide-react";
 import { AppHeader } from "@/components/disasterph/header";
+import { SiteDisclaimer } from "@/components/disasterph/site-disclaimer";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -191,6 +193,21 @@ function SheltersUnavailable() {
           </div>
           <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">{copy.body}</p>
           <p className="mt-3 text-sm leading-6 text-[var(--text-muted)]">{copy.followLocal}</p>
+          <h2 className="mt-5 text-sm font-semibold">{copy.findTitle}</h2>
+          <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-6 text-[var(--text-muted)]">
+            {copy.findSteps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
+          <a
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-cyan-400 hover:text-cyan-300"
+            href="https://ndrrmc.gov.ph/"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <ExternalLink className="h-4 w-4" />
+            {copy.ndrrmc}
+          </a>
           <a
             className="mt-5 inline-flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20"
             href="tel:911"
@@ -198,6 +215,7 @@ function SheltersUnavailable() {
             <Phone className="h-4 w-4" />
             {copy.emergency} 911
           </a>
+          <SiteDisclaimer className="mt-5 border-t border-overlay/8 pt-4" />
         </div>
       </main>
     </div>

@@ -369,6 +369,7 @@ export function DisasterPHCommand() {
                 locale={locale}
                 onChange={setArea}
                 places={places}
+                recentIncidents={allRecentIncidents}
                 warningCount={criticalCount}
               />
             </div>

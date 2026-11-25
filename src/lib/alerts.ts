@@ -24,13 +24,13 @@ function buildMessage(
 
   switch (trigger) {
     case "new-critical":
-      return `${incident.title} is critical for ${placeText}.`;
+      return `${incident.title} (critical level) is near ${placeText}.`;
     case "new-warning":
-      return `${incident.title} now affects ${placeText}.`;
+      return `${incident.title} is near ${placeText}.`;
     case "escalation":
       return `${incident.title} escalated in severity near ${placeText}.`;
     case "new-place-impact":
-      return `${incident.title} now affects additional saved places: ${placeText}.`;
+      return `${incident.title} is now also near ${placeText}.`;
     default:
       return `${incident.title} requires attention near ${placeText}.`;
   }

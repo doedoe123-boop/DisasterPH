@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { LocateFixed, MapPin } from "lucide-react";
+import { Bookmark, LocateFixed, MapPin } from "lucide-react";
 import { t, type Locale } from "@/lib/i18n";
 import { REGION_NAMES, locateRegion } from "@/lib/geo/ph-regions";
 import { areaLabel, resolveArea, type SelectedArea } from "@/lib/area";
-import type { SavedPlace } from "@/types/incident";
+import type { Incident, SavedPlace } from "@/types/incident";
+import { SavedPlacesPanel } from "./saved-places-panel";
 
 type LocateState = "idle" | "locating" | "denied" | "unavailable" | "offshore";
 
@@ -21,6 +22,7 @@ export function AreaBar({
   count,
   warningCount,
   locale,
+  recentIncidents,
 }: {
   area: SelectedArea;
   onChange: (area: SelectedArea) => void;
@@ -28,9 +30,13 @@ export function AreaBar({
   count: number;
   warningCount: number;
   locale: Locale;
+  /** Recent events nationwide, for the saved-places panel. */
+  recentIncidents: Incident[];
 }) {
   const copy = t(locale).area;
+  const placesCopy = t(locale).places;
   const [locate, setLocate] = useState<LocateState>("idle");
+  const [placesOpen, setPlacesOpen] = useState(false);
   const effective = resolveArea(area, places);
   const label = areaLabel(effective, places, copy.all);
   const value =
@@ -80,10 +86,13 @@ export function AreaBar({
             ? copy.locationOffshore
             : null;
 
+  const isPlace = effective.kind === "place";
   const summary =
     count === 0
-      ? copy.summaryNone.replace("{area}", label)
-      : (count === 1 ? copy.summaryOne : copy.summaryMany)
+      ? (isPlace ? copy.summaryPlaceNone : copy.summaryNone).replace("{area}", label)
+      : (count === 1
+          ? isPlace ? copy.summaryPlaceOne : copy.summaryOne
+          : isPlace ? copy.summaryPlaceMany : copy.summaryMany)
           .replace("{n}", String(count))
           .replace("{area}", label) +
         (warningCount > 0 ? ` · ${copy.summaryWarning.replace("{n}", String(warningCount))}` : "");
@@ -132,6 +141,27 @@ export function AreaBar({
           <LocateFixed className="h-3.5 w-3.5" />
           {copy.useLocation}
         </button>
+        <button
+          className="flex items-center gap-1.5 rounded-lg border border-overlay/12 px-2.5 py-1.5 text-[12px] font-medium text-[var(--text-primary)] transition hover:bg-overlay/6"
+          aria-haspopup="dialog"
+          onClick={() => setPlacesOpen(true)}
+          type="button"
+        >
+          <Bookmark className="h-3.5 w-3.5" />
+          {places.length > 0
+            ? placesCopy.openWithCount.replace("{n}", String(places.length))
+            : placesCopy.title}
+        </button>
+        <SavedPlacesPanel
+          locale={locale}
+          onClose={() => setPlacesOpen(false)}
+          onShowPlace={(placeId) => {
+            setLocate("idle");
+            onChange({ kind: "place", placeId });
+          }}
+          open={placesOpen}
+          recentIncidents={recentIncidents}
+        />
       </div>
       <div className="min-w-0 text-[12px] leading-5 text-[var(--text-muted)]" role="status">
         {locateMessage ?? (
@@ -139,6 +169,9 @@ export function AreaBar({
             <span className="text-[var(--text-primary)]">{summary}</span>
             {count === 0 && effective.kind !== "all" && (
               <span className="block text-[11px] text-[var(--text-dim)]">{copy.summaryCaveat}</span>
+            )}
+            {isPlace && (
+              <span className="block text-[11px] text-[var(--text-dim)]">{copy.placeCaveat}</span>
             )}
           </>
         )}
