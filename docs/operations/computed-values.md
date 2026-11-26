@@ -3,7 +3,7 @@
 Everything a visitor sees is either **copied from an agency** (PHIVOLCS, PAGASA,
 NASA EONET, USGS) or **computed by DisasterPH**. This list covers the second
 kind: what we compute, from what, where in the code, and what it is based on.
-Review it whenever a rule changes. Last reviewed: 2026-11-26 (map Phase 3a).
+Review it whenever a rule changes. Last reviewed: 2026-11-26 (map Phase 3b).
 
 Legend for "Basis":
 - **Official**: follows a published agency rule or table (source linked).
@@ -37,6 +37,7 @@ uses these four words. They exist to sort and colour events consistently.
 | Provinces under a wind signal | Copied from the PAGASA bulletin; matched to our province list | `pagasa.ts` `findProvinces` | Official text, our matching |
 | "Areas named in the bulletin" (event page) | Wind-signal provinces or the volcano province only | `src/app/pulse/[id]/page.tsx` `bulletinAreas` | Official |
 | Felt intensities by place | Copied from the PHIVOLCS bulletin; ALL-CAPS province names turned to title case | `src/lib/ingest/phivolcs-eq-bulletin.ts` | Official |
+| Which bulletins are read in the background | M4.0+ PHIVOLCS earthquakes, newest first, at most 12 new per 3-minute refresh, 3 at a time, waiting at most 2.5 s (slower ones are merged on the next refresh); cached by URL, failures retried after 5 minutes | `src/lib/ingest/phivolcs-eq-bulletin.ts` `enrichQuakesWithBulletins` | Ours (scheduling); content official |
 | Nearest town for "Use my current location" | Nearest of 1,642 town points within 30 km | `src/components/disasterph/saved-places-panel.tsx` | Ours, town points from faeldon/philippines-json-maps |
 
 ## Saved places and "your area"

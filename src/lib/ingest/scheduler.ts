@@ -12,6 +12,7 @@ import { fetchEonetEvents } from "./eonet";
 import { EQ_MIN_MAGNITUDE, EQ_WINDOW_DAYS, fetchPhivolcsEvents } from "./phivolcs";
 import { fetchUsgsEvents } from "./usgs";
 import { BULLETIN_STALE_MS, fetchPhivolcsVolcanoes } from "./phivolcs-volcano";
+import { enrichQuakesWithBulletins } from "./phivolcs-eq-bulletin";
 import { TC_BULLETIN_STALE_MS, fetchPagasaEvents, type SourceFetchResult } from "./pagasa";
 
 /** Cache TTL: 3 min in prod, 30 s in dev. */
@@ -181,7 +182,11 @@ async function ingestVolcanoes(): Promise<void> {
 async function ingestEarthquakes(): Promise<void> {
   const start = Date.now();
   try {
-    const events = await earthquakeFetchers.phivolcs();
+    const listed = await earthquakeFetchers.phivolcs();
+    // Felt intensities and damage/aftershock expectations for M4+ quakes,
+    // from their bulletins (cached; a few new ones per refresh). Never fails
+    // the earthquake source: without bulletins the list is shown as it is.
+    const events = await enrichQuakesWithBulletins(listed).catch(() => listed);
     const now = Date.now();
     replaceSourceIncidents("PHIVOLCS", events, {
       eventType: "earthquake",
