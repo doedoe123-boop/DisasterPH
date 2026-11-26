@@ -3,7 +3,7 @@
 Everything a visitor sees is either **copied from an agency** (PHIVOLCS, PAGASA,
 NASA EONET, USGS) or **computed by DisasterPH**. This list covers the second
 kind: what we compute, from what, where in the code, and what it is based on.
-Review it whenever a rule changes. Last reviewed: 2026-11-26 (map Phase 3b).
+Review it whenever a rule changes. Last reviewed: 2026-11-26 (map Phase 4).
 
 Legend for "Basis":
 - **Official**: follows a published agency rule or table (source linked).
@@ -49,6 +49,10 @@ uses these four words. They exist to sort and colour events consistently.
 | Area summary counts ("47 recent events in or near …", "3 at warning level or higher") | Count of matched events in the last 10 days | `src/components/disasterph/area-bar.tsx`, `disasterph-command.tsx` | Ours |
 | Event order when places are saved | severity × 10 + nearness (linear to 0 at 200 km) | `src/lib/incidents.ts` `priorityScore` | Ours |
 | Stored coordinates | Rounded to 2 decimals (about 1 km) | `src/lib/saved-places.ts` `roundCoord` | Ours (privacy) |
+| Saved place inside / near the edge / outside a volcano danger zone (event card) | Straight-line (haversine) distance from the volcano's point to the saved place, compared with the PHIVOLCS Permanent Danger Zone radius. Within 1.5 km of the edge either way is "near the edge" (saved points are rounded to about 1 km); no verdict when the bulletin gives no radius, only the distance. Places over 50 km away are not listed; at most 5, nearest first. Computed in the browser; places never leave it | `src/lib/danger-zone.ts` `placeChecks`, `EDGE_MARGIN_KM`, `VOLCANO_PLACE_KM` | Official radius; distance, edge margin and cut-off ours |
+| Saved place distance from an earthquake (event card) | Haversine distance from the PHIVOLCS epicentre, rounded to whole km (minimum 1); only places within 100 km | `src/lib/danger-zone.ts` `QUAKE_PLACE_KM` | Official epicentre; distance and cut-off ours. No felt or not-felt verdict |
+| Saved place under a cyclone's wind signal (event card) | The place's region appears in the PAGASA signal regions for that cyclone | `src/lib/danger-zone.ts` (uses `regionForMatching`) | Official signal regions; region lookup ours |
+| "This is not a safety confirmation." | Fixed text ending every saved-place section; inside or near the edge also quotes the bulletin's own Permanent Danger Zone line and says to contact the people there and follow the local DRRMO | `src/components/disasterph/event-card.tsx` `SavedPlaceLines` | Quote official; the rest ours (product wording) |
 
 ## Time and freshness
 
@@ -69,7 +73,7 @@ uses these four words. They exist to sort and colour events consistently.
 
 | Value | How | Code | Basis |
 |---|---|---|---|
-| Volcano danger-zone circle | Radius from the PHIVOLCS bulletin's Permanent Danger Zone; no circle if the bulletin gives none (e.g. Taal) | `src/components/disasterph/mapbox-map.tsx` `volcanoExclusionRadiusKm` | Official radius, our circle drawing |
+| Volcano danger-zone circle | Radius from the PHIVOLCS bulletin's Permanent Danger Zone (accepted only if more than 0 and at most 30 km); no circle if the bulletin gives none (e.g. Taal). Drawn as a 64-point great-circle ring on the same sphere as the inside/outside distance. When chosen: stronger fill and outline, the label "{n} km Permanent Danger Zone (PHIVOLCS)" just inside its top, and the camera fits the whole circle in the clear part of the map (popover beside it on wide screens) | `src/lib/danger-zone.ts` `pdzRadiusKm`, `zoneRing`; `src/components/disasterph/mapbox-map.tsx` `syncHazardZones`; `src/lib/map-camera.ts` `zonePadding` | Official radius, our circle drawing |
 | Storm track line | NASA EONET positions; dashed where EONET marks them as forecast | `mapbox-map.tsx` `syncTyphoonTracks` | Official (NASA EONET) |
 | Earthquake marker | Circle sized by magnitude, magnitude written on it, ring colour = our severity label | `src/lib/map-event-layers.ts` | Official magnitude; ring colour ours |
 | Earthquake clusters | Nearby quakes grouped (MapLibre clustering, radius 38 px, none from zoom 9); label = count and largest magnitude | `src/lib/map-event-layers.ts` | Ours (display); magnitudes official |

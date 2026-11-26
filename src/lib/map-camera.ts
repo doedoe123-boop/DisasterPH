@@ -38,6 +38,42 @@ export function mapPadding(width: number, height: number, leftInset = 0, bottomI
   };
 }
 
+/** Width kept free on the right for the event popover when it sits beside a
+ *  danger zone (popover max width 340 px plus a gap). */
+export const POPOVER_SIDE_ROOM = 360;
+
+/** True when the map is wide enough to show a danger zone with the popover
+ *  beside it rather than over it. */
+export function popoverFitsBesideZone(width: number, leftInset = 0): boolean {
+  const p = mapPadding(width, 600, leftInset);
+  return width - p.left - p.right - POPOVER_SIDE_ROOM >= 260;
+}
+
+/**
+ * Padding for fitting a volcano danger zone: the clear map area and, when the
+ * popover sits beside the zone, room on the right for the popover. (The
+ * zone's label sits just inside the top of the circle.)
+ */
+export function zonePadding(
+  width: number,
+  height: number,
+  leftInset = 0,
+  bottomInset = 0,
+  topInset = 0,
+  besidePopover = false,
+): Padding {
+  const p = mapPadding(width, height, leftInset, bottomInset, topInset);
+  // Phones: the bottom sheet leaves little map, so trim the side margins
+  // (the circle is centred; the zoom buttons stay clear of it).
+  const small = width < 640;
+  return {
+    top: p.top,
+    bottom: small ? Math.max(4, p.bottom - 24) : p.bottom,
+    left: p.left,
+    right: p.right + (besidePopover ? POPOVER_SIDE_ROOM : 0),
+  };
+}
+
 /** True when a screen point lies inside the padded (unobstructed) area. */
 export function isInView(
   point: { x: number; y: number },

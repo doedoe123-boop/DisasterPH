@@ -11,6 +11,8 @@ import { sourceInfo } from "@/lib/source-info";
 import { displayRegion } from "@/lib/geo/ph-regions";
 import { intensityGroups, ROMAN_NUMERALS } from "@/lib/quake-intensity";
 import { PHIVOLCS_TSUNAMI_URL, showTsunamiPointer } from "@/lib/tsunami-check";
+import { pdzRadiusKm, placeChecks, type PlaceCheck } from "@/lib/danger-zone";
+import { useSavedPlaces } from "@/hooks/use-saved-places";
 
 /**
  * One event, in the order the map handoff asks for: what and how recent,
@@ -100,6 +102,9 @@ function EventCardBody({
 }: CardProps) {
   const incident = useQuakeDetails(base);
   const copy = t(locale).common.card;
+  // Saved places stay on this device; the check runs here.
+  const { places } = useSavedPlaces();
+  const checks = placeChecks(incident, places);
   const m = incident.metadata;
   const source = sourceInfo(incident);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -265,7 +270,10 @@ function EventCardBody({
         </section>
       )}
 
-      {/* 6. Links */}
+      {/* 6. Saved places: distance, inside/outside the danger zone, never a safety claim */}
+      {checks.length > 0 && <SavedPlaceLines checks={checks} incident={incident} locale={locale} />}
+
+      {/* Links */}
       <div className="mt-3 flex flex-wrap gap-2">
         {source.recordUrl && (
           <a href={source.recordUrl} target="_blank" rel="noopener noreferrer" className="event-card-btn inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-overlay/15 px-3 font-semibold hover:bg-overlay/6">
@@ -290,5 +298,50 @@ function EventCardBody({
         {source.publisher === "USGS" ? ` · ${copy.usgsFallback}` : ""}
       </p>
     </article>
+  );
+}
+
+function placeSentence(check: PlaceCheck, incident: Incident, locale: Locale): string {
+  const copy = t(locale).common.card;
+  const fill = (tpl: string) =>
+    tpl
+      .replace("{place}", check.place.label)
+      .replace("{km}", String(check.distanceKm ?? ""))
+      .replace("{zone}", String(pdzRadiusKm(incident)))
+      .replace("{region}", check.region ?? "");
+  switch (check.relation) {
+    case "inside": return fill(copy.placeInside);
+    case "edge": return fill(copy.placeEdge);
+    case "outside": return fill(copy.placeOutside);
+    case "signal": return fill(copy.placeSignal);
+    default: return fill(incident.event_type === "volcano" ? copy.placeNearVolcano : copy.placeNearQuake);
+  }
+}
+
+/** The saved-place lines on a card. Inside (or at the edge of) a danger zone is stated plainly, with the bulletin's own line. */
+function SavedPlaceLines({ checks, incident, locale }: { checks: PlaceCheck[]; incident: Incident; locale: Locale }) {
+  const copy = t(locale).common.card;
+  const serious = checks.some((c) => c.relation === "inside" || c.relation === "edge");
+  const pdzLine = lines(incident.metadata.prohibited).find((l) => /permanent danger zone|\bPDZ\b/i.test(l));
+  return (
+    <section
+      className={`saved-place-lines mt-3 rounded-lg border p-2.5 ${serious ? "is-serious border-red-500/50 bg-red-500/10" : "border-overlay/12 bg-overlay/[0.03]"}`}
+    >
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-dim)]">{copy.yourPlaces}</h3>
+      <ul className="mt-1 space-y-1">
+        {checks.map((c) => (
+          <li key={c.place.id} className={c.relation === "inside" ? "font-semibold" : undefined}>
+            {placeSentence(c, incident, locale)}
+          </li>
+        ))}
+      </ul>
+      {serious && (
+        <p className="mt-1.5">
+          {pdzLine ? copy.insideQuote.replace("{line}", pdzLine.replace(/\.$/, "")) + " " : ""}
+          {copy.insideAdvice}
+        </p>
+      )}
+      <p className="mt-1.5 text-[12px] text-[var(--text-muted)]">{copy.notSafetyConfirmation}</p>
+    </section>
   );
 }

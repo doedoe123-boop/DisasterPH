@@ -17,12 +17,13 @@ import { PHIVOLCS_TSUNAMI_URL, showTsunamiPointer } from "@/lib/tsunami-check";
 import { loadMapLibre } from "@/lib/maplibre-loader";
 import { Mountain, LocateFixed } from "lucide-react";
 import { TERRAIN_CONFIG, TERRAIN_SOURCE, disableTerrain, enableTerrain } from "@/lib/terrain";
-import { focusZoom, isInView, mapPadding } from "@/lib/map-camera";
+import { focusZoom, isInView, mapPadding, popoverFitsBesideZone, zonePadding } from "@/lib/map-camera";
 import { displayRegion } from "@/lib/geo/ph-regions";
 import { eventLabel, severityText, t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
 import { MapLegend } from "@/components/disasterph/map-legend";
 import { applyBaseLabels } from "@/lib/map-labels";
+import { pdzRadiusKm, zoneRing } from "@/lib/danger-zone";
 import {
   QUAKE_SPLIT_ZOOM,
   ensureEventLayers,
@@ -154,6 +155,12 @@ export default function MapLibreMapComponent({
   useEffect(() => {
     clusterWordRef.current = clusterWord;
   }, [clusterWord]);
+  // "{n} km Permanent Danger Zone (PHIVOLCS)" for the chosen volcano's circle.
+  const zoneLabel = t(locale).common.card.zoneLabel;
+  const zoneLabelRef = useRef(zoneLabel);
+  useEffect(() => {
+    zoneLabelRef.current = zoneLabel;
+  }, [zoneLabel]);
   // Latest callbacks for the map's own event handlers (registered once).
   const onSelectRef = useRef(onSelectIncident);
   const onHoverRef = useRef(onHoverIncident);
@@ -264,7 +271,7 @@ export default function MapLibreMapComponent({
         map.once("styledata", () => {
           applySky(map);
           applyBaseLabels(map);
-          addAllSourcesAndLayers(map, incidentsRef.current, clusterWordRef.current);
+          addAllSourcesAndLayers(map, incidentsRef.current, clusterWordRef.current, zoneLabelRef.current);
           // Style swaps drop sources; restore terrain if it was on.
           if (terrainRef.current && TERRAIN_CONFIG) enableTerrain(map, TERRAIN_CONFIG, false);
         });
@@ -370,8 +377,8 @@ export default function MapLibreMapComponent({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
-    syncHazardZones(map, incidents);
-  }, [incidents, mapReady]);
+    syncHazardZones(map, incidents, zoneLabel);
+  }, [incidents, mapReady, zoneLabel]);
 
   // ── Typhoon track lines + wind radius circles ──
   useEffect(() => {
@@ -397,6 +404,12 @@ export default function MapLibreMapComponent({
     set(selected, "selected", true);
     set(hoveredIncidentId, "hover", true);
     shownStateRef.current = { selected, hover: hoveredIncidentId };
+    // The chosen volcano's danger zone: stronger and labelled.
+    if (map.getSource("hazard-zones")) {
+      if (shown.selected) map.setFeatureState({ source: "hazard-zones", id: shown.selected }, { selected: false });
+      if (selected) map.setFeatureState({ source: "hazard-zones", id: selected }, { selected: true });
+    }
+    if (map.getLayer("hazard-zone-label")) map.setFilter("hazard-zone-label", ["==", ["get", "id"], selected ?? ""]);
     // incidents: a refresh re-creates features, so state is re-applied.
   }, [selectedIncidentId, hoveredIncidentId, incidents, mapReady]);
 
@@ -436,16 +449,27 @@ export default function MapLibreMapComponent({
   const chosen = selectedIncidentId ? incidents.find((i) => i.id === selectedIncidentId) : undefined;
   const chosenLng = chosen?.longitude;
   const chosenLat = chosen?.latitude;
+  const chosenZoneKm = chosen ? pdzRadiusKm(chosen) : 0;
   const hasPopover = Boolean(popover);
+  // A volcano with a danger zone: the popover sits beside the circle (to its
+  // right) instead of over it, when the map is wide enough.
+  const popoverSideRef = useRef(false);
   useEffect(() => {
     const map = mapRef.current;
     const ml = mlRef.current;
     if (!map || !ml || !mapReady || !hasPopover || chosenLng === undefined || chosenLat === undefined) {
       popoverRef.current?.remove();
       popoverRef.current = null;
+      popoverSideRef.current = false;
       setPopoverNode(null);
       return;
     }
+    const side = chosenZoneKm > 0 && popoverFitsBesideZone(map.getContainer().clientWidth, leftInsetRef.current);
+    if (popoverRef.current && popoverSideRef.current !== side) {
+      popoverRef.current.remove();
+      popoverRef.current = null;
+    }
+    popoverSideRef.current = side;
     if (!popoverRef.current) {
       const node = document.createElement("div");
       node.className = "bantay-popover-body";
@@ -453,6 +477,7 @@ export default function MapLibreMapComponent({
         closeButton: false,
         closeOnClick: false,
         offset: 20,
+        anchor: side ? "left" : undefined,
         className: "bantay-popover",
         maxWidth: "340px",
         // The card moves focus to its own heading.
@@ -465,7 +490,7 @@ export default function MapLibreMapComponent({
     } else {
       popoverRef.current.setLngLat([chosenLng, chosenLat]);
     }
-  }, [mapReady, hasPopover, chosenLng, chosenLat, selectedIncidentId]);
+  }, [mapReady, hasPopover, chosenLng, chosenLat, chosenZoneKm, selectedIncidentId]);
   // Keep the popover inside the map: cap its height to the larger free side
   // of the marker, then let MapLibre re-place it (it picks the side that
   // fits). Re-run when the card grows (details load) or the map moves.
@@ -473,12 +498,24 @@ export default function MapLibreMapComponent({
     const map = mapRef.current;
     const popup = popoverRef.current;
     if (!map || !popup || !popoverNode || chosenLng === undefined || chosenLat === undefined) return;
+    const side = popoverSideRef.current;
+    // Beside a zone: keep the popover just outside the circle at any zoom.
+    const besideZone = () => {
+      if (!side) return;
+      const y = map.project([chosenLng, chosenLat]).y;
+      const edge = map.project([chosenLng, chosenLat + chosenZoneKm / 111]).y;
+      popup.setOffset(Math.round(Math.abs(y - edge)) + 14);
+    };
     const place = () => {
       const h = map.getContainer().clientHeight;
       const y = map.project([chosenLng, chosenLat]).y;
-      const room = Math.max(y - (topInsetRef.current + 12), h - y - 12) - 36;
+      const above = y - (topInsetRef.current + 12);
+      const below = h - y - 12;
+      // Side anchor: the card is centred on the marker, so both halves count.
+      const room = side ? 2 * Math.min(above, below) - 12 : Math.max(above, below) - 36;
       const body = popup.getElement()?.querySelector<HTMLElement>(".bantay-popover-body");
       if (body) body.style.maxHeight = `${Math.max(160, Math.round(room))}px`;
+      besideZone();
       popup.setLngLat([chosenLng, chosenLat]);
     };
     place();
@@ -486,11 +523,13 @@ export default function MapLibreMapComponent({
     const body = popup.getElement()?.querySelector(".bantay-popover-body");
     if (body) observer.observe(body);
     map.on("moveend", place);
+    map.on("zoom", besideZone);
     return () => {
       observer.disconnect();
       map.off("moveend", place);
+      map.off("zoom", besideZone);
     };
-  }, [popoverNode, chosenLng, chosenLat]);
+  }, [popoverNode, chosenLng, chosenLat, chosenZoneKm]);
   useEffect(
     () => () => {
       popoverRef.current?.remove();
@@ -546,6 +585,25 @@ export default function MapLibreMapComponent({
     const padding = mapPadding(w, h, leftInsetRef.current, bottomInsetRef.current, topInsetRef.current);
     // An earthquake inside a cluster isn't visible on its own: zoom in far
     // enough for the cluster to split.
+    const zoneKm = pdzRadiusKm(incident);
+    if (zoneKm > 0) {
+      // A 6 km circle is a few pixels at the national view: show the whole
+      // zone in the clear part of the map (phones: as large as the strip
+      // above the sheet allows) and, on wide screens, the popover beside it.
+      const zonePad = zonePadding(w, h, leftInsetRef.current, bottomInsetRef.current, topInsetRef.current, popoverSideRef.current);
+      const dLat = (zoneKm * (w < 640 ? 1.04 : 1.15)) / 111;
+      const dLng = dLat / Math.cos((incident.latitude * Math.PI) / 180);
+      userMovedRef.current = true;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      map.fitBounds(
+        [
+          [incident.longitude - dLng, incident.latitude - dLat],
+          [incident.longitude + dLng, incident.latitude + dLat],
+        ],
+        { padding: zonePad, maxZoom: 12.5, duration: reduce ? 0 : 800, essential: false },
+      );
+      return;
+    }
     const inCluster = incident.event_type === "earthquake" && !quakeShownAlone(map, incident.id);
     if (!inCluster && isInView(map.project(lngLat), w, h, padding)) return;
 
@@ -719,67 +777,88 @@ function applySky(map: MlMap) {
   );
 }
 
-function syncHazardZones(map: MlMap, incidents: Incident[]) {
-  const ZONE_SOURCE = "hazard-zones";
-  const ZONE_FILL = "hazard-zones-fill";
-  const ZONE_STROKE = "hazard-zones-stroke";
+const ZONE_SOURCE = "hazard-zones";
+const ZONE_LABEL_SOURCE = "hazard-zone-labels";
+const ZONE_LABEL_LAYER = "hazard-zone-label";
 
-  const features = incidents
-    // Only the volcano Permanent Danger Zone, with the radius PHIVOLCS gives.
-    // (Earthquakes have no circle: a felt area guessed from magnitude would
-    // look official. Where shaking was felt comes from the PHIVOLCS bulletin.)
+/**
+ * Volcano Permanent Danger Zones, with the radius PHIVOLCS gives (no radius,
+ * no circle). Faint for every volcano; the chosen volcano's zone gets a
+ * stronger fill, a solid outline and a label (feature-state + filter).
+ * (Earthquakes have no circle: a felt area guessed from magnitude would look
+ * official. Where shaking was felt comes from the PHIVOLCS bulletin.)
+ */
+function syncHazardZones(map: MlMap, incidents: Incident[], labelText: string) {
+  const zones = incidents
     .filter((i) => i.event_type === "volcano")
-    .map((i) => {
-      const radiusKm = volcanoExclusionRadiusKm(i);
-      if (radiusKm <= 0) return null;
-      const color = HAZARD_COLORS.volcano;
-
-      return {
-        type: "Feature" as const,
-        properties: { color, id: i.id },
-        geometry: {
-          type: "Polygon" as const,
-          coordinates: [circlePolygon(i.longitude, i.latitude, radiusKm)],
-        },
-      };
-    })
-    .filter(Boolean);
-
-  const geojson = {
-    type: "FeatureCollection" as const,
-    features,
+    .map((i) => ({ i, km: pdzRadiusKm(i) }))
+    .filter((z) => z.km > 0);
+  const polygons: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: zones.map(({ i, km }) => ({
+      type: "Feature",
+      properties: { id: i.id, color: HAZARD_COLORS.volcano },
+      geometry: { type: "Polygon", coordinates: [zoneRing(i.latitude, i.longitude, km)] },
+    })),
+  };
+  // Label point at the top of the circle (1° latitude ≈ 111 km).
+  const labels: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: zones.map(({ i, km }) => ({
+      type: "Feature",
+      properties: { id: i.id, label: labelText.replace("{n}", String(km)) },
+      geometry: { type: "Point", coordinates: [i.longitude, i.latitude + km / 111] },
+    })),
   };
 
-  if (map.getSource(ZONE_SOURCE)) {
-    (map.getSource(ZONE_SOURCE) as import("maplibre-gl").GeoJSONSource).setData(
-      geojson as GeoJSON.FeatureCollection,
-    );
-  } else {
-    map.addSource(ZONE_SOURCE, {
-      type: "geojson",
-      data: geojson as GeoJSON.FeatureCollection,
-    });
-    map.addLayer({
-      id: ZONE_FILL,
-      type: "fill",
-      source: ZONE_SOURCE,
-      paint: {
-        "fill-color": ["get", "color"],
-        "fill-opacity": 0.08,
-      },
-    }, belowEvents(map));
-    map.addLayer({
-      id: ZONE_STROKE,
-      type: "line",
-      source: ZONE_SOURCE,
-      paint: {
-        "line-color": ["get", "color"],
-        "line-opacity": 0.3,
-        "line-width": 1.5,
-        "line-dasharray": [4, 3],
-      },
-    }, belowEvents(map));
+  const existing = map.getSource(ZONE_SOURCE) as import("maplibre-gl").GeoJSONSource | undefined;
+  if (existing) {
+    existing.setData(polygons);
+    (map.getSource(ZONE_LABEL_SOURCE) as import("maplibre-gl").GeoJSONSource | undefined)?.setData(labels);
+    return;
   }
+  const chosen: import("maplibre-gl").ExpressionSpecification = ["boolean", ["feature-state", "selected"], false];
+  map.addSource(ZONE_SOURCE, { type: "geojson", data: polygons, promoteId: "id" });
+  map.addLayer({
+    id: "hazard-zones-fill",
+    type: "fill",
+    source: ZONE_SOURCE,
+    paint: { "fill-color": ["get", "color"], "fill-opacity": ["case", chosen, 0.22, 0.08] },
+  }, belowEvents(map));
+  map.addLayer({
+    id: "hazard-zones-stroke",
+    type: "line",
+    source: ZONE_SOURCE,
+    paint: {
+      "line-color": ["get", "color"],
+      "line-opacity": ["case", chosen, 0.95, 0.35],
+      "line-width": ["case", chosen, 3, 1.5],
+    },
+  }, belowEvents(map));
+  map.addSource(ZONE_LABEL_SOURCE, { type: "geojson", data: labels });
+  map.addLayer({
+    id: ZONE_LABEL_LAYER,
+    type: "symbol",
+    source: ZONE_LABEL_SOURCE,
+    filter: ["==", ["get", "id"], ""],
+    layout: {
+      "text-field": ["get", "label"],
+      "text-font": ["Noto Sans Bold"],
+      "text-size": 12,
+      // Just inside the top of the circle, on one line, so it never sits
+      // under the controls above the zone.
+      "text-anchor": "top",
+      "text-offset": [0, 0.4],
+      "text-max-width": 40,
+      "text-allow-overlap": true,
+      "text-ignore-placement": true,
+    },
+    // Rebuilt on theme change (addAllSourcesAndLayers runs after setStyle).
+    paint:
+      document.documentElement.dataset.theme === "day"
+        ? { "text-color": "#7c2d12", "text-halo-color": "#ffffff", "text-halo-width": 2 }
+        : { "text-color": "#fed7aa", "text-halo-color": "#1c1917", "text-halo-width": 2 },
+  });
 }
 
 function syncTyphoonTracks(map: MlMap, incidents: Incident[]) {
@@ -890,9 +969,9 @@ function syncTyphoonTracks(map: MlMap, incidents: Incident[]) {
   }
 }
 
-function addAllSourcesAndLayers(map: MlMap, incidents: Incident[], clusterWord: string) {
+function addAllSourcesAndLayers(map: MlMap, incidents: Incident[], clusterWord: string, zoneLabel: string) {
   ensureEventLayers(map, incidents, clusterWord);
-  syncHazardZones(map, incidents);
+  syncHazardZones(map, incidents, zoneLabel);
   syncTyphoonTracks(map, incidents);
 }
 
@@ -1002,35 +1081,6 @@ function buildPopupMeta(incident: Incident): string {
   return parts.join(" · ");
 }
 
-/**
- * Permanent Danger Zone radius from the PHIVOLCS bulletin (e.g. 4 km, 6 km).
- * No circle when the bulletin gives none (Taal's PDZ is the whole volcano
- * island) — a guessed radius could look official.
- */
-function volcanoExclusionRadiusKm(incident: Incident): number {
-  const km = Number(incident.metadata?.pdz_radius_km);
-  return Number.isFinite(km) && km > 0 && km <= 30 ? km : 0;
-}
-
-/** Generate a polygon approximating a circle on the globe */
-function circlePolygon(
-  centerLon: number,
-  centerLat: number,
-  radiusKm: number,
-  steps = 48,
-): [number, number][] {
-  const coords: [number, number][] = [];
-  const km2deg = 1 / 111.32;
-  for (let i = 0; i <= steps; i++) {
-    const angle = (i / steps) * 2 * Math.PI;
-    const dx = radiusKm * Math.cos(angle) * km2deg;
-    const dy =
-      (radiusKm * Math.sin(angle) * km2deg) /
-      Math.cos((centerLat * Math.PI) / 180);
-    coords.push([centerLon + dy, centerLat + dx]);
-  }
-  return coords;
-}
 
 const COMMUNITY_CATEGORY_LABELS: Record<string, string> = {
   blocked_road: "RD",
