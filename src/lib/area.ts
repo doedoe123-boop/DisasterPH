@@ -1,6 +1,7 @@
 import type { Incident, SavedPlace } from "@/types/incident";
 import { computePlaceRisk } from "@/lib/risk-summary";
 import { REGION_NAMES } from "@/lib/geo/ph-regions";
+import { namedRegions } from "@/lib/event-regions";
 
 /**
  * The area a visitor chose to focus on. "all" shows the whole country.
@@ -49,11 +50,6 @@ export function resolveArea(area: SelectedArea, places: SavedPlace[]): SelectedA
   return area;
 }
 
-/** Regions under a PAGASA wind signal ("A|B|C"), from the bulletin's areas. */
-function signalRegions(incident: Incident): string[] {
-  const v = incident.metadata?.signal_regions;
-  return typeof v === "string" && v ? v.split("|") : [];
-}
 
 /**
  * Whether an incident concerns the area: same region (offshore events count
@@ -72,7 +68,8 @@ export function incidentInArea(
       incident.region === area.region ||
       (typeof incident.metadata?.near_region === "string" &&
         incident.metadata.near_region === area.region) ||
-      signalRegions(incident).includes(area.region)
+      // Wind-signal areas, rainfall warning provinces, river basins.
+      namedRegions(incident).includes(area.region)
     );
   }
   // Same rule as saved-place alerts (risk-summary.ts), including wind signals.

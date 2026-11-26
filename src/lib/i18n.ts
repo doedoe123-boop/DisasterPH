@@ -209,6 +209,24 @@ export const copy = {
         checked: "checked {age}",
         usgsFallback: "backup while PHIVOLCS is unavailable",
         backToList: "Back to list",
+        rainBadge: "{level} warning",
+        rainLevel: "Warning level",
+        rainAreas: "Areas (PAGASA)",
+        issued: "Issued",
+        basinStatus: "Status",
+        firstSeen: "First seen by DisasterPH",
+        hazardPagasa: "Associated hazard (PAGASA)",
+        alsoInWarning: "Also in this warning (PAGASA)",
+        advisoryAreas: "Rainfall advisory (PAGASA)",
+        pagasaAdvice: "PAGASA's advice",
+        forecastWater: "Forecast water level (PAGASA)",
+        forecastRain: "Forecast rainfall, next 24 h (PAGASA)",
+        observedRain: "Observed rainfall, past 24 h (PAGASA)",
+        basinPdf: "PAGASA's flood bulletin for this basin is a PDF; open it for the details.",
+        approxPlace: "The marker is placed in the middle of the provinces PAGASA lists. It is not an exact location.",
+        basinAreasOurs: "Which provinces this river basin covers, and so where its marker sits, is DisasterPH's own lookup, not from PAGASA.",
+        staleWarning: "This warning is more than 4 hours old. PAGASA may have issued a newer one: check the official page.",
+        placeWarning: "{place} is in {region}, one of the regions with a province named in this PAGASA warning.",
         zoneLabel: "{n} km Permanent Danger Zone (PHIVOLCS)",
         yourPlaces: "Your saved places",
         placeInside: "{place} is about {km} km from the summit, inside the {zone} km Permanent Danger Zone.",
@@ -227,7 +245,7 @@ export const copy = {
         rangeNames: { "1h": "hour", "6h": "6 hours", "24h": "24 hours", "48h": "48 hours", "7d": "7 days" },
         layers: "Layers",
         layersTitle: "Map layers",
-        layerNames: { earthquake: "Earthquakes", volcano: "Volcanoes", typhoon: "Tropical cyclones", other: "Other (NASA EONET)" },
+        layerNames: { earthquake: "Earthquakes", volcano: "Volcanoes", typhoon: "Tropical cyclones", flood: "Rain & flood (PAGASA)", other: "Other (NASA EONET)" },
         includeSmall: "Include smaller earthquakes (M3.0 to 3.4)",
         about: "About {layer}",
         info: { source: "Source", updates: "Updates", limits: "Limits", ours: "Computed by DisasterPH" },
@@ -249,6 +267,12 @@ export const copy = {
         cycloneNoSignal: "Tropical cyclone {name}: no wind signal raised",
         noCyclone: "No active tropical cyclone",
         cycloneUnknown: "PAGASA unavailable",
+        rainWarning: "Heavy Rainfall Warning ({level}): {areas}",
+        rainMore: "{text} and {n} more",
+        basinOne: "{status}: {name}",
+        basinMany: "{status}: {n} river basins",
+        weatherAdvisory: "PAGASA Weather Advisory No. {n}",
+        rainUnknown: "PAGASA rainfall warnings unavailable",
       },
       list: {
         sortLabel: "Sort",
@@ -277,6 +301,7 @@ export const copy = {
         names: {
           PHIVOLCS: "PHIVOLCS earthquakes",
           PHIVOLCS_VOLCANO: "PHIVOLCS volcanoes",
+          PAGASA_RAIN: "PAGASA rainfall and flood",
           PAGASA: "PAGASA",
           EONET: "NASA EONET",
           USGS: "USGS",
@@ -291,16 +316,18 @@ export const copy = {
         volcano: "Volcano: PHIVOLCS alert level (number)",
         volcanoLevels: "Alert levels 1 to 5",
         typhoon: "Tropical cyclone: highest wind signal",
+        rain: "PAGASA Heavy Rainfall Warning: R = Red, O = Orange, Y = Yellow (A = Rainfall Advisory); placed in the middle of the listed provinces",
+        basin: "River basin flood status (PAGASA), e.g. FW = Flood Watch",
         ringTitle: "Earthquake ring colour = severity",
         age: "Fainter earthquake = older (solid = last hour)",
         levelsTitle: "Info, Watch, Warning, Critical are DisasterPH's own labels:",
         levelDefs: {
-          advisory: "below M4.0 · Alert Level 1",
-          watch: "M4.0 to 4.9 · Alert Level 2 · Signal No. 1",
-          warning: "M5.0 to 6.4 · Alert Level 3 · Signal No. 2",
-          critical: "M6.5+ · Alert Level 4 to 5 · Signal No. 3+",
+          advisory: "below M4.0 · Alert Level 1 · Rainfall Advisory",
+          watch: "M4.0 to 4.9 · Alert Level 2 · Signal No. 1 · Yellow rainfall · Flood Watch",
+          warning: "M5.0 to 6.4 · Alert Level 3 · Signal No. 2 · Orange rainfall",
+          critical: "M6.5+ · Alert Level 4 to 5 · Signal No. 3+ · Red rainfall",
         },
-        official: "Official: magnitudes, PHIVOLCS alert levels and PAGASA wind signals.",
+        official: "Official: magnitudes, PHIVOLCS alert levels, PAGASA wind signals, rainfall warning levels and river basin statuses.",
         dangerZone: "Volcano danger zone (radius from PHIVOLCS); outlined and labelled when chosen",
         track: "Storm track (NASA EONET); dashed = forecast",
         note: "Tap a marker for details. Severity is also written in each popup and list item.",
@@ -378,8 +405,10 @@ export const copy = {
         "PAGASA has an active tropical cyclone bulletin, but DisasterPH could not read it. Read the official bulletin.",
       typhoonUnknown:
         "Tropical cyclone status from PAGASA is not available right now. Check the official bulletin.",
-      floodNotCovered:
-        "DisasterPH does not show PAGASA flood advisories yet. Check PAGASA's flood information.",
+      floodNone:
+        "No PAGASA Heavy Rainfall Warning, Rainfall Advisory or river basin flood watch on the pages DisasterPH reads (checked {time}). This is not an official all-clear: local flooding can still happen. Follow PAGASA and your local DRRMO.",
+      floodUnknown:
+        "PAGASA's rainfall and flood warnings could not be read just now. Check PAGASA's flood information.",
       volcanoNone:
         "Every volcano PHIVOLCS monitors is at Alert Level 0 (normal), according to PHIVOLCS (checked {time}).",
       volcanoUnknown:
@@ -650,7 +679,7 @@ export const copy = {
     eventType: {
       earthquake: "Earthquake",
       typhoon: "Typhoon",
-      flood: "Flood",
+      flood: "Rain & flood",
       volcano: "Volcano",
       landslide: "Landslide",
       wildfire: "Wildfire",
@@ -818,6 +847,24 @@ export const copy = {
         checked: "sinuri {age}", // NEEDS NATIVE REVIEW
         usgsFallback: "pansamantala habang hindi maabot ang PHIVOLCS", // NEEDS NATIVE REVIEW
         backToList: "Bumalik sa listahan", // NEEDS NATIVE REVIEW
+        rainBadge: "{level} warning",
+        rainLevel: "Antas ng babala", // NEEDS NATIVE REVIEW
+        rainAreas: "Mga lugar (PAGASA)", // NEEDS NATIVE REVIEW
+        issued: "Inilabas", // NEEDS NATIVE REVIEW
+        basinStatus: "Status",
+        firstSeen: "Unang nakita ng DisasterPH", // NEEDS NATIVE REVIEW
+        hazardPagasa: "Kaugnay na panganib (PAGASA)", // NEEDS NATIVE REVIEW
+        alsoInWarning: "Kasama rin sa babalang ito (PAGASA)", // NEEDS NATIVE REVIEW
+        advisoryAreas: "Rainfall advisory (PAGASA)",
+        pagasaAdvice: "Payo ng PAGASA", // NEEDS NATIVE REVIEW
+        forecastWater: "Inaasahang lebel ng tubig (PAGASA)", // NEEDS NATIVE REVIEW
+        forecastRain: "Inaasahang ulan, susunod na 24 oras (PAGASA)", // NEEDS NATIVE REVIEW
+        observedRain: "Naitalang ulan, nakalipas na 24 oras (PAGASA)", // NEEDS NATIVE REVIEW
+        basinPdf: "PDF ang flood bulletin ng PAGASA para sa basin na ito; buksan ito para sa detalye.", // NEEDS NATIVE REVIEW
+        approxPlace: "Nasa gitna ng mga probinsyang nakalista ng PAGASA ang marker. Hindi ito eksaktong lokasyon.", // NEEDS NATIVE REVIEW
+        basinAreasOurs: "Ang mga probinsyang sakop ng river basin na ito, at kung saan nakalagay ang marker nito, ay sariling tantiya ng DisasterPH, hindi mula sa PAGASA.", // NEEDS NATIVE REVIEW
+        staleWarning: "Lampas 4 na oras na ang babalang ito. Maaaring may mas bago na ang PAGASA: tingnan ang opisyal na pahina.", // NEEDS NATIVE REVIEW
+        placeWarning: "Ang {place} ay nasa {region}, isa sa mga rehiyong may probinsyang nakasaad sa babalang ito ng PAGASA.", // NEEDS NATIVE REVIEW
         zoneLabel: "{n} km Permanent Danger Zone (PHIVOLCS)",
         yourPlaces: "Mga naka-save mong lugar", // NEEDS NATIVE REVIEW
         placeInside: "Ang {place} ay mga {km} km mula sa tuktok, sa loob ng {zone} km na Permanent Danger Zone.", // NEEDS NATIVE REVIEW
@@ -836,7 +883,7 @@ export const copy = {
         rangeNames: { "1h": "oras", "6h": "6 na oras", "24h": "24 na oras", "48h": "48 na oras", "7d": "7 araw" }, // NEEDS NATIVE REVIEW
         layers: "Mga layer", // NEEDS NATIVE REVIEW
         layersTitle: "Mga layer ng mapa", // NEEDS NATIVE REVIEW
-        layerNames: { earthquake: "Mga lindol", volcano: "Mga bulkan", typhoon: "Mga bagyo", other: "Iba pa (NASA EONET)" }, // NEEDS NATIVE REVIEW
+        layerNames: { earthquake: "Mga lindol", volcano: "Mga bulkan", typhoon: "Mga bagyo", flood: "Ulan at baha (PAGASA)", other: "Iba pa (NASA EONET)" }, // NEEDS NATIVE REVIEW
         includeSmall: "Isama ang mas mahinang lindol (M3.0 hanggang 3.4)", // NEEDS NATIVE REVIEW
         about: "Tungkol sa {layer}", // NEEDS NATIVE REVIEW
         info: { source: "Pinagmulan", updates: "Update", limits: "Limitasyon", ours: "Kinukuwenta ng DisasterPH" }, // NEEDS NATIVE REVIEW
@@ -858,6 +905,12 @@ export const copy = {
         cycloneNoSignal: "Bagyong {name}: walang nakataas na wind signal", // NEEDS NATIVE REVIEW
         noCyclone: "Walang aktibong bagyo", // NEEDS NATIVE REVIEW
         cycloneUnknown: "Hindi maabot ang PAGASA", // NEEDS NATIVE REVIEW
+        rainWarning: "Heavy Rainfall Warning ({level}): {areas}",
+        rainMore: "{text} at {n} pa", // NEEDS NATIVE REVIEW
+        basinOne: "{status}: {name}",
+        basinMany: "{status}: {n} river basin", // NEEDS NATIVE REVIEW
+        weatherAdvisory: "Weather Advisory ng PAGASA Blg. {n}", // NEEDS NATIVE REVIEW
+        rainUnknown: "Hindi makuha ang rainfall warning ng PAGASA", // NEEDS NATIVE REVIEW
       },
       list: {
         sortLabel: "Ayos", // NEEDS NATIVE REVIEW
@@ -886,6 +939,7 @@ export const copy = {
         names: {
           PHIVOLCS: "Lindol ng PHIVOLCS", // NEEDS NATIVE REVIEW
           PHIVOLCS_VOLCANO: "Bulkan ng PHIVOLCS", // NEEDS NATIVE REVIEW
+          PAGASA_RAIN: "Ulan at baha ng PAGASA", // NEEDS NATIVE REVIEW
           PAGASA: "PAGASA",
           EONET: "NASA EONET",
           USGS: "USGS",
@@ -900,16 +954,18 @@ export const copy = {
         volcano: "Bulkan: alert level ng PHIVOLCS (numero)", // NEEDS NATIVE REVIEW
         volcanoLevels: "Alert level 1 hanggang 5", // NEEDS NATIVE REVIEW
         typhoon: "Bagyo: pinakamataas na wind signal", // NEEDS NATIVE REVIEW
+        rain: "Heavy Rainfall Warning ng PAGASA: R = Red, O = Orange, Y = Yellow (A = Rainfall Advisory); nasa gitna ng mga nakalistang probinsya", // NEEDS NATIVE REVIEW
+        basin: "Flood status ng river basin (PAGASA), hal. FW = Flood Watch", // NEEDS NATIVE REVIEW
         ringTitle: "Kulay ng gilid ng lindol = antas", // NEEDS NATIVE REVIEW
         age: "Mas malabong lindol = mas luma (buo = nakaraang oras)", // NEEDS NATIVE REVIEW
         levelsTitle: "Sariling label ng DisasterPH ang Info, Bantayan, Babala, Kritikal:", // NEEDS NATIVE REVIEW
         levelDefs: {
-          advisory: "mas mababa sa M4.0 · Alert Level 1", // NEEDS NATIVE REVIEW
-          watch: "M4.0 hanggang 4.9 · Alert Level 2 · Signal No. 1", // NEEDS NATIVE REVIEW
-          warning: "M5.0 hanggang 6.4 · Alert Level 3 · Signal No. 2", // NEEDS NATIVE REVIEW
-          critical: "M6.5+ · Alert Level 4 hanggang 5 · Signal No. 3+", // NEEDS NATIVE REVIEW
+          advisory: "mas mababa sa M4.0 · Alert Level 1 · Rainfall Advisory", // NEEDS NATIVE REVIEW
+          watch: "M4.0 hanggang 4.9 · Alert Level 2 · Signal No. 1 · Yellow na ulan · Flood Watch", // NEEDS NATIVE REVIEW
+          warning: "M5.0 hanggang 6.4 · Alert Level 3 · Signal No. 2 · Orange na ulan", // NEEDS NATIVE REVIEW
+          critical: "M6.5+ · Alert Level 4 hanggang 5 · Signal No. 3+ · Red na ulan", // NEEDS NATIVE REVIEW
         },
-        official: "Opisyal: magnitude, alert level ng PHIVOLCS at wind signal ng PAGASA.", // NEEDS NATIVE REVIEW
+        official: "Opisyal: magnitude, alert level ng PHIVOLCS, at wind signal, antas ng rainfall warning at status ng river basin ng PAGASA.", // NEEDS NATIVE REVIEW
         dangerZone: "Danger zone ng bulkan (radius mula sa PHIVOLCS); may balangkas at label kapag pinili", // NEEDS NATIVE REVIEW
         track: "Dinaanan ng bagyo (NASA EONET); putol-putol = forecast", // NEEDS NATIVE REVIEW
         note: "Pindutin ang marker para sa detalye. Nakasulat din ang antas sa bawat popup at listahan.", // NEEDS NATIVE REVIEW
@@ -987,8 +1043,10 @@ export const copy = {
         "May aktibong tropical cyclone bulletin ang PAGASA, pero hindi ito mabasa ng DisasterPH. Basahin ang opisyal na bulletin.",
       typhoonUnknown:
         "Hindi available ngayon ang status ng bagyo mula sa PAGASA. Tingnan ang opisyal na bulletin.",
-      floodNotCovered:
-        "Hindi pa ipinapakita ng DisasterPH ang mga flood advisory ng PAGASA. Tingnan ang flood information ng PAGASA.",
+      floodNone:
+        "Walang Heavy Rainfall Warning, Rainfall Advisory o flood watch ng river basin ng PAGASA sa mga pahinang binabasa ng DisasterPH (sinuri noong {time}). Hindi ito opisyal na abiso na ligtas na: maaari pa ring bumaha sa inyong lugar. Sundin ang PAGASA at ang inyong lokal na DRRMO.", // NEEDS NATIVE REVIEW
+      floodUnknown:
+        "Hindi mabasa ngayon ang rainfall at flood warning ng PAGASA. Tingnan ang flood information ng PAGASA.", // NEEDS NATIVE REVIEW
       volcanoNone:
         "Nasa Alert Level 0 (normal) ang lahat ng bulkang binabantayan ng PHIVOLCS, ayon sa PHIVOLCS (sinuri noong {time}).",
       volcanoUnknown:
@@ -1260,7 +1318,7 @@ export const copy = {
     eventType: {
       earthquake: "Lindol",
       typhoon: "Bagyo",
-      flood: "Baha",
+      flood: "Ulan at baha", // NEEDS NATIVE REVIEW
       volcano: "Bulkan",
       landslide: "Pagguho",
       wildfire: "Sunog sa Gubat",

@@ -28,6 +28,7 @@ import { AppHeader } from "@/components/disasterph/header";
 import { PrepGuidance } from "@/components/disasterph/prep-guidance";
 import { VolcanoBulletin } from "@/components/disasterph/volcano-bulletin";
 import { TyphoonBulletin } from "@/components/disasterph/typhoon-bulletin";
+import { RainBulletin } from "@/components/disasterph/rain-bulletin";
 import { QuakeBulletin } from "@/components/disasterph/quake-bulletin";
 import { PHIVOLCS_TSUNAMI_URL, showTsunamiPointer } from "@/lib/tsunami-check";
 import { PulseDetailSkeleton } from "@/components/disasterph/page-skeletons";
@@ -369,6 +370,11 @@ export default function PulseDetailPage() {
                 {/* Official PAGASA tropical cyclone bulletin */}
                 {incident.event_type === "typhoon" && incident.source === "PAGASA" && (
                   <TyphoonBulletin incident={incident} locale={locale} />
+                )}
+
+                {/* Official PAGASA rainfall warning, rainfall advisory or river basin status */}
+                {incident.event_type === "flood" && incident.source === "PAGASA" && (
+                  <RainBulletin incident={incident} locale={locale} />
                 )}
 
                 {/* What to do */}

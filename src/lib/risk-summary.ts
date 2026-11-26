@@ -1,3 +1,4 @@
+import { namedRegions } from "@/lib/event-regions";
 import type {
   Incident,
   IncidentSeverity,
@@ -81,11 +82,6 @@ function effectiveRadiusForIncident(incident: Incident): number {
 
 export type MatchReason = "region" | "proximity" | "both";
 
-/** Regions under one of a typhoon's PAGASA wind signals ("A|B|C"). */
-function signalRegions(incident: Incident): string[] {
-  const v = incident.metadata?.signal_regions;
-  return typeof v === "string" && v ? v.split("|") : [];
-}
 
 function incidentMatchesPlace(place: SavedPlace, incident: Incident) {
   const placeRegion = regionForMatching(place.latitude, place.longitude);
@@ -98,12 +94,16 @@ function incidentMatchesPlace(place: SavedPlace, incident: Incident) {
   // Offshore incidents carry their nearest region in metadata.near_region.
   // Typhoons also match every region under one of their wind signals, even
   // when the centre is far offshore.
-  const underSignal = signalRegions(incident).includes(placeRegion);
+  // (and rainfall/flood warnings every region of their listed provinces).
+  const underSignal = namedRegions(incident).includes(placeRegion);
   const sameRegion =
     placeRegion === incident.region ||
     (typeof incident.metadata?.near_region === "string" &&
       placeRegion === incident.metadata.near_region);
-  const withinRadius = distanceKm <= effectiveRadiusForIncident(incident);
+  // A marker that is only the middle of several provinces (PAGASA rainfall
+  // warnings, river basins) is not a place: those match by named region only.
+  const approx = incident.metadata?.location_approx === true;
+  const withinRadius = !approx && distanceKm <= effectiveRadiusForIncident(incident);
 
   // For advisory-level incidents, require proximity — region-only match is too broad
   const effectiveRegionMatch =

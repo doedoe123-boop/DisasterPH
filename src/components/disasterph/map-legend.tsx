@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import { ChevronDown, ChevronUp, Info } from "lucide-react";
 import { HAZARD_COLORS, SEVERITY_RING } from "@/lib/mapbox";
-import { VOLCANO_LEVEL_COLORS, VOLCANO_LEVEL_TEXT } from "@/lib/map-event-layers";
+import { RAIN_COLORS, VOLCANO_LEVEL_COLORS, VOLCANO_LEVEL_TEXT } from "@/lib/map-event-layers";
 import { severityText, t, type Locale } from "@/lib/i18n";
 
 /** A small copy of the volcano marker: triangle with the alert level. */
@@ -87,6 +87,24 @@ export function MapLegend({ locale }: { locale: Locale }) {
           <li className="flex items-center gap-2">
             <MarkerSwatch color={HAZARD_COLORS.typhoon} label="2" />
             <span>{copy.typhoon}</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <span aria-hidden className="flex w-[22px] shrink-0 items-center justify-center gap-px">
+              {(["ev-rain-red", "ev-rain-orange", "ev-rain-yellow"] as const).map((k) => (
+                <span key={k} className="inline-block h-[13px] w-[7px] rounded-b-full rounded-t-[40%]" style={{ background: RAIN_COLORS[k] }} />
+              ))}
+            </span>
+            <span>{copy.rain}</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="inline-flex h-[20px] w-[22px] shrink-0 items-center justify-center rounded-[5px] text-[8.5px] font-bold text-white"
+              style={{ background: RAIN_COLORS["ev-basin"] }}
+            >
+              FW
+            </span>
+            <span>{copy.basin}</span>
           </li>
         </ul>
         <p className="mt-2.5 flex items-center gap-2">

@@ -36,8 +36,9 @@ export interface Incident {
 }
 
 /** Status entries: one per incident source, plus PHIVOLCS volcano bulletins
- *  (their incidents are published as "PHIVOLCS"). */
-export type SourceKey = IncidentSource | "PHIVOLCS_VOLCANO";
+ *  (their incidents are published as "PHIVOLCS") and PAGASA rainfall and
+ *  flood warnings (published as "PAGASA", event type "flood"). */
+export type SourceKey = IncidentSource | "PHIVOLCS_VOLCANO" | "PAGASA_RAIN";
 
 export interface SourceStatus {
   source: SourceKey;
@@ -49,6 +50,8 @@ export interface SourceStatus {
   notes: string;
   /** PAGASA only: what the official bulletin page says about tropical cyclones. */
   bulletin_state?: "none" | "active" | "unknown";
+  /** PAGASA rainfall/flood only: the national Weather Advisory in effect (null: none). */
+  weather_advisory?: { number: number; url: string } | null;
 }
 
 export interface DashboardStats {

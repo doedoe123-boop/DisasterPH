@@ -27,6 +27,14 @@ export interface StatusParts {
   cyclones: Array<{ name: string; signal: number }>;
   /** PAGASA could not be read: don't claim "no active tropical cyclone". */
   cyclonesUnknown: boolean;
+  /** The highest PAGASA Heavy Rainfall Warning level in effect, with its areas (as published). */
+  rainTop: { level: string; areas: string; more: number } | null;
+  /** River basins not on "Non-Flood Watch", grouped by PAGASA's status. */
+  basins: Array<{ status: string; names: string[] }>;
+  /** PAGASA's national Weather Advisory in effect. */
+  weatherAdvisory: number | null;
+  /** PAGASA's rainfall pages could not be read and nothing is known. */
+  rainUnknown: boolean;
 }
 
 function volcanoName(incident: Incident): string {
@@ -59,7 +67,24 @@ export function statusParts(incidents: Incident[], sources: SourceStatus[], now:
   const cyclones = incidents
     .filter((i) => i.event_type === "typhoon" && i.source === "PAGASA")
     .map((i) => ({ name: cycloneName(i), signal: Number(i.metadata.signal_number) || 0 }));
+  const rain = incidents.filter((i) => i.source === "PAGASA" && i.metadata.product === "rainfall_warning" && typeof i.metadata.warning_level === "string");
+  const order: Record<string, number> = { Red: 3, Orange: 2, Yellow: 1 };
+  const top = [...rain].sort((a, b) => (order[String(b.metadata.warning_level)] ?? 0) - (order[String(a.metadata.warning_level)] ?? 0))[0];
+  const basinMap = new Map<string, string[]>();
+  for (const i of incidents) {
+    if (i.source !== "PAGASA" || i.metadata.product !== "basin") continue;
+    const status = String(i.metadata.basin_status ?? "");
+    basinMap.set(status, [...(basinMap.get(status) ?? []), String(i.metadata.basin_name ?? i.title)]);
+  }
+  const rainSource = sources.find((x) => x.source === "PAGASA_RAIN");
+  const rainEvents = incidents.filter((i) => i.source === "PAGASA" && i.event_type === "flood");
   return {
+    rainTop: top
+      ? { level: String(top.metadata.warning_level), areas: String(top.metadata.level_areas ?? ""), more: rain.length - 1 }
+      : null,
+    basins: [...basinMap].map(([status, names]) => ({ status, names })),
+    weatherAdvisory: rainSource?.weather_advisory?.number ?? null,
+    rainUnknown: !ok("PAGASA_RAIN") && rainEvents.length === 0,
     namedVolcanoes: named,
     levelOneCount: volcanoes.filter((i) => Number(i.metadata.alert_level) === 1).length,
     volcanoUnknown: !ok("PHIVOLCS_VOLCANO") && volcanoes.length === 0,
@@ -100,6 +125,21 @@ export function statusText(incidents: Incident[], sources: SourceStatus[], local
           : copy.cycloneNoSignal.replace("{name}", c.name),
       );
   } else parts.push(p.cyclonesUnknown ? copy.cycloneUnknown : copy.noCyclone);
+
+  // Rain and floods: only what PAGASA has in effect (nothing when none).
+  if (p.rainTop) {
+    const text = copy.rainWarning.replace("{level}", p.rainTop.level).replace("{areas}", p.rainTop.areas);
+    parts.push(p.rainTop.more > 0 ? copy.rainMore.replace("{text}", text).replace("{n}", String(p.rainTop.more)) : text);
+  }
+  for (const b of p.basins) {
+    parts.push(
+      b.names.length === 1
+        ? copy.basinOne.replace("{status}", b.status).replace("{name}", b.names[0])
+        : copy.basinMany.replace("{status}", b.status).replace("{n}", String(b.names.length)),
+    );
+  }
+  if (p.weatherAdvisory) parts.push(copy.weatherAdvisory.replace("{n}", String(p.weatherAdvisory)));
+  if (p.rainUnknown) parts.push(copy.rainUnknown);
 
   return parts.join(" · ");
 }

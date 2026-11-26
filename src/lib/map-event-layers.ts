@@ -93,6 +93,20 @@ function statusKind(incident: Incident): { icon: string; label: string } {
     const signal = Number(m.signal_number);
     return { icon: "ev-typhoon", label: Number.isFinite(signal) && signal > 0 ? String(signal) : "TC" };
   }
+  if (incident.event_type === "flood" && incident.source === "PAGASA") {
+    // PAGASA rainfall warning: the level's initial on a drop in its colour
+    // (R / O / Y; A for a rainfall advisory). River basin: the status's
+    // initials ("Flood Watch" -> "FW").
+    if (m.product === "basin") {
+      const initials = String(m.basin_status ?? "").split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").join("").slice(0, 2);
+      return { icon: "ev-basin", label: initials || "FL" };
+    }
+    const level = String(m.warning_level ?? "").toLowerCase();
+    if (level === "red" || level === "orange" || level === "yellow") {
+      return { icon: `ev-rain-${level}`, label: level[0].toUpperCase() };
+    }
+    return { icon: "ev-rain-advisory", label: "A" };
+  }
   const letters: Record<string, string> = { flood: "FL", landslide: "LS", wildfire: "WF" };
   return { icon: "ev-other", label: letters[incident.event_type] ?? "?" };
 }
@@ -132,7 +146,10 @@ export function eventCollections(incidents: Incident[], now: number = Date.now()
         geometry,
         properties: {
           id: i.id, icon, label, rank, type: i.event_type,
-          textColor: i.event_type === "volcano" ? VOLCANO_LEVEL_TEXT[Number(label) || 0] ?? "#111827" : "#111827",
+          textColor:
+            i.event_type === "volcano"
+              ? VOLCANO_LEVEL_TEXT[Number(label) || 0] ?? "#111827"
+              : RAIN_TEXT[icon] ?? "#111827",
         },
       });
     }
@@ -142,6 +159,22 @@ export function eventCollections(incidents: Incident[], now: number = Date.now()
     statuses: { type: "FeatureCollection", features: statuses },
   };
 }
+
+/** PAGASA rainfall warning colours (Red / Orange / Yellow) and the advisory and basin markers. */
+export const RAIN_COLORS: Record<string, string> = {
+  "ev-rain-red": "#dc2626",
+  "ev-rain-orange": "#f97316",
+  "ev-rain-yellow": "#facc15",
+  "ev-rain-advisory": "#64748b",
+  "ev-basin": "#2563eb",
+};
+const RAIN_TEXT: Record<string, string> = {
+  "ev-rain-red": "#ffffff",
+  "ev-rain-orange": "#111827",
+  "ev-rain-yellow": "#111827",
+  "ev-rain-advisory": "#ffffff",
+  "ev-basin": "#ffffff",
+};
 
 /* ── Icons (drawn once per style on a canvas; no image files to fetch) ── */
 
@@ -190,6 +223,43 @@ function addIcons(map: MlMap) {
       ctx.beginPath();
       ctx.arc(s / 2, s / 2, s * 0.42, 0, Math.PI * 2);
       ctx.fillStyle = HAZARD_COLORS.typhoon;
+      ctx.fill();
+      ctx.lineWidth = s * 0.07;
+      ctx.strokeStyle = "#ffffff";
+      ctx.stroke();
+    }),
+  );
+  // Rainfall warnings and advisories: a drop.
+  for (const name of ["ev-rain-red", "ev-rain-orange", "ev-rain-yellow", "ev-rain-advisory"]) {
+    add(
+      name,
+      drawIcon((ctx, s) => {
+        const cx = s / 2;
+        const r = s * 0.3;
+        const cy = s * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(cx, s * 0.06);
+        ctx.bezierCurveTo(cx + r * 0.35, s * 0.25, cx + r, cy - r * 0.6, cx + r, cy);
+        ctx.arc(cx, cy, r, 0, Math.PI);
+        ctx.bezierCurveTo(cx - r, cy - r * 0.6, cx - r * 0.35, s * 0.25, cx, s * 0.06);
+        ctx.closePath();
+        ctx.fillStyle = RAIN_COLORS[name];
+        ctx.fill();
+        ctx.lineWidth = s * 0.07;
+        ctx.strokeStyle = "#ffffff";
+        ctx.stroke();
+      }),
+    );
+  }
+  // River basin status: a rounded square with a wave line.
+  add(
+    "ev-basin",
+    drawIcon((ctx, s) => {
+      const pad = s * 0.1;
+      const w = s - 2 * pad;
+      ctx.beginPath();
+      ctx.roundRect(pad, pad, w, w, s * 0.18);
+      ctx.fillStyle = RAIN_COLORS["ev-basin"];
       ctx.fill();
       ctx.lineWidth = s * 0.07;
       ctx.strokeStyle = "#ffffff";

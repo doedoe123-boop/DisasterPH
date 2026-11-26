@@ -43,7 +43,12 @@ export function HazardEmptyState({
       message = copy.typhoonUnknown;
     }
   } else if (filter === "flood") {
-    message = copy.floodNotCovered;
+    // Empty only means "none in effect" when PAGASA's pages were read.
+    const rain = sourceStatuses.find((s) => s.source === "PAGASA_RAIN");
+    message =
+      rain && rain.status === "healthy" && rain.last_success_at
+        ? copy.floodNone.replace("{time}", formatPHT(rain.last_success_at))
+        : copy.floodUnknown;
     link = { href: LINKS.pagasaFlood, label: copy.pagasaFloodLink };
   } else if (filter === "volcano") {
     // Empty only means "no volcano above Level 0" when the source worked.

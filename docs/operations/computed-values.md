@@ -3,7 +3,7 @@
 Everything a visitor sees is either **copied from an agency** (PHIVOLCS, PAGASA,
 NASA EONET, USGS) or **computed by DisasterPH**. This list covers the second
 kind: what we compute, from what, where in the code, and what it is based on.
-Review it whenever a rule changes. Last reviewed: 2026-11-26 (map Phase 6).
+Review it whenever a rule changes. Last reviewed: 2026-11-26 (PAGASA rainfall and flood warnings).
 
 Legend for "Basis":
 - **Official**: follows a published agency rule or table (source linked).
@@ -24,6 +24,8 @@ uses these four words. They exist to sort and colour events consistently.
 | EONET other | Watch | same | Ours |
 | PHIVOLCS volcanoes | Alert Level >= 4 Critical, 3 Warning, 2 Watch, 1 Info | `src/lib/ingest/phivolcs-volcano.ts` `volcanoSeverity` | Ours, mapped from the official Alert Level (which is shown alongside) |
 | PAGASA tropical cyclones | Highest wind signal >= 3 Critical, 2 Warning, 1 Watch, none Info | `src/lib/ingest/pagasa.ts` `tcSeverity` | Ours, mapped from the official Wind Signal (shown alongside) |
+| PAGASA Heavy Rainfall Warnings | RED warning level Critical, ORANGE Warning, YELLOW Watch; Rainfall Advisory Info | `src/lib/ingest/pagasa-rain.ts` `LEVEL_SEVERITY` | Ours, mapped from the official warning level (shown alongside) |
+| PAGASA river basin status | A status containing "Warning" Warning; any other status besides "Non-Flood Watch" (e.g. "Flood Watch") Watch | `pagasa-rain.ts` `basinIncidents` | Ours, mapped from the official status (shown verbatim) |
 
 ## Place and region
 
@@ -66,6 +68,8 @@ uses these four words. They exist to sort and colour events consistently.
 | Ages ("5h ago") | Now minus the source's time | `src/lib/incidents.ts` `formatRelativeTime` | Ours |
 | Volcano bulletin "stale" flag | Bulletin older than 2 days | `phivolcs-volcano.ts` `BULLETIN_STALE_MS` | Ours (bulletins are daily) |
 | Typhoon bulletin "stale" flag | Bulletin older than 9 hours | `pagasa.ts` `TC_BULLETIN_STALE_MS` | Ours (PAGASA issues every 3 to 6 hours) |
+| Rainfall warning "stale" flag and cut-off | Older than 4 hours: flagged ("PAGASA may have issued a newer one"); older than 24 hours: not shown | `pagasa-rain.ts` `RAIN_STALE_MS`, `RAIN_MAX_AGE_MS` | Ours (PAGASA issues the next warning within about 3 hours) |
+| River basin time | The basin page's "ISSUED AT" when there is one; otherwise when DisasterPH first saw the status, labelled "First seen by DisasterPH" (the status table and PDF bulletins carry no time DisasterPH can read) | `pagasa-rain.ts` `basinIncidents` | Official when issued; first-seen time ours |
 | Sources line ("Sources: 4 of 4 live · updated 2m ago") | Counts the 4 primary sources whose status is healthy; "updated" is the oldest last success among them; any other source is named with its state and last success. Offline: "can't be checked while offline (last checked …)" | `src/components/disasterph/sources-line.tsx` | Ours, from the health below |
 | Source health (Healthy / Delayed / Degraded) | Last success under 5 min old = healthy, over 15 min = delayed, over 30 min = degraded; a failed fetch = degraded (3 in a row = offline, shown as degraded); content that couldn't be read reliably = degraded | `src/lib/ingest/store.ts` `recordFetch`, `getSourceHealth` | Ours |
 | Which events are listed | Earthquakes M3.0+ from the last 7 days; feed and counts use the last 10 days | `phivolcs.ts` `EQ_MIN_MAGNITUDE`, `EQ_WINDOW_DAYS`; `disasterph-command.tsx` | Ours |
@@ -92,6 +96,9 @@ uses these four words. They exist to sort and colour events consistently.
 | Chosen event | Counts only while the event is in the current view (area, tab, earthquake filters); otherwise no card and no `event` in the URL | `src/components/disasterph/disasterph-command.tsx` | Ours (display) |
 | Shareable view URL | Allowed parameters only (view, show, layers, range, mag, event), each checked against a fixed list; defaults left out; never saved places, coordinates or a location-derived region | `src/lib/view-url.ts` | Ours |
 | Link preview text (Messenger, Viber…) | Region links: the area summary counts above plus "Official data from PHIVOLCS and PAGASA, checked {time}", with the not-an-all-clear caveat when there are none; event links: the event title, its publisher and its time as on the card; otherwise the status strip | `src/lib/share-preview.ts` | Official values; counts and wording ours |
+| Rainfall warning marker | One per warning level, at the average position of the listed provinces (each province's centre = the average of its town positions); the card says it is not an exact location and has no "Open in Maps" | `pagasa-rain.ts` `placeOf`, `provinceCentroid` | Ours (display); the provinces are PAGASA's |
+| River basin provinces | Which provinces each of the 18 basins and 4 dam sub-basins covers, used for the marker and for "your area". **From general geography, not from PAGASA; verify** | `pagasa-rain.ts` `BASIN_PROVINCES` | Ours (unverified lookup); the card says so |
+| Rainfall/flood "your area" and saved places | The regions of the provinces PAGASA lists ("warning_regions"), like a typhoon's wind-signal regions | `src/lib/event-regions.ts` `namedRegions` | Ours (province to region), provinces official |
 | Base map | OpenFreeMap: Positron (light theme, plain grey since map Phase 6) or Dark; free, no key | `src/lib/mapbox.ts` | Third-party map (OpenStreetMap data) |
 | Outline map (fallback base) | Shown when the base map cannot load: its style fails, its tile source fails, or base tiles keep failing (3 while offline; 6 online with none loaded). A plain outline of the 18 regions (PSGC regions via faeldon/philippines-json-maps, MIT, ~1 km simplification, rounded to ~100 m), kept by the service worker. Switches back by itself when the device comes back online, or on "Try again" | `src/lib/map-fallback.ts`, `scripts/build-ph-outline.mjs`, `public/map/ph-outline.json` | Official boundaries (simplified); thresholds ours |
 | Offline banner | "Offline: showing last saved data from {time}." The time is when the shown data was generated by the server, not when it was saved on the device | `src/components/disasterph/disasterph-command.tsx` | Ours (wording from the map handoff addendum) |
@@ -102,6 +109,9 @@ uses these four words. They exist to sort and colour events consistently.
 |---|---|---|---|
 | Flood and Landslide tabs | Hidden unless a source reports one (these hazards aren't monitored; only NASA EONET reports them, rarely) | `disasterph-command.tsx`, `src/app/pulse/page.tsx` | Ours |
 | Typhoon tab "None active" | Shown when no tropical cyclone is listed anywhere (PAGASA is read every 3 min) | `disasterph-command.tsx` | Ours, from PAGASA data |
+| Rain & flood tab "None active" and empty text | No PAGASA rainfall warning, rainfall advisory or basin status other than "Non-Flood Watch"; the empty text says "not an official all-clear", and only claims "none" when PAGASA's pages were read | `disasterph-command.tsx`, `hazard-empty-state.tsx` | Ours, from PAGASA data |
+| Status line rain parts | Highest Heavy Rainfall Warning level with PAGASA's areas ("and N more"), basins grouped by PAGASA's status, and "PAGASA Weather Advisory No. N"; nothing when none in effect | `src/lib/status-strip.ts` | Official values; wording ours |
+| Rainfall hazard, advice and basin forecasts | Copied from the warning or basin page ("ASSOCIATED HAZARD", the "advised to" sentence, water-level and rainfall statements) | `pagasa-rain.ts` | Official |
 | Base-map labels | English name, else Latin-script, else local name; place labels outside a box around the Philippines hidden | `src/lib/map-labels.ts` | Ours (display), names from OpenStreetMap via OpenFreeMap |
 
 ## Text shown as guidance

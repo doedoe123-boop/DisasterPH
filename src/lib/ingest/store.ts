@@ -111,6 +111,7 @@ export function recordFetch(log: FetchLog): void {
       log.note ??
       `Fetched ${log.event_count} event${log.event_count !== 1 ? "s" : ""} successfully.`;
     prev.bulletin_state = log.bulletin_state;
+    if (log.weather_advisory !== undefined) prev.weather_advisory = log.weather_advisory;
     const age = Date.now() - new Date(log.fetched_at).getTime();
     prev.status = log.uncertain
       ? "degraded" // reachable, but its content could not be read reliably
@@ -149,11 +150,12 @@ export function getSourceHealth(): SourceStatus[] {
       latency_ms: h.latency_ms,
       notes: h.notes,
       ...(h.bulletin_state && { bulletin_state: h.bulletin_state }),
+      ...(h.weather_advisory !== undefined && { weather_advisory: h.weather_advisory }),
     });
   }
 
   // Guarantee every primary source appears (USGS only appears as a fallback)
-  for (const src of ["PAGASA", "PHIVOLCS", "PHIVOLCS_VOLCANO", "EONET"] as const) {
+  for (const src of ["PAGASA", "PAGASA_RAIN", "PHIVOLCS", "PHIVOLCS_VOLCANO", "EONET"] as const) {
     if (!out.find((s) => s.source === src)) {
       out.push({
         source: src,

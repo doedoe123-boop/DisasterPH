@@ -30,8 +30,14 @@ const EN: Record<LayerKey, LayerInfo> = {
   typhoon: {
     source: "PAGASA Tropical Cyclone Bulletins.",
     updates: "DisasterPH checks every 3 minutes. PAGASA issues bulletins every 3 to 6 hours. A bulletin older than 9 hours is flagged.",
-    limits: "Wind signals are listed by province as PAGASA writes them. DisasterPH does not show rainfall or flood warnings yet.",
+    limits: "Wind signals are listed by province as PAGASA writes them. Rainfall and flood warnings are in the Rain & flood layer.",
     ours: "The Info/Watch/Warning/Critical label (from the highest signal) and matching provinces to regions. The signals are official.",
+  },
+  flood: {
+    source: "PAGASA: Heavy Rainfall Warnings and Rainfall Advisories from its five Regional Services Divisions, and the status of the 18 major river basins and 4 dam sub-basins from its flood page.",
+    updates: "DisasterPH checks every 3 minutes. PAGASA issues rainfall warnings about every 3 hours while rain lasts. A warning older than 4 hours is flagged; one older than a day is not shown.",
+    limits: "Warning levels, areas, hazards and advice are copied as PAGASA writes them. Basins on a PDF bulletin show their status only. Thunderstorm warnings and PAGASA's General Flood Advisories are not shown. Weather Advisories appear in the status line only.",
+    ours: "The Info/Watch/Warning/Critical label (Red Critical, Orange Warning, Yellow Watch, Rainfall Advisory Info, Flood Watch Watch), the marker position (middle of the listed provinces) and which provinces a river basin covers.",
   },
   other: {
     source: "NASA EONET (Earth Observatory Natural Event Tracker): floods, landslides and storms seen by NASA.",
@@ -57,8 +63,14 @@ const FIL: Record<LayerKey, LayerInfo> = {
   typhoon: {
     source: "Tropical Cyclone Bulletin ng PAGASA.",
     updates: "Sinusuri ng DisasterPH bawat 3 minuto. Naglalabas ang PAGASA ng bulletin bawat 3 hanggang 6 na oras. May babala kapag lampas 9 na oras na.",
-    limits: "Nakalista ang wind signal ayon sa probinsya gaya ng sulat ng PAGASA. Wala pang rainfall o flood warning sa DisasterPH.",
+    limits: "Nakalista ang wind signal ayon sa probinsya gaya ng sulat ng PAGASA. Nasa layer na Ulan at baha ang mga rainfall at flood warning.",
     ours: "Ang label na Info/Bantayan/Babala/Kritikal (mula sa pinakamataas na signal) at pagtutugma ng probinsya sa rehiyon. Opisyal ang mga signal.",
+  },
+  flood: {
+    source: "PAGASA: Heavy Rainfall Warning at Rainfall Advisory mula sa limang Regional Services Division nito, at ang status ng 18 malalaking river basin at 4 na dam sub-basin mula sa flood page nito.",
+    updates: "Sinusuri ng DisasterPH bawat 3 minuto. Naglalabas ang PAGASA ng rainfall warning halos bawat 3 oras habang umuulan. May babala kapag lampas 4 na oras na; hindi na ipinapakita kapag lampas isang araw.",
+    limits: "Kinopya gaya ng sulat ng PAGASA ang antas, lugar, panganib at payo. Status lang ang ipinapakita para sa basin na PDF ang bulletin. Hindi ipinapakita ang thunderstorm warning at General Flood Advisory ng PAGASA. Nasa status line lang ang Weather Advisory.",
+    ours: "Ang label na Info/Bantayan/Babala/Kritikal (Red Kritikal, Orange Babala, Yellow Bantayan, Rainfall Advisory Info, Flood Watch Bantayan), ang puwesto ng marker (gitna ng mga nakalistang probinsya) at kung aling probinsya ang sakop ng river basin.",
   },
   other: {
     source: "NASA EONET: baha, pagguho ng lupa at bagyo na nakita ng NASA.",

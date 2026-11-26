@@ -112,7 +112,7 @@ function LayerPanel({
 }: MapToolbarProps & { id: string; onClose: () => void }) {
   const copy = t(locale).common.mapFilters;
   const [infoOpen, setInfoOpen] = useState<LayerKey | null>(null);
-  const keys: LayerKey[] = hasOther ? ["earthquake", "volcano", "typhoon", "other"] : ["earthquake", "volcano", "typhoon"];
+  const keys: LayerKey[] = hasOther ? ["earthquake", "volcano", "typhoon", "flood", "other"] : ["earthquake", "volcano", "typhoon", "flood"];
   return (
     <div
       id={id}

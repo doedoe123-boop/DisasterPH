@@ -47,12 +47,14 @@ export function ageHours(incident: Incident, now: number = Date.now()): number {
 }
 
 /** Map layers a reader can switch on and off. */
-export type LayerKey = "earthquake" | "volcano" | "typhoon" | "other";
-export const LAYER_KEYS: LayerKey[] = ["earthquake", "volcano", "typhoon", "other"];
+export type LayerKey = "earthquake" | "volcano" | "typhoon" | "flood" | "other";
+export const LAYER_KEYS: LayerKey[] = ["earthquake", "volcano", "typhoon", "flood", "other"];
 
 export function layerOf(incident: Incident): LayerKey {
   if (incident.event_type === "earthquake" || incident.event_type === "volcano" || incident.event_type === "typhoon") {
     return incident.event_type;
   }
+  // PAGASA rainfall warnings and river basins; NASA EONET floods stay "other".
+  if (incident.event_type === "flood" && incident.source === "PAGASA") return "flood";
   return "other";
 }

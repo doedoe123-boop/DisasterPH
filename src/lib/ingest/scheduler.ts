@@ -14,6 +14,7 @@ import { fetchUsgsEvents } from "./usgs";
 import { BULLETIN_STALE_MS, fetchPhivolcsVolcanoes } from "./phivolcs-volcano";
 import { enrichQuakesWithBulletins } from "./phivolcs-eq-bulletin";
 import { TC_BULLETIN_STALE_MS, fetchPagasaEvents, type SourceFetchResult } from "./pagasa";
+import { fetchPagasaRainFlood } from "./pagasa-rain";
 
 /** Cache TTL: 3 min in prod, 30 s in dev. */
 const CACHE_TTL_MS =
@@ -45,6 +46,7 @@ export async function ensureFreshData(): Promise<void> {
         ingestEarthquakes(),
         ingestVolcanoes(),
         ingestPagasa(),
+        ingestPagasaRain(),
         ingestSource("EONET", fetchEonetEvents),
       ]);
       setLastRefresh(now);
@@ -126,6 +128,47 @@ async function ingestPagasa(): Promise<void> {
     keepLastKnown();
     recordFetch({
       source: "PAGASA",
+      fetched_at: new Date().toISOString(),
+      success: false,
+      latency_ms: Date.now() - start,
+      event_count: 0,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
+
+/** PAGASA rainfall warnings, rainfall advisories and river basin status; replaceable in tests. */
+export const pagasaRainFetchers = { pages: fetchPagasaRainFlood };
+
+/**
+ * PAGASA rainfall and flood events (event type "flood", published as
+ * "PAGASA"), reported under their own status entry ("PAGASA_RAIN"). They are
+ * the set PAGASA currently publishes: a lifted warning removes its event.
+ * Parts that could not be read keep their last known events.
+ */
+async function ingestPagasaRain(): Promise<void> {
+  const start = Date.now();
+  const previous = getIncidents().filter((i) => i.source === "PAGASA" && i.event_type === "flood");
+  try {
+    const result = await pagasaRainFetchers.pages(previous);
+    const kept = previous.filter((i) => typeof i.metadata.part === "string" && result.failedParts.includes(i.metadata.part));
+    replaceSourceIncidents("PAGASA", [...result.events, ...kept], { eventType: "flood" });
+    recordFetch({
+      source: "PAGASA_RAIN",
+      fetched_at: new Date().toISOString(),
+      success: true,
+      latency_ms: Date.now() - start,
+      event_count: result.events.length,
+      note: result.note,
+      ...(result.failedParts.length && { uncertain: true }),
+      weather_advisory:
+        result.weatherAdvisoryState === "unknown"
+          ? undefined
+          : result.weatherAdvisory && { number: result.weatherAdvisory.number, url: result.weatherAdvisory.url },
+    });
+  } catch (error) {
+    recordFetch({
+      source: "PAGASA_RAIN",
       fetched_at: new Date().toISOString(),
       success: false,
       latency_ms: Date.now() - start,
