@@ -48,7 +48,10 @@ export function MapLegend({ locale }: { locale: Locale }) {
   return (
     // Spans from below the top-left map buttons to the bottom, so the open
     // panel never covers them; it scrolls when the map is short.
-    <div className="map-legend pointer-events-none absolute bottom-[calc(var(--map-bottom-inset,0px)+0.75rem)] left-3 top-24 z-10 flex max-w-[calc(100%-1.5rem)] flex-col items-start justify-end lg:left-[calc(var(--map-left-inset)+0.75rem)]">
+    // Closed: between the map's top controls and the list panel. Open: the
+    // full map height (over the toolbar and the phone list panel), so it
+    // isn't a cramped box on phones; closing it brings them back.
+    <div className={`map-legend pointer-events-none absolute left-3 ${expanded ? "bottom-3 top-3 z-30" : "bottom-[calc(var(--map-bottom-inset,0px)+0.75rem)] top-[calc(var(--map-toolbar-h,0px)+6rem)] z-10"} flex max-w-[calc(100%-1.5rem)] flex-col items-start justify-end lg:left-[calc(var(--map-left-inset)+0.75rem)]`}>
       <div
         id={panelId}
         role="group"
@@ -86,6 +89,13 @@ export function MapLegend({ locale }: { locale: Locale }) {
             <span>{copy.typhoon}</span>
           </li>
         </ul>
+        <p className="mt-2.5 flex items-center gap-2">
+          <span aria-hidden className="flex w-[22px] shrink-0 items-center gap-0.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: HAZARD_COLORS.earthquake }} />
+            <span className="inline-block h-2.5 w-2.5 rounded-full opacity-45" style={{ background: HAZARD_COLORS.earthquake }} />
+          </span>
+          <span>{copy.age}</span>
+        </p>
         <p className="mt-2.5 text-[11px] font-semibold text-[var(--text-muted)]">{copy.ringTitle}</p>
         <ul className="mt-1 grid grid-cols-2 gap-x-2 gap-y-1">
           {severities.map((s) => (
@@ -116,6 +126,16 @@ export function MapLegend({ locale }: { locale: Locale }) {
             <span>{copy.track}</span>
           </li>
         </ul>
+        <p className="mt-3 text-[11px] font-semibold leading-4 text-[var(--text-muted)]">{copy.levelsTitle}</p>
+        <dl className="mt-1 space-y-0.5 text-[11px] leading-4">
+          {severities.map((sev) => (
+            <div key={sev.key} className="flex gap-1.5">
+              <dt className="shrink-0 font-semibold">{sev.label}:</dt>
+              <dd className="text-[var(--text-muted)]">{copy.levelDefs[sev.key]}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mt-2 text-[11px] leading-4 text-[var(--text-muted)]">{copy.official}</p>
         <p className="mt-2.5 text-[11px] leading-4 text-[var(--text-dim)]">{copy.note}</p>
       </div>
       <button

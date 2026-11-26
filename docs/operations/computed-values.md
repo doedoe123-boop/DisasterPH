@@ -3,7 +3,7 @@
 Everything a visitor sees is either **copied from an agency** (PHIVOLCS, PAGASA,
 NASA EONET, USGS) or **computed by DisasterPH**. This list covers the second
 kind: what we compute, from what, where in the code, and what it is based on.
-Review it whenever a rule changes. Last reviewed: 2026-11-25 (map Phase 2a).
+Review it whenever a rule changes. Last reviewed: 2026-11-26 (map Phase 2b).
 
 Legend for "Basis":
 - **Official**: follows a published agency rule or table (source linked).
@@ -74,6 +74,9 @@ uses these four words. They exist to sort and colour events consistently.
 | Earthquake clusters | Nearby quakes grouped (MapLibre clustering, radius 38 px, none from zoom 9); label = count and largest magnitude | `src/lib/map-event-layers.ts` | Ours (display); magnitudes official |
 | Volcano marker | Triangle with the PHIVOLCS alert level number; colour per level 1-5 | `src/lib/map-event-layers.ts` | Official level; colours ours |
 | Tropical cyclone marker | Circle with the highest PAGASA wind signal number ("TC" if none) | `src/lib/map-event-layers.ts` | Official signal |
+| Earthquake fading | Opacity by age: solid in the last hour, fainter after 1, 6, 24 and 48 hours | `src/lib/map-event-layers.ts` `AGE_OPACITY` | Ours (display) |
+| Earthquake time and magnitude filters | Last 1h/6h/24h/48h/7d (default 24h), M3.5+ by default or M3.0+; earthquakes only, applied to the map, list and counts; measured from when the data was generated | `src/lib/quake-filters.ts` | Ours (display choice) |
+| Status strip ("Mayon at Alert Level 3 · 1 earthquake M4.0+ in the last 24 h · No active tropical cyclone") | Volcano levels as PHIVOLCS gives them (named from Level 2, Level 1 counted); count of M4.0+ quakes that started in the last 24 h; PAGASA cyclones with their highest signal; a part is replaced by "unavailable" when its source was never read. No combined score | `src/lib/status-strip.ts` | Official values; the count and wording are ours |
 | Base-map labels hidden near markers | A place name that would overlap a marker is not drawn | `src/lib/map-event-layers.ts` (blocker layers) | Ours (display) |
 | ~~Earthquake "felt area" circle~~ | Removed in map Phase 1: 25 to 200 km guessed from magnitude | — | Was ours, looked official |
 | ~~Typhoon wind circle~~ | Removed in map Phase 1: wind speed × 0.8 km | — | Was ours, looked official |

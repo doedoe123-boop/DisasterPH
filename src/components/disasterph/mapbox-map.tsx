@@ -53,13 +53,15 @@ interface Props {
   bottomInset?: number;
   /** Changes each time an event is chosen from the list: bring it into view again. */
   focusRequest?: number;
+  /** Height in pixels of controls over the top of the map (time chips). */
+  topInset?: number;
 }
 
 /** Flat, north-up view of the whole country inside the unobstructed area. */
-function fitNational(map: MlMap, leftInset: number, duration: number, bottomInset = 0) {
+function fitNational(map: MlMap, leftInset: number, duration: number, bottomInset = 0, topInset = 0) {
   const { clientWidth: w, clientHeight: h } = map.getContainer();
   map.fitBounds(PH_BOUNDS, {
-    padding: mapPadding(w, h, leftInset, bottomInset),
+    padding: mapPadding(w, h, leftInset, bottomInset, topInset),
     pitch: DEFAULT_CAMERA.pitch,
     bearing: DEFAULT_CAMERA.bearing,
     duration,
@@ -93,6 +95,7 @@ export default function MapLibreMapComponent({
   leftInset,
   bottomInset = 0,
   focusRequest = 0,
+  topInset = 0,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -105,6 +108,10 @@ export default function MapLibreMapComponent({
     leftInsetRef.current = leftInset;
   }, [leftInset]);
   const bottomInsetRef = useRef(bottomInset);
+  const topInsetRef = useRef(topInset);
+  useEffect(() => {
+    topInsetRef.current = topInset;
+  }, [topInset]);
   // Set once the resident pans/zooms/selects; until then layout changes
   // re-fit the national view instead of leaving it off-centre.
   const userMovedRef = useRef(false);
@@ -112,7 +119,7 @@ export default function MapLibreMapComponent({
   useEffect(() => {
     bottomInsetRef.current = bottomInset;
     const map = mapRef.current;
-    if (map && !userMovedRef.current) fitNational(map, leftInsetRef.current, 0, bottomInset);
+    if (map && !userMovedRef.current) fitNational(map, leftInsetRef.current, 0, bottomInset, topInsetRef.current);
   }, [bottomInset]);
   const [mapReady, setMapReady] = useState(false);
   // Set when MapLibre cannot load or start. "unsupported" = no WebGL2 (a
@@ -217,7 +224,7 @@ export default function MapLibreMapComponent({
         }
 
         setRotateGestures(map, false);
-        fitNational(map, leftInsetRef.current, 0, bottomInsetRef.current);
+        fitNational(map, leftInsetRef.current, 0, bottomInsetRef.current, topInsetRef.current);
 
         setMapReady(true);
       });
@@ -280,7 +287,7 @@ export default function MapLibreMapComponent({
     // resident moves the map; after that, leave their camera alone.
     const observer = new ResizeObserver(() => {
       map.resize();
-      if (!userMovedRef.current) fitNational(map, leftInsetRef.current, 0, bottomInsetRef.current);
+      if (!userMovedRef.current) fitNational(map, leftInsetRef.current, 0, bottomInsetRef.current, topInsetRef.current);
     });
     observer.observe(container);
     return () => observer.disconnect();
@@ -458,7 +465,7 @@ export default function MapLibreMapComponent({
 
     const lngLat: [number, number] = [incident.longitude, incident.latitude];
     const { clientWidth: w, clientHeight: h } = map.getContainer();
-    const padding = mapPadding(w, h, leftInsetRef.current, bottomInsetRef.current);
+    const padding = mapPadding(w, h, leftInsetRef.current, bottomInsetRef.current, topInsetRef.current);
     // An earthquake inside a cluster isn't visible on its own: zoom in far
     // enough for the cluster to split.
     const inCluster = incident.event_type === "earthquake" && !quakeShownAlone(map, incident.id);
@@ -504,7 +511,7 @@ export default function MapLibreMapComponent({
       setTerrainOn(false);
     }
     userMovedRef.current = false;
-    fitNational(map, leftInsetRef.current, 600, bottomInsetRef.current);
+    fitNational(map, leftInsetRef.current, 600, bottomInsetRef.current, topInsetRef.current);
   };
 
   return (
@@ -519,16 +526,18 @@ export default function MapLibreMapComponent({
       {mapReady && !mapFailed && (
         <div
           // The inset panel (focus-mode card) is only shown at lg and up.
-          className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5 lg:left-[calc(var(--map-left-inset)+0.75rem)]"
+          className="absolute left-3 top-[calc(var(--map-toolbar-h,0px)+0.75rem)] z-10 flex flex-col items-start gap-1.5 lg:left-[calc(var(--map-left-inset)+0.75rem)]"
         >
           <button
-            className="flex items-center gap-1.5 rounded-lg border border-overlay/15 bg-[var(--bg-panel)]/90 px-2.5 py-1.5 text-[12px] font-medium text-[var(--text-primary)] shadow transition hover:bg-[var(--bg-panel)]"
+            className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg border border-overlay/15 bg-[var(--bg-panel)]/90 px-2.5 py-1.5 text-[12px] font-medium text-[var(--text-primary)] shadow transition hover:bg-[var(--bg-panel)] sm:min-h-0 sm:min-w-0"
             onClick={resetView}
             title={mapCopy.resetViewTitle}
+            aria-label={mapCopy.resetView}
             type="button"
           >
-            <LocateFixed className="h-3.5 w-3.5" />
-            {mapCopy.resetView}
+            <LocateFixed aria-hidden className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+            {/* Phones: icon only, so the map keeps its height. */}
+            <span className="sr-only sm:not-sr-only">{mapCopy.resetView}</span>
           </button>
           {TERRAIN_CONFIG && (
           <button

@@ -75,6 +75,9 @@ export function quakeShownAlone(map: MlMap, id: string): boolean {
   return map.queryRenderedFeatures({ layers: [L.quake], filter: ["==", ["get", "id"], id] }).length > 0;
 }
 
+/** Opacity by age: solid in the last hour, fainter as quakes get older. */
+const AGE_OPACITY: ExpressionSpecification = ["step", ["coalesce", ["get", "age"], 0], 1, 1, 0.9, 6, 0.78, 24, 0.62, 48, 0.48];
+
 /** Size of the transparent "blocker" image (px); scaled to each marker. */
 const BLOCK_PX = 8;
 
@@ -95,7 +98,7 @@ function statusKind(incident: Incident): { icon: string; label: string } {
 const SEVERITY_RANK: Record<string, number> = { advisory: 0, watch: 1, warning: 2, critical: 3 };
 
 /** GeoJSON for both sources. Only plain values from the feed go into properties. */
-export function eventCollections(incidents: Incident[]): {
+export function eventCollections(incidents: Incident[], now: number = Date.now()): {
   quakes: GeoJSON.FeatureCollection;
   statuses: GeoJSON.FeatureCollection;
 } {
@@ -116,6 +119,8 @@ export function eventCollections(incidents: Incident[]): {
           label: Number.isFinite(mag) ? mag.toFixed(1) : "EQ",
           ring: SEVERITY_RING[i.severity] ?? SEVERITY_RING.advisory,
           rank,
+          // Hours since the quake: older quakes are drawn fainter.
+          age: Math.max(0, Math.round(((now - Date.parse(i.started_at || i.updated_at)) / 3_600_000) * 10) / 10) || 0,
         },
       });
     } else {
@@ -286,6 +291,9 @@ export function ensureEventLayers(map: MlMap, incidents: Incident[], largestLabe
       "circle-color": HAZARD_COLORS.earthquake,
       "circle-stroke-color": ["case", ["==", emphasis, 1], "#ffffff", ["get", "ring"]],
       "circle-stroke-width": ["+", 2, ["*", emphasis, 1.5]],
+      // Selected or hovered quakes are always solid.
+      "circle-opacity": ["case", ["==", emphasis, 1], 1, AGE_OPACITY],
+      "circle-stroke-opacity": ["case", ["==", emphasis, 1], 1, AGE_OPACITY],
     } });
   add({ id: L.quakeBlock, type: "symbol", source: QUAKE_SOURCE, filter: single,
     layout: {
@@ -300,7 +308,7 @@ export function ensureEventLayers(map: MlMap, incidents: Incident[], largestLabe
       "symbol-sort-key": ["-", 0, ["coalesce", ["get", "mag"], 0]],
       "text-allow-overlap": true, "text-ignore-placement": true,
     },
-    paint: { "text-color": "#111827" } });
+    paint: { "text-color": "#111827", "text-opacity": ["max", 0.75, AGE_OPACITY] } });
 
   // Volcanoes, cyclones, other (above earthquakes)
   add({ id: L.statusHit, type: "circle", source: STATUS_SOURCE,

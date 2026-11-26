@@ -21,15 +21,17 @@ const BASE: Padding = { top: 56, bottom: 56, left: 48, right: 64 };
  * floats over the left of the map (the focus-mode incident card). It is only
  * applied when the map is wide enough for it to leave a usable area.
  */
-export function mapPadding(width: number, height: number, leftInset = 0, bottomInset = 0): Padding {
+export function mapPadding(width: number, height: number, leftInset = 0, bottomInset = 0, topInset = 0): Padding {
   const left = leftInset > 0 && width - leftInset >= 480 ? BASE.left + leftInset : BASE.left;
   // Small screens: shrink the margins so the country is not tiny.
   const scale = width < 640 || height < 420 ? 0.5 : 1;
   // `bottomInset`: a panel over the bottom of the map (the phone list panel),
   // kept clear only when enough map remains above it.
-  const bottomExtra = bottomInset > 0 && height - bottomInset >= 240 ? bottomInset : 0;
+  const bottomExtra = bottomInset > 0 && height - bottomInset >= 150 ? bottomInset : 0;
+  // `topInset`: controls over the top of the map (the time chips row).
+  const top = Math.max(Math.round(BASE.top * scale), topInset > 0 && height - topInset - bottomExtra >= 120 ? topInset + 8 : 0);
   return {
-    top: Math.round(BASE.top * scale),
+    top,
     bottom: Math.round(BASE.bottom * scale) + bottomExtra,
     left: left === BASE.left ? Math.round(BASE.left * scale) : left,
     right: Math.round(BASE.right * scale),

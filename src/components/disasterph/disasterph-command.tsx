@@ -22,6 +22,16 @@ import {
 } from "@/lib/incidents";
 import { eventTimeWithAge } from "@/lib/event-time";
 import { SourcesLine } from "@/components/disasterph/sources-line";
+import { StatusStrip } from "@/components/disasterph/status-strip";
+import { MapToolbar } from "@/components/disasterph/map-toolbar";
+import {
+  DEFAULT_QUAKE_RANGE,
+  LAYER_KEYS,
+  layerOf,
+  passesQuakeFilters,
+  type LayerKey,
+  type QuakeRange,
+} from "@/lib/quake-filters";
 import { eventLabel, severityText, t } from "@/lib/i18n";
 import { plainAlertInterpretation } from "@/lib/plain-alert";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
@@ -92,6 +102,10 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
   const [focusMode, setFocusMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [listOpen, setListOpen] = useState(false);
+  // Earthquake filters (map, list and counts) and map layers.
+  const [quakeRange, setQuakeRange] = useState<QuakeRange>(DEFAULT_QUAKE_RANGE);
+  const [includeSmall, setIncludeSmall] = useState(false);
+  const [layers, setLayers] = useState<Record<LayerKey, boolean>>({ earthquake: true, volcano: true, typhoon: true, other: true });
   // Bumped whenever an event is chosen from the list, so the map brings it
   // into view even if it was already selected (e.g. after zooming out).
   const [focusRequest, setFocusRequest] = useState(0);
@@ -130,14 +144,20 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
       (i) => new Date(i.updated_at).getTime() >= tenDayCutoff,
     );
   }, [incidents, tenDayCutoff]);
+  // Earthquake time and magnitude filters, measured from when the data was
+  // generated (the same instant on the server and in the browser).
+  const shownRecent = useMemo(() => {
+    const at = generatedAt ? Date.parse(generatedAt) : tenDayCutoff + 10 * 86_400_000;
+    return allRecentIncidents.filter((i) => passesQuakeFilters(i, quakeRange, includeSmall, at));
+  }, [allRecentIncidents, quakeRange, includeSmall, generatedAt, tenDayCutoff]);
 
   // ── Place-first: everything below (counters, chips, feed, map) follows
   //    the visitor's chosen area, so all views share one filter state. ──
   const [area, setArea] = useSelectedArea();
   const recentIncidents = useMemo(() => {
     const effective = resolveArea(area, places);
-    return allRecentIncidents.filter((i) => incidentInArea(i, effective, places));
-  }, [allRecentIncidents, area, places]);
+    return shownRecent.filter((i) => incidentInArea(i, effective, places));
+  }, [shownRecent, area, places]);
 
   // ── Filtered incidents for the main view ──
   const filteredIncidents = useMemo(() => {
@@ -148,6 +168,17 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
     }
     return filterIncidentsByType(recentIncidents, activeFilter);
   }, [recentIncidents, activeFilter]);
+
+  // Map: the same events, minus layers switched off in the Layers panel.
+  const mapIncidents = useMemo(
+    () => filteredIncidents.filter((i) => layers[layerOf(i)]),
+    [filteredIncidents, layers],
+  );
+  const layerCounts = useMemo(() => {
+    const counts = Object.fromEntries(LAYER_KEYS.map((k) => [k, 0])) as Record<LayerKey, number>;
+    for (const i of filteredIncidents) counts[layerOf(i)]++;
+    return counts;
+  }, [filteredIncidents]);
 
   // ── Count by type ──
   const countByType = useMemo(() => {
@@ -342,6 +373,7 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
               />
               <div className="px-4 pb-2.5 md:px-5">
                 <SourcesLine statuses={sourceStatuses} locale={locale} offline={!isOnline} checkedAt={generatedAt} />
+                <StatusStrip incidents={incidents} sources={sourceStatuses} locale={locale} />
               </div>
             </div>
           )}
@@ -413,7 +445,20 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
             }
           >
             <CommandMap
-              incidents={filteredIncidents}
+              incidents={mapIncidents}
+              toolbar={
+                <MapToolbar
+                  locale={locale}
+                  range={quakeRange}
+                  onRange={setQuakeRange}
+                  includeSmall={includeSmall}
+                  onIncludeSmall={setIncludeSmall}
+                  layers={layers}
+                  onLayer={(key, on) => setLayers((l) => ({ ...l, [key]: on }))}
+                  counts={layerCounts}
+                  hasOther={layerCounts.other > 0}
+                />
+              }
               communityReports={[]}
               // Only an explicit selection moves the map. The detail panels
               // fall back to the newest event, but the camera must not.
