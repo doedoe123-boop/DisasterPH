@@ -17,6 +17,7 @@ import type { Incident, IncidentEventType, SourceStatus } from "@/types/incident
 import { severityText, t, type Locale } from "@/lib/i18n";
 import { eventTimeWithAge } from "@/lib/event-time";
 import { HazardEmptyState } from "@/components/disasterph/hazard-empty-state";
+import { EventCard } from "@/components/disasterph/event-card";
 
 const HAZARD_ICON: Record<string, typeof Waves> = {
   earthquake: Waves,
@@ -144,8 +145,18 @@ export function EventSheet({
   open,
   onToggle,
   onPeekHeight,
+  chosen = null,
+  onCloseChosen,
   ...list
-}: ListProps & { open: boolean; onToggle: () => void; onPeekHeight?: (px: number) => void }) {
+}: ListProps & {
+  open: boolean;
+  onToggle: () => void;
+  /** Height of the panel as it sits over the map (kept clear by the camera). */
+  onPeekHeight?: (px: number) => void;
+  /** The chosen event: the panel shows its card instead of the list. */
+  chosen?: Incident | null;
+  onCloseChosen?: () => void;
+}) {
   const copy = t(list.locale).common.eventSheet;
   const listId = useId();
   const ref = useRef<HTMLDivElement>(null);
@@ -153,17 +164,63 @@ export function EventSheet({
   useEffect(() => {
     report.current = onPeekHeight;
   }, [onPeekHeight]);
-  // Report the collapsed height (titles wrap differently) so the map keeps
-  // that strip clear; 0 when the panel is hidden (wide screens).
+  // Report the height over the map (collapsed list, or an event's card) so
+  // the camera keeps that strip clear; 0 when the panel is hidden (wide
+  // screens). The expanded list is a temporary overlay and isn't reported.
   useEffect(() => {
     const el = ref.current;
-    if (!el || open) return;
+    if (!el || (open && !chosen)) return;
     const send = () => report.current?.(Math.round(el.getBoundingClientRect().height));
     send();
     const observer = new ResizeObserver(send);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [open]);
+  }, [open, chosen]);
+
+  // Swipe down on the card's handle closes it.
+  const dragStart = useRef<number | null>(null);
+  const onPointerDown = (e: React.PointerEvent) => {
+    dragStart.current = e.clientY;
+    // Keep receiving the pointer after it leaves the handle (mouse and pen;
+    // touch does this by itself).
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    const start = dragStart.current;
+    dragStart.current = null;
+    if (start === null || e.clientY - start < 48) return;
+    onCloseChosen?.();
+  };
+
+  if (chosen) {
+    return (
+      <div
+        ref={ref}
+        role="dialog"
+        aria-modal="false"
+        aria-label={chosen.title}
+        className="event-sheet event-sheet-card pointer-events-auto absolute inset-x-0 bottom-0 z-20 flex max-h-[55%] flex-col rounded-t-2xl border-t border-overlay/12 bg-[var(--bg-panel)] shadow-[0_-8px_24px_rgba(0,0,0,0.25)] lg:hidden"
+      >
+        <div
+          className="flex h-6 shrink-0 cursor-grab touch-none items-center justify-center"
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
+          aria-hidden
+        >
+          <span className="h-1 w-10 rounded-full bg-overlay/20" />
+        </div>
+        <div className="min-h-0 overflow-y-auto overscroll-contain">
+          <EventCard
+            incident={chosen}
+            locale={list.locale}
+            sourceStatuses={list.sourceStatuses}
+            onClose={() => onCloseChosen?.()}
+            variant="sheet"
+          />
+        </div>
+      </div>
+    );
+  }
   const count = list.incidents.length;
   const heading =
     count === 0 ? copy.none : (count === 1 ? copy.one : copy.many).replace("{n}", String(count));

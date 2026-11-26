@@ -1,14 +1,11 @@
 "use client";
 
-import { displayRegion } from "@/lib/geo/ph-regions";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   WifiOff,
   Activity,
-  AlertTriangle,
-  ArrowUpRight,
   X,
   Waves,
   Wind,
@@ -20,7 +17,6 @@ import {
   filterIncidentsByType,
   formatDateTime,
 } from "@/lib/incidents";
-import { eventTimeWithAge } from "@/lib/event-time";
 import { SourcesLine } from "@/components/disasterph/sources-line";
 import { StatusStrip } from "@/components/disasterph/status-strip";
 import { MapToolbar } from "@/components/disasterph/map-toolbar";
@@ -32,13 +28,12 @@ import {
   type LayerKey,
   type QuakeRange,
 } from "@/lib/quake-filters";
-import { eventLabel, severityText, t } from "@/lib/i18n";
-import { plainAlertInterpretation } from "@/lib/plain-alert";
+import { eventLabel, t } from "@/lib/i18n";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
-import { visualFromSeverity } from "@/lib/severity";
 import type { Incident, IncidentEventType } from "@/types/incident";
 import { useIncidents, type IncidentsPayload } from "@/hooks/use-incidents";
 import { EventList, EventSheet, LIST_LIMIT } from "@/components/disasterph/event-list";
+import { EventCard } from "@/components/disasterph/event-card";
 import { useAlertCenter } from "@/hooks/use-alert-center";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
 import { useSelectedArea } from "@/hooks/use-selected-area";
@@ -51,17 +46,6 @@ import { CommandMap } from "./command-map";
 import { EmergencyContacts } from "./emergency-contacts";
 import { CommandCenterSkeleton } from "./page-skeletons";
 
-import { getPrepTips, localizePrepTip } from "@/lib/prep-guidance";
-
-/* ── Hazard type icons ── */
-const HAZARD_ICON: Record<string, typeof Waves> = {
-  earthquake: Waves,
-  typhoon: Wind,
-  flood: Droplets,
-  volcano: Mountain,
-  landslide: TriangleAlert,
-  wildfire: AlertTriangle,
-};
 
 /* ── Filter bar button config ── */
 interface FilterChip {
@@ -94,7 +78,6 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
   const [activeFilter, setActiveFilter] = useState<
     IncidentEventType | "all" | "critical"
   >("all");
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedIncidentId, setSelectedIncidentId] = useState("");
   const [hoveredIncidentId, setHoveredIncidentId] = useState<string | null>(
     null,
@@ -126,16 +109,20 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
   );
   useAlertCenter(incidents, placeRisks);
 
-  const selectedIncident: Incident | undefined =
-    incidents.find((i) => i.id === selectedIncidentId) ?? incidents[0];
-
-  const prepTips = useMemo(
-    () =>
-      selectedIncident
-        ? getPrepTips(selectedIncident.event_type, selectedIncident.severity)
-        : [],
-    [selectedIncident],
-  );
+  // The event the reader chose (marker, list row): its card opens as a
+  // bottom sheet on phones and a popover on wide screens.
+  const chosen: Incident | null = selectedIncidentId
+    ? incidents.find((i) => i.id === selectedIncidentId) ?? null
+    : null;
+  // Escape closes the card.
+  useEffect(() => {
+    if (!chosen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedIncidentId("");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [chosen]);
 
   // ── 10-day window, from midnight Philippine time (server and browser agree) ──
   const tenDayCutoff = useMemo(() => phtDayStart(10), []);
@@ -336,7 +323,6 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
                   selectedId={selectedIncidentId || null}
                   onSelect={(incident) => {
                     setSelectedIncidentId(incident.id);
-                    setSheetOpen(true);
                     setFocusRequest((n) => n + 1);
                   }}
                   filter={activeFilter}
@@ -467,7 +453,6 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
               onHoverIncident={setHoveredIncidentId}
               onSelectIncident={(incident) => {
                 setSelectedIncidentId(incident.id);
-                setSheetOpen(true);
               }}
               focusMode={focusMode}
               onToggleFocus={() => setFocusMode((f) => !f)}
@@ -478,12 +463,26 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
               mapBottomInset={narrow && !focusMode ? sheetPeek : 0}
               focusRequest={focusRequest}
               // Focus-mode incident card: absolute left-4 (16px) + w-[320px].
-              mapLeftInset={focusMode && sheetOpen && selectedIncident ? 336 : 0}
+              mapLeftInset={0}
+              popover={
+                !narrow && chosen ? (
+                  <EventCard
+                    incident={chosen}
+                    locale={locale}
+                    sourceStatuses={sourceStatuses}
+                    onClose={() => setSelectedIncidentId("")}
+                    variant="popover"
+                  />
+                ) : null
+              }
+              hoverPreviews={!narrow}
             />
 
             {/* ── Phones and tablets: the event list as a panel over the map ── */}
             {!focusMode && (
               <EventSheet
+                chosen={chosen}
+                onCloseChosen={() => setSelectedIncidentId("")}
                 open={listOpen}
                 onToggle={() => setListOpen((v) => !v)}
                 onPeekHeight={setSheetPeek}
@@ -500,161 +499,6 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
               />
             )}
 
-            {/* ── Focus Mode: Compact Incident Card ── */}
-            <AnimatePresence>
-              {focusMode &&
-                sheetOpen &&
-                selectedIncident &&
-                (() => {
-                  const sv = visualFromSeverity(selectedIncident.severity);
-                  const FocusIcon =
-                    HAZARD_ICON[selectedIncident.event_type] ?? AlertTriangle;
-                  const topTips = prepTips.slice(0, 3);
-                  const meta = selectedIncident.metadata;
-                  const pills: string[] = [];
-                  if (selectedIncident.event_type === "earthquake") {
-                    if (meta.magnitude != null)
-                      pills.push(`M${Number(meta.magnitude).toFixed(1)}`);
-                    if (meta.depth_km != null)
-                      pills.push(`${Number(meta.depth_km).toFixed(0)}km deep`);
-                    if (
-                      meta.felt_reports != null &&
-                      Number(meta.felt_reports) > 0
-                    )
-                      pills.push(`${meta.felt_reports} felt`);
-                  } else if (selectedIncident.event_type === "typhoon") {
-                    if (meta.signal_number != null)
-                      pills.push(`Signal ${meta.signal_number}`);
-                    if (meta.wind_speed_kph != null)
-                      pills.push(`${meta.wind_speed_kph} kph`);
-                  } else if (selectedIncident.event_type === "volcano") {
-                    if (meta.alert_level)
-                      pills.push(`Alert ${String(meta.alert_level)}`);
-                  }
-
-                  return (
-                    <motion.div
-                      key={selectedIncident.id}
-                      initial={{ x: -20, opacity: 0, scale: 0.96 }}
-                      animate={{ x: 0, opacity: 1, scale: 1 }}
-                      exit={{ x: -20, opacity: 0, scale: 0.96 }}
-                      transition={{
-                        duration: 0.25,
-                        ease: [0.25, 0.1, 0.25, 1],
-                      }}
-                      className="absolute left-4 top-4 z-40 hidden w-[320px] overflow-hidden rounded-xl border border-overlay/10 bg-[var(--bg-panel)] backdrop-blur-xl shadow-[var(--shadow-elevated)] lg:block"
-                    >
-                      {/* Severity accent bar */}
-                      <div
-                        className={`h-[3px] w-full ${
-                          selectedIncident.severity === "critical"
-                            ? "bg-red-500"
-                            : selectedIncident.severity === "warning"
-                              ? "bg-orange-500"
-                              : selectedIncident.severity === "watch"
-                                ? "bg-amber-500"
-                                : "bg-cyan-500"
-                        }`}
-                      />
-
-                      <div className="px-4 pt-3 pb-4">
-                        {/* Top row: type + severity + close */}
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`flex h-7 w-7 items-center justify-center rounded-lg ${
-                              selectedIncident.severity === "critical"
-                                ? "bg-red-500/15 text-red-400"
-                                : selectedIncident.severity === "warning"
-                                  ? "bg-orange-500/15 text-orange-400"
-                                  : "bg-[var(--bg-chip)] text-[var(--text-dim)]"
-                            }`}
-                          >
-                            <FocusIcon className="h-3.5 w-3.5" />
-                          </div>
-                          <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-dim)]">
-                            {eventLabel(selectedIncident.event_type, locale)}
-                          </span>
-                          <span
-                            className={`rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${sv.badge}`}
-                          >
-                            {severityText(selectedIncident.severity, locale)}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setSheetOpen(false)}
-                            className="ml-auto flex h-6 w-6 items-center justify-center rounded-md text-[var(--text-dim)] transition hover:bg-overlay/8 hover:text-[var(--text-primary)]"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-
-                        {/* Title */}
-                        <h3 className="mt-2.5 text-[15px] font-bold leading-snug text-[var(--text-primary)]">
-                          {selectedIncident.title}
-                        </h3>
-
-                        <p className="mt-2 rounded-lg border border-cyan-400/15 bg-cyan-400/8 px-3 py-2 text-[12px] font-medium leading-5 text-[var(--text-primary)]">
-                          {plainAlertInterpretation(selectedIncident, locale)}
-                        </p>
-
-                        {/* Location + time */}
-                        <div className="mt-1.5 flex items-center gap-3 text-[12px] text-[var(--text-muted)]">
-                          <span>{displayRegion(selectedIncident.region, locale)}</span>
-                          <span className="text-[var(--text-dim)] opacity-50">
-                            ·
-                          </span>
-                          <span suppressHydrationWarning>
-                            {eventTimeWithAge(selectedIncident, locale)}
-                          </span>
-                        </div>
-
-                        {/* Data pills */}
-                        {pills.length > 0 && (
-                          <div className="mt-3 flex flex-wrap gap-1.5">
-                            {pills.map((pill) => (
-                              <span
-                                key={pill}
-                                className="rounded-md border border-overlay/12 bg-overlay/[0.05] px-2 py-0.5 font-mono text-[11px] font-medium text-[var(--text-muted)]"
-                              >
-                                {pill}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* What to do (compact) */}
-                        {topTips.length > 0 && (
-                          <div className="mt-3 border-t border-overlay/6 pt-3">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-dim)] mb-1.5">
-                              {i18n.common.whatToDo}
-                            </p>
-                            <div className="space-y-1">
-                              {topTips.map((tip) => (
-                                <p
-                                  key={tip.id}
-                                  className="flex items-start gap-1.5 text-[12px] leading-tight text-[var(--text-muted)]"
-                                >
-                                  <span className="mt-px text-cyan-400">✓</span>
-                                  {localizePrepTip(tip, locale).title}
-                                </p>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* View full detail link */}
-                        <Link
-                          href={`/pulse/${encodeURIComponent(selectedIncident.id)}`}
-                          className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-overlay/10 bg-overlay/[0.04] px-3 py-2 text-[12px] font-semibold text-[var(--text-primary)] transition hover:bg-overlay/8 hover:border-overlay/15"
-                        >
-                          {i18n.common.viewFullDetail}
-                          <ArrowUpRight className="h-3.5 w-3.5" />
-                        </Link>
-                      </div>
-                    </motion.div>
-                  );
-                })()}
-            </AnimatePresence>
           </section>
 
         </div>
