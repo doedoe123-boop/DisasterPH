@@ -206,6 +206,17 @@ export const copy = {
         checked: "checked {age}",
         usgsFallback: "backup while PHIVOLCS is unavailable",
         backToList: "Back to list",
+        zoneLabel: "{n} km Permanent Danger Zone (PHIVOLCS)",
+        yourPlaces: "Your saved places",
+        placeInside: "{place} is about {km} km from the summit, inside the {zone} km Permanent Danger Zone.",
+        placeEdge: "{place} is about {km} km from the summit, near the edge of the {zone} km Permanent Danger Zone (saved locations are approximate, about 1 km).",
+        placeOutside: "{place} is about {km} km from the summit, outside the {zone} km Permanent Danger Zone.",
+        placeNearVolcano: "{place} is about {km} km from the summit. PHIVOLCS gives no zone radius in this bulletin.",
+        placeNearQuake: "{place} is about {km} km from the epicentre.",
+        placeSignal: "{place} is in {region}, under one of this cyclone's PAGASA wind signals.",
+        insideQuote: "PHIVOLCS: should not be allowed: {line}.",
+        insideAdvice: "Contact the people there and follow your local DRRMO.",
+        notSafetyConfirmation: "This is not a safety confirmation. It cannot tell you whether the people there are okay.",
       },
       mapFilters: {
         rangeLabel: "Earthquakes from the last",
@@ -280,7 +291,7 @@ export const copy = {
           critical: "M6.5+ · Alert Level 4 to 5 · Signal No. 3+",
         },
         official: "Official: magnitudes, PHIVOLCS alert levels and PAGASA wind signals.",
-        dangerZone: "Volcano danger zone (radius from PHIVOLCS)",
+        dangerZone: "Volcano danger zone (radius from PHIVOLCS); outlined and labelled when chosen",
         track: "Storm track (NASA EONET); dashed = forecast",
         note: "Tap a marker for details. Severity is also written in each popup and list item.",
       },
@@ -779,6 +790,17 @@ export const copy = {
         checked: "sinuri {age}", // NEEDS NATIVE REVIEW
         usgsFallback: "pansamantala habang hindi maabot ang PHIVOLCS", // NEEDS NATIVE REVIEW
         backToList: "Bumalik sa listahan", // NEEDS NATIVE REVIEW
+        zoneLabel: "{n} km Permanent Danger Zone (PHIVOLCS)",
+        yourPlaces: "Mga naka-save mong lugar", // NEEDS NATIVE REVIEW
+        placeInside: "Ang {place} ay mga {km} km mula sa tuktok, sa loob ng {zone} km na Permanent Danger Zone.", // NEEDS NATIVE REVIEW
+        placeEdge: "Ang {place} ay mga {km} km mula sa tuktok, malapit sa gilid ng {zone} km na Permanent Danger Zone (tantiya lang ang naka-save na lokasyon, mga 1 km).", // NEEDS NATIVE REVIEW
+        placeOutside: "Ang {place} ay mga {km} km mula sa tuktok, labas sa {zone} km na Permanent Danger Zone.", // NEEDS NATIVE REVIEW
+        placeNearVolcano: "Ang {place} ay mga {km} km mula sa tuktok. Walang radius ng zone sa bulletin na ito.", // NEEDS NATIVE REVIEW
+        placeNearQuake: "Ang {place} ay mga {km} km mula sa epicenter.", // NEEDS NATIVE REVIEW
+        placeSignal: "Ang {place} ay nasa {region}, sakop ng isa sa mga wind signal ng PAGASA para sa bagyong ito.", // NEEDS NATIVE REVIEW
+        insideQuote: "PHIVOLCS: hindi dapat payagan: {line}.", // NEEDS NATIVE REVIEW
+        insideAdvice: "Kontakin ang mga tao roon at sundin ang lokal na DRRMO.", // NEEDS NATIVE REVIEW
+        notSafetyConfirmation: "Hindi ito kumpirmasyon na ligtas. Hindi nito masasabi kung maayos ang mga tao roon.", // NEEDS NATIVE REVIEW
       },
       mapFilters: {
         rangeLabel: "Mga lindol sa nakalipas na", // NEEDS NATIVE REVIEW
@@ -853,7 +875,7 @@ export const copy = {
           critical: "M6.5+ · Alert Level 4 hanggang 5 · Signal No. 3+", // NEEDS NATIVE REVIEW
         },
         official: "Opisyal: magnitude, alert level ng PHIVOLCS at wind signal ng PAGASA.", // NEEDS NATIVE REVIEW
-        dangerZone: "Danger zone ng bulkan (radius mula sa PHIVOLCS)", // NEEDS NATIVE REVIEW
+        dangerZone: "Danger zone ng bulkan (radius mula sa PHIVOLCS); may balangkas at label kapag pinili", // NEEDS NATIVE REVIEW
         track: "Dinaanan ng bagyo (NASA EONET); putol-putol = forecast", // NEEDS NATIVE REVIEW
         note: "Pindutin ang marker para sa detalye. Nakasulat din ang antas sa bawat popup at listahan.", // NEEDS NATIVE REVIEW
       },
