@@ -115,7 +115,15 @@ function EventCardBody({
     headingRef.current?.focus({ preventScroll: true });
   }, [base.id]);
 
-  const statusKey = incident.source === "PHIVOLCS" && incident.event_type === "volcano" ? "PHIVOLCS_VOLCANO" : incident.source;
+  const statusKey =
+    incident.source === "PHIVOLCS" && incident.event_type === "volcano"
+      ? "PHIVOLCS_VOLCANO"
+      : incident.source === "PAGASA" && incident.event_type === "flood"
+        ? "PAGASA_RAIN"
+        : incident.source;
+  const pagasaFlood = incident.source === "PAGASA" && incident.event_type === "flood";
+  // Notes under "What this means" (DisasterPH's own, kept apart from PAGASA's words).
+  const notes: string[] = [];
   const status = sourceStatuses.find((s) => s.source === statusKey);
   const checked = status?.last_success_at ? formatRelativeTime(status.last_success_at, locale) : null;
   const lat = incident.latitude.toFixed(4);
@@ -177,11 +185,40 @@ function EventCardBody({
     const doNow = lines(m.what_to_do);
     if (doNow.length) todo = { title: copy.pagasaWhatToDo, items: doNow };
     else if (lines(m.precautions).length) todo = { title: copy.pagasaPrecautions, items: lines(m.precautions) };
+  } else if (pagasaFlood && m.product === "basin") {
+    badge = typeof m.basin_status === "string" ? m.basin_status : null;
+    heading = typeof m.basin_name === "string" ? m.basin_name : incident.title;
+    stats.push({ label: copy.basinStatus, value: String(m.basin_status ?? "") });
+    stats.push({ label: m.time_kind === "issued" ? copy.issued : copy.firstSeen, value: eventTimeFull(incident, locale) });
+    if (typeof m.forecast_water === "string") meaning.push({ title: copy.forecastWater, items: [m.forecast_water] });
+    if (typeof m.forecast_rain === "string") meaning.push({ title: copy.forecastRain, items: [m.forecast_rain] });
+    if (typeof m.observed_rain === "string") meaning.push({ title: copy.observedRain, items: [m.observed_rain] });
+    if (meaning.length === 0) notes.push(copy.basinPdf);
+    notes.push(copy.basinAreasOurs);
+  } else if (pagasaFlood) {
+    const level = typeof m.warning_level === "string" ? m.warning_level : null;
+    const product = m.product === "rainfall_warning" ? "Heavy Rainfall Warning" : "Rainfall Advisory";
+    badge = level ? copy.rainBadge.replace("{level}", level) : product;
+    heading = level && typeof m.level_areas === "string" ? m.level_areas : incident.title.split(" · ").slice(1).join(" · ") || incident.title;
+    subline = [
+      `${product}${m.product_no != null ? ` No. ${m.product_no}` : ""}`,
+      typeof m.office === "string" ? m.office : null,
+      typeof m.weather_system === "string" ? m.weather_system : null,
+    ].filter(Boolean).join(" · ");
+    if (level) stats.push({ label: copy.rainLevel, value: level });
+    stats.push({ label: copy.issued, value: eventTimeFull(incident, locale) });
+    if (typeof m.hazard === "string") meaning.push({ title: copy.hazardPagasa, items: [m.hazard] });
+    const body = lines(m.body);
+    if (body.length) meaning.push({ title: level ? copy.alsoInWarning : copy.advisoryAreas, items: body });
+    if (typeof m.advice === "string") todo = { title: copy.pagasaAdvice, items: [m.advice] };
+    if (m.bulletin_stale === true) notes.unshift(copy.staleWarning);
   } else {
     badge = eventLabel(incident.event_type, locale);
     stats.push({ label: copy.time, value: eventTimeFull(incident, locale) });
     meaning = [{ items: [copy.referenceOnly] }];
   }
+  // Basins have their own note (their provinces are our lookup, not PAGASA's list).
+  if (m.location_approx === true && m.product !== "basin") notes.push(copy.approxPlace);
 
   const pad = variant === "popover" ? "p-3.5" : "px-4 pb-4 pt-1";
   return (
@@ -259,6 +296,12 @@ function EventCardBody({
         </section>
       )}
 
+      {notes.length > 0 && (
+        <ul className="event-card-notes mt-2 space-y-1 text-[12px] text-[var(--text-muted)]">
+          {notes.map((n) => <li key={n}>{n}</li>)}
+        </ul>
+      )}
+
       {/* 5. What to do (agency wording) */}
       {todo && (
         <section className="mt-3">
@@ -281,10 +324,12 @@ function EventCardBody({
             {incident.event_type === "earthquake" ? copy.officialRecord : copy.officialBulletin}
           </a>
         )}
-        <a href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`} target="_blank" rel="noopener noreferrer" className="event-card-btn inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-overlay/15 px-3 font-semibold hover:bg-overlay/6">
-          <MapPinned aria-hidden className="h-4 w-4" />
-          {copy.openInMaps}
-        </a>
+        {m.location_approx !== true && (
+          <a href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`} target="_blank" rel="noopener noreferrer" className="event-card-btn inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-overlay/15 px-3 font-semibold hover:bg-overlay/6">
+            <MapPinned aria-hidden className="h-4 w-4" />
+            {copy.openInMaps}
+          </a>
+        )}
         <Link href={`/pulse/${encodeURIComponent(incident.id)}`} className="event-card-btn inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-overlay/15 px-3 font-semibold hover:bg-overlay/6">
           <ArrowUpRight aria-hidden className="h-4 w-4" />
           {copy.details}
@@ -313,7 +358,7 @@ function placeSentence(check: PlaceCheck, incident: Incident, locale: Locale): s
     case "inside": return fill(copy.placeInside);
     case "edge": return fill(copy.placeEdge);
     case "outside": return fill(copy.placeOutside);
-    case "signal": return fill(copy.placeSignal);
+    case "signal": return fill(incident.event_type === "typhoon" ? copy.placeSignal : copy.placeWarning);
     default: return fill(incident.event_type === "volcano" ? copy.placeNearVolcano : copy.placeNearQuake);
   }
 }

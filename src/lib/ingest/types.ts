@@ -10,6 +10,8 @@ export interface FetchLog {
   bulletin_state?: "none" | "active" | "unknown";
   /** Fetched but could not be interpreted with confidence. */
   uncertain?: boolean;
+  /** PAGASA rainfall/flood only: the national Weather Advisory in effect (null: none). */
+  weather_advisory?: { number: number; url: string } | null;
 }
 
 export interface SourceHealthRecord {
@@ -21,4 +23,6 @@ export interface SourceHealthRecord {
   consecutive_failures: number;
   notes: string;
   bulletin_state?: "none" | "active" | "unknown";
+  /** PAGASA rainfall/flood only: the national Weather Advisory in effect (null: none). */
+  weather_advisory?: { number: number; url: string } | null;
 }

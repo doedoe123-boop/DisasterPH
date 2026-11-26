@@ -1,6 +1,7 @@
 import type { Incident, SavedPlace } from "@/types/incident";
 import { haversineKm } from "@/lib/risk-summary";
 import { regionForMatching } from "@/lib/ingest/regions";
+import { namedRegions } from "@/lib/event-regions";
 
 /**
  * Volcano danger zones and the saved-place line on the event card. Runs in
@@ -71,8 +72,10 @@ export interface PlaceCheck {
 /** Saved places relevant to this event, nearest first (at most 5). */
 export function placeChecks(incident: Incident, places: SavedPlace[]): PlaceCheck[] {
   if (places.length === 0) return [];
-  if (incident.event_type === "typhoon") {
-    const regions = typeof incident.metadata.signal_regions === "string" ? incident.metadata.signal_regions.split("|") : [];
+  // Typhoon wind signals and PAGASA rainfall/flood warnings name regions:
+  // a saved place there is listed by region, not by distance.
+  if (incident.event_type === "typhoon" || (incident.event_type === "flood" && incident.source === "PAGASA")) {
+    const regions = namedRegions(incident);
     if (regions.length === 0) return [];
     return places
       .map((place) => ({ place, region: regionForMatching(place.latitude, place.longitude) }))

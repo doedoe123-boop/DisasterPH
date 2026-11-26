@@ -126,7 +126,7 @@ export function DisasterPHCommand({ initial, initialView = {} }: { initial?: Inc
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>(() =>
     initialView.layers
       ? (Object.fromEntries(LAYER_KEYS.map((k) => [k, initialView.layers!.includes(k)])) as Record<LayerKey, boolean>)
-      : { earthquake: true, volcano: true, typhoon: true, other: true },
+      : { earthquake: true, volcano: true, typhoon: true, flood: true, other: true },
   );
   // List order: newest first (default) or highest level first.
   const [sort, setSort] = useState<ListSort>("newest");
@@ -272,7 +272,7 @@ export function DisasterPHCommand({ initial, initialView = {} }: { initial?: Inc
     for (const i of allRecentIncidents) counts[i.event_type] = (counts[i.event_type] ?? 0) + 1;
     return counts;
   }, [allRecentIncidents]);
-  const UNMONITORED = new Set(["flood", "landslide"]);
+  const UNMONITORED = new Set(["landslide"]);
 
   // ── Filter bar chips ──
   const allFilterChips: FilterChip[] = [
@@ -295,7 +295,7 @@ export function DisasterPHCommand({ initial, initialView = {} }: { initial?: Inc
 
   /** Badge text: "None active" when no typhoon exists anywhere. */
   function chipBadge(value: string): string {
-    if (value === "typhoon" && (nationalCount.typhoon ?? 0) === 0) return i18n.common.noneActive;
+    if ((value === "typhoon" || value === "flood") && (nationalCount[value] ?? 0) === 0) return i18n.common.noneActive;
     return String(chipCount(value));
   }
 

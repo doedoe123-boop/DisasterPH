@@ -12,7 +12,7 @@ import type { IncidentEventType } from "@/types/incident";
  *
  *   view    region, as a short name (REGION_SLUGS)
  *   show    the hazard tab: warning | quake | volcano | typhoon | flood | landslide
- *   layers  map layers that are on: quake,volcano,typhoon,other (all on: omitted)
+ *   layers  map layers that are on: quake,volcano,typhoon,rain,other (all on: omitted)
  *   range   earthquake time range: 1h | 6h | 24h | 48h | 7d (24h: omitted)
  *   mag     3 to include M3.0+ (M3.5+: omitted)
  *   event   the chosen event's id (must exist in the current data)
@@ -59,6 +59,7 @@ const LAYER_NAMES: Readonly<Record<string, LayerKey>> = {
   quake: "earthquake",
   volcano: "volcano",
   typhoon: "typhoon",
+  rain: "flood",
   other: "other",
 };
 /** Event ids look like "PHIVOLCS:20261124T232954Z" or "EONET_1234". */

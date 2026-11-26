@@ -14,6 +14,18 @@ export function plainAlertInterpretation(
   incident: Incident,
   locale: Locale,
 ): string {
+  // PAGASA rainfall warnings, advisories and river basins: PAGASA's own words
+  // (the warning's associated hazard, the advisory text, the basin forecast),
+  // never a sentence of ours.
+  if (incident.source === "PAGASA" && incident.event_type === "flood") {
+    const m = incident.metadata;
+    const firstLine = typeof m.body === "string" ? m.body.split("\n")[0] : null;
+    const official =
+      m.product === "basin"
+        ? (typeof m.forecast_water === "string" ? m.forecast_water : null) ?? (typeof m.basin_status === "string" ? m.basin_status : null)
+        : (typeof m.hazard === "string" ? m.hazard : null) ?? firstLine;
+    if (official) return `PAGASA: ${official}`;
+  }
   const magnitude = numberValue(incident.metadata.magnitude);
   const depthKm = numberValue(incident.metadata.depth_km);
   const signalNumber = numberValue(incident.metadata.signal_number);
