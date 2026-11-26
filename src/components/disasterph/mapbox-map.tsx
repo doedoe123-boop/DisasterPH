@@ -18,6 +18,13 @@ import { loadMapLibre } from "@/lib/maplibre-loader";
 import { House, MapPinned, Mountain, Navigation, X } from "lucide-react";
 import type { SavedPlace } from "@/types/incident";
 import { boundsAround, syncUserLayers, type DeviceLocation } from "@/lib/map-user-layers";
+import {
+  BASE_SOURCES,
+  OFFLINE_TILE_ERRORS,
+  ONLINE_TILE_ERRORS,
+  outlineStyle,
+  type BaseMapState,
+} from "@/lib/map-fallback";
 import { TERRAIN_CONFIG, TERRAIN_SOURCE, disableTerrain, enableTerrain } from "@/lib/terrain";
 import { focusZoom, isInView, mapPadding, popoverFitsBesideZone, zonePadding } from "@/lib/map-camera";
 import { displayRegion } from "@/lib/geo/ph-regions";
@@ -71,6 +78,10 @@ interface Props {
   onMyPlaces?: () => void;
   /** No saved places yet: open the saved-places panel. */
   onAddPlace?: () => void;
+  /** The base map in use: OpenFreeMap, or the outline when it cannot load. */
+  onBaseMapChange?: (state: BaseMapState) => void;
+  /** Changes when the reader asks to try the base map again. */
+  baseMapRetry?: number;
 }
 
 const NO_PLACES: SavedPlace[] = [];
@@ -143,6 +154,8 @@ export default function MapLibreMapComponent({
   showPlacePins = false,
   onMyPlaces,
   onAddPlace,
+  onBaseMapChange,
+  baseMapRetry = 0,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -220,6 +233,15 @@ export default function MapLibreMapComponent({
   useEffect(() => {
     userLayersRef.current = { places: shownPlaces, location: located };
   }, [shownPlaces, located]);
+  // Base map: OpenFreeMap, or the outline of the Philippines when it cannot
+  // load (map-fallback.ts). Read by the map's own handlers.
+  const baseStateRef = useRef<BaseMapState>("normal");
+  const onBaseMapChangeRef = useRef(onBaseMapChange);
+  useEffect(() => {
+    onBaseMapChangeRef.current = onBaseMapChange;
+  }, [onBaseMapChange]);
+  // Set by the map once it is created: switch back to the base map.
+  const restoreBaseRef = useRef<(() => void) | null>(null);
   // Latest callbacks for the map's own event handlers (registered once).
   const onSelectRef = useRef(onSelectIncident);
   const onHoverRef = useRef(onHoverIncident);
@@ -233,6 +255,7 @@ export default function MapLibreMapComponent({
     if (!containerRef.current) return;
     let cancelled = false;
     let themeHandler: ((e: Event) => void) | null = null;
+    let onlineHandler: (() => void) | null = null;
     const communityMarkers = communityMarkersRef.current;
 
     async function init() {
@@ -303,6 +326,7 @@ export default function MapLibreMapComponent({
         setRotateGestures(map, false);
         fitNational(map, leftInsetRef.current, 0, bottomInsetRef.current, topInsetRef.current);
 
+        loaded = true;
         setMapReady(true);
       });
 
@@ -311,11 +335,82 @@ export default function MapLibreMapComponent({
         if ((e as { originalEvent?: Event }).originalEvent) userMovedRef.current = true;
       });
 
-      // Missing or failing DEM tiles never block the map: fall back to 2D.
+      // ── Base map fallback ──
+      // The base map (style, then tiles) comes from OpenFreeMap. When it cannot
+      // load (offline, or its server down), the map switches to a plain outline
+      // of the Philippines kept by the service worker; events stay on top.
+      let loaded = false;
+      let tileErrors = 0;
+      let baseTileLoaded = false;
+      const theme = () => (document.documentElement.dataset.theme === "day" ? "day" : "night");
+      const setBase = (state: BaseMapState) => {
+        baseStateRef.current = state;
+        onBaseMapChangeRef.current?.(state);
+      };
+      /** A new style: once it is in, put our sources and layers back on it. */
+      const restyle = (style: string | ReturnType<typeof outlineStyle>) => {
+        map.setStyle(style);
+        // Before the first load the "load" handler and effects add everything.
+        if (!loaded) return;
+        map.once("styledata", () => {
+          applySky(map);
+          applyBaseLabels(map);
+          addAllSourcesAndLayers(map, incidentsRef.current, clusterWordRef.current, zoneLabelRef.current);
+          syncUserLayers(map, userLayersRef.current.places, userLayersRef.current.location);
+          // Style swaps drop sources; restore terrain if it was on (base map only).
+          if (terrainRef.current && TERRAIN_CONFIG && baseStateRef.current === "normal") {
+            enableTerrain(map, TERRAIN_CONFIG, false);
+          }
+        });
+      };
+      const switchToOutline = () => {
+        if (baseStateRef.current !== "normal") return;
+        setBase(navigator.onLine ? "outline-unavailable" : "outline-offline");
+        if (terrainRef.current) {
+          terrainRef.current = false;
+          setTerrainOn(false);
+        }
+        restyle(outlineStyle(theme()));
+      };
+      restoreBaseRef.current = () => {
+        if (baseStateRef.current === "normal") return;
+        tileErrors = 0;
+        baseTileLoaded = false;
+        setBase("normal");
+        restyle(getMapStyle());
+      };
+      onlineHandler = () => restoreBaseRef.current?.();
+      window.addEventListener("online", onlineHandler);
+      map.on("data", (e) => {
+        const ev = e as { dataType?: string; sourceId?: string; tile?: unknown };
+        if (ev.dataType === "source" && ev.tile && ev.sourceId && BASE_SOURCES.has(ev.sourceId)) baseTileLoaded = true;
+      });
+
       map.on("error", (e) => {
-        if ((e as { sourceId?: string }).sourceId === TERRAIN_SOURCE) {
+        const sourceId = (e as { sourceId?: string }).sourceId;
+        // Missing or failing DEM tiles never block the map: fall back to 2D.
+        if (sourceId === TERRAIN_SOURCE) {
           setTerrainFailed(true);
           setTerrainOn(false);
+          return;
+        }
+        if (baseStateRef.current !== "normal") return;
+        // The style itself could not be read (no source: the style request).
+        if (!sourceId && !map.isStyleLoaded()) {
+          switchToOutline();
+          return;
+        }
+        if (sourceId && BASE_SOURCES.has(sourceId)) {
+          // The source's own description (TileJSON) failed: no tile can load.
+          if (!(e as { tile?: unknown }).tile && sourceId === "openmaptiles") {
+            switchToOutline();
+            return;
+          }
+          tileErrors++;
+          const offline = !navigator.onLine;
+          if ((offline && tileErrors >= OFFLINE_TILE_ERRORS) || (!baseTileLoaded && tileErrors >= ONLINE_TILE_ERRORS)) {
+            switchToOutline();
+          }
         }
       });
 
@@ -325,16 +420,10 @@ export default function MapLibreMapComponent({
       (containerRef.current as HTMLDivElement & { __map?: MlMap }).__map = map;
 
       themeHandler = (e: Event) => {
-        const theme = (e as CustomEvent).detail.theme;
-        map.setStyle(theme === "day" ? MAP_STYLE_DAY : MAP_STYLE_NIGHT);
-        map.once("styledata", () => {
-          applySky(map);
-          applyBaseLabels(map);
-          addAllSourcesAndLayers(map, incidentsRef.current, clusterWordRef.current, zoneLabelRef.current);
-          syncUserLayers(map, userLayersRef.current.places, userLayersRef.current.location);
-          // Style swaps drop sources; restore terrain if it was on.
-          if (terrainRef.current && TERRAIN_CONFIG) enableTerrain(map, TERRAIN_CONFIG, false);
-        });
+        const next = (e as CustomEvent).detail.theme === "day" ? "day" : "night";
+        restyle(
+          baseStateRef.current === "normal" ? (next === "day" ? MAP_STYLE_DAY : MAP_STYLE_NIGHT) : outlineStyle(next),
+        );
       };
       window.addEventListener("themechange", themeHandler);
     }
@@ -347,12 +436,19 @@ export default function MapLibreMapComponent({
       communityMarkers.clear();
       popupRef.current?.remove();
       if (themeHandler) window.removeEventListener("themechange", themeHandler);
+      if (onlineHandler) window.removeEventListener("online", onlineHandler);
+      restoreBaseRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
       mlRef.current = null;
       setMapReady(false);
     };
   }, [mapAttempt, locale]);
+
+  // "Try again" (base map unavailable): ask OpenFreeMap again.
+  useEffect(() => {
+    if (baseMapRetry > 0) restoreBaseRef.current?.();
+  }, [baseMapRetry]);
 
   // ── Resize observer ──
   useEffect(() => {

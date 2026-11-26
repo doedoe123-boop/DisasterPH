@@ -18,10 +18,11 @@ export const DEFAULT_CAMERA = {
   bearing: 0,
 } as const;
 
-/** MapLibre night tile style */
+/** MapLibre night tile style (OpenFreeMap, free, no key) */
 export const MAP_STYLE_NIGHT = "https://tiles.openfreemap.org/styles/dark";
-/** MapLibre day tile style */
-export const MAP_STYLE_DAY = "https://tiles.openfreemap.org/styles/bright";
+/** MapLibre day tile style: Positron, a light grey map with few colours, so
+ *  event markers and their labels stand out (was "bright", busier). */
+export const MAP_STYLE_DAY = "https://tiles.openfreemap.org/styles/positron";
 /** Returns the correct tile style URL based on the current theme */
 export const getMapStyle = () =>
   typeof document !== "undefined" &&
