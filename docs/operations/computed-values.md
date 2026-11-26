@@ -3,7 +3,7 @@
 Everything a visitor sees is either **copied from an agency** (PHIVOLCS, PAGASA,
 NASA EONET, USGS) or **computed by DisasterPH**. This list covers the second
 kind: what we compute, from what, where in the code, and what it is based on.
-Review it whenever a rule changes. Last reviewed: 2026-11-26 (map Phase 4).
+Review it whenever a rule changes. Last reviewed: 2026-11-26 (map Phase 5).
 
 Legend for "Basis":
 - **Official**: follows a published agency rule or table (source linked).
@@ -53,6 +53,9 @@ uses these four words. They exist to sort and colour events consistently.
 | Saved place distance from an earthquake (event card) | Haversine distance from the PHIVOLCS epicentre, rounded to whole km (minimum 1); only places within 100 km | `src/lib/danger-zone.ts` `QUAKE_PLACE_KM` | Official epicentre; distance and cut-off ours. No felt or not-felt verdict |
 | Saved place under a cyclone's wind signal (event card) | The place's region appears in the PAGASA signal regions for that cyclone | `src/lib/danger-zone.ts` (uses `regionForMatching`) | Official signal regions; region lookup ours |
 | "This is not a safety confirmation." | Fixed text ending every saved-place section; inside or near the edge also quotes the bulletin's own Permanent Danger Zone line and says to contact the people there and follow the local DRRMO | `src/components/disasterph/event-card.tsx` `SavedPlaceLines` | Quote official; the rest ours (product wording) |
+| "All my saved places" (area, and the map's "My places") | Events that match any saved place by the same rule as one saved place (radius, region or wind signal above) | `src/lib/area.ts` `incidentInArea` | Ours (same rule as saved-place alerts) |
+| Region from "Use my location" | The device's position reduced to its region in the browser; flagged so it is never written into a shareable link | `src/components/disasterph/area-bar.tsx`, `src/lib/area.ts` (`fromLocation`) | Ours (privacy) |
+| "Show my location" dot and circle | The browser's position and its reported accuracy radius, drawn between 50 m and 50 km; kept in page memory only (not stored, not sent, not in the URL) | `src/lib/map-user-layers.ts` | Device-reported; drawing ours |
 
 ## Time and freshness
 
@@ -85,6 +88,10 @@ uses these four words. They exist to sort and colour events consistently.
 | Base-map labels hidden near markers | A place name that would overlap a marker is not drawn | `src/lib/map-event-layers.ts` (blocker layers) | Ours (display) |
 | ~~Earthquake "felt area" circle~~ | Removed in map Phase 1: 25 to 200 km guessed from magnitude | — | Was ours, looked official |
 | ~~Typhoon wind circle~~ | Removed in map Phase 1: wind speed × 0.8 km | — | Was ours, looked official |
+| List order | Newest first by default (event time), or highest level first (our severity label, then newest). The list only: the map does not depend on it | `src/lib/list-sort.ts` | Ours (display choice) |
+| Chosen event | Counts only while the event is in the current view (area, tab, earthquake filters); otherwise no card and no `event` in the URL | `src/components/disasterph/disasterph-command.tsx` | Ours (display) |
+| Shareable view URL | Allowed parameters only (view, show, layers, range, mag, event), each checked against a fixed list; defaults left out; never saved places, coordinates or a location-derived region | `src/lib/view-url.ts` | Ours |
+| Link preview text (Messenger, Viber…) | Region links: the area summary counts above plus "Official data from PHIVOLCS and PAGASA, checked {time}", with the not-an-all-clear caveat when there are none; event links: the event title, its publisher and its time as on the card; otherwise the status strip | `src/lib/share-preview.ts` | Official values; counts and wording ours |
 
 ## Tabs and labels
 

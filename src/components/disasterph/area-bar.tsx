@@ -23,6 +23,8 @@ export function AreaBar({
   warningCount,
   locale,
   recentIncidents,
+  placesOpen: placesOpenProp,
+  onPlacesOpen,
 }: {
   area: SelectedArea;
   onChange: (area: SelectedArea) => void;
@@ -32,24 +34,33 @@ export function AreaBar({
   locale: Locale;
   /** Recent events nationwide, for the saved-places panel. */
   recentIncidents: Incident[];
+  /** The saved-places panel, when the page controls it (the map's "My places"). */
+  placesOpen?: boolean;
+  onPlacesOpen?: (open: boolean) => void;
 }) {
   const copy = t(locale).area;
   const placesCopy = t(locale).places;
   const [locate, setLocate] = useState<LocateState>("idle");
-  const [placesOpen, setPlacesOpen] = useState(false);
+  const [ownPlacesOpen, setOwnPlacesOpen] = useState(false);
+  const placesOpen = placesOpenProp ?? ownPlacesOpen;
+  const setPlacesOpen = onPlacesOpen ?? setOwnPlacesOpen;
   const effective = resolveArea(area, places);
-  const label = areaLabel(effective, places, copy.all);
+  // In the summary: "3 recent events near your saved places".
+  const label = areaLabel(effective, places, copy.all, copy.yourSavedPlaces);
   const value =
     effective.kind === "region"
       ? `region:${effective.region}`
       : effective.kind === "place"
         ? `place:${effective.placeId}`
-        : "all";
+        : effective.kind === "places"
+          ? "places"
+          : "all";
 
   function select(v: string) {
     setLocate("idle");
     if (v.startsWith("region:")) onChange({ kind: "region", region: v.slice(7) });
     else if (v.startsWith("place:")) onChange({ kind: "place", placeId: v.slice(6) });
+    else if (v === "places") onChange({ kind: "places" });
     else onChange({ kind: "all" });
   }
 
@@ -68,7 +79,8 @@ export function AreaBar({
           return;
         }
         setLocate("idle");
-        onChange({ kind: "region", region });
+        // Kept out of shareable links: it says roughly where the visitor is.
+        onChange({ kind: "region", region, fromLocation: true });
       },
       (err) => setLocate(err.code === err.PERMISSION_DENIED ? "denied" : "unavailable"),
       { enableHighAccuracy: false, maximumAge: 10 * 60_000, timeout: 15_000 },
@@ -86,7 +98,7 @@ export function AreaBar({
             ? copy.locationOffshore
             : null;
 
-  const isPlace = effective.kind === "place";
+  const isPlace = effective.kind === "place" || effective.kind === "places";
   const summary =
     count === 0
       ? (isPlace ? copy.summaryPlaceNone : copy.summaryNone).replace("{area}", label)
@@ -117,6 +129,7 @@ export function AreaBar({
           <option value="all">{copy.all}</option>
           {places.length > 0 && (
             <optgroup label={copy.savedPlaces}>
+              <option value="places">{copy.allSavedPlaces}</option>
               {places.map((p) => (
                 <option key={p.id} value={`place:${p.id}`}>
                   {p.label}

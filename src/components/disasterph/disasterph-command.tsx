@@ -23,21 +23,29 @@ import { MapToolbar } from "@/components/disasterph/map-toolbar";
 import {
   DEFAULT_QUAKE_RANGE,
   LAYER_KEYS,
+  QUAKE_RANGES,
   layerOf,
   passesQuakeFilters,
   type LayerKey,
   type QuakeRange,
 } from "@/lib/quake-filters";
+import { viewQuery, type ViewState } from "@/lib/view-url";
 import { eventLabel, t } from "@/lib/i18n";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
 import type { Incident, IncidentEventType } from "@/types/incident";
 import { useIncidents, type IncidentsPayload } from "@/hooks/use-incidents";
-import { EventList, EventSheet, LIST_LIMIT } from "@/components/disasterph/event-list";
+import {
+  EventList,
+  EventSheet,
+  LIST_LIMIT,
+  SortToggle,
+} from "@/components/disasterph/event-list";
+import { sortForList, type ListSort } from "@/lib/list-sort";
 import { EventCard } from "@/components/disasterph/event-card";
 import { useAlertCenter } from "@/hooks/use-alert-center";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
 import { useSelectedArea } from "@/hooks/use-selected-area";
-import { incidentInArea, resolveArea } from "@/lib/area";
+import { ALL_AREAS, incidentInArea, resolveArea, type SelectedArea } from "@/lib/area";
 import { AreaBar } from "@/components/disasterph/area-bar";
 import { useNetworkStatus } from "@/hooks/use-network-status";
 import { useLocale } from "@/hooks/useLocale";
@@ -74,11 +82,36 @@ function phtDayStart(days: number): number {
   return Math.floor((now + PHT) / 86_400_000) * 86_400_000 - PHT - days * 86_400_000;
 }
 
-export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
+/**
+ * A shared link's event, if it exists in the data. An earthquake outside the
+ * default filters widens them just enough to show it, unless the link set them.
+ */
+function linkedEvent(view: ViewState, initial?: IncidentsPayload) {
+  const incident = view.event ? initial?.data.find((i) => i.id === view.event) : undefined;
+  if (!incident) return { id: "", range: view.range, includeSmall: view.includeSmall };
+  let range = view.range;
+  let includeSmall = view.includeSmall;
+  if (incident.event_type === "earthquake" && initial) {
+    const at = Date.parse(initial.meta.generated_at);
+    if (range === undefined) {
+      range = QUAKE_RANGES.find((r) => passesQuakeFilters(incident, r.key, true, at))?.key ?? DEFAULT_QUAKE_RANGE;
+      if (QUAKE_RANGES.findIndex((r) => r.key === range) < QUAKE_RANGES.findIndex((r) => r.key === DEFAULT_QUAKE_RANGE)) {
+        range = DEFAULT_QUAKE_RANGE;
+      }
+    }
+    if (includeSmall === undefined && !passesQuakeFilters(incident, range, false, at)) includeSmall = true;
+  }
+  return { id: incident.id, range, includeSmall };
+}
+
+export function DisasterPHCommand({ initial, initialView = {} }: { initial?: IncidentsPayload; initialView?: ViewState }) {
+  // A shared link (?view=…&range=…): read once, on the server and in the
+  // browser alike, so both render the same first page.
+  const [linked] = useState(() => linkedEvent(initialView, initial));
   const [activeFilter, setActiveFilter] = useState<
     IncidentEventType | "all" | "critical"
-  >("all");
-  const [selectedIncidentId, setSelectedIncidentId] = useState("");
+  >(initialView.tab ?? "all");
+  const [selectedIncidentId, setSelectedIncidentId] = useState(linked.id);
   const [hoveredIncidentId, setHoveredIncidentId] = useState<string | null>(
     null,
   );
@@ -86,12 +119,20 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [listOpen, setListOpen] = useState(false);
   // Earthquake filters (map, list and counts) and map layers.
-  const [quakeRange, setQuakeRange] = useState<QuakeRange>(DEFAULT_QUAKE_RANGE);
-  const [includeSmall, setIncludeSmall] = useState(false);
-  const [layers, setLayers] = useState<Record<LayerKey, boolean>>({ earthquake: true, volcano: true, typhoon: true, other: true });
+  const [quakeRange, setQuakeRange] = useState<QuakeRange>(linked.range ?? DEFAULT_QUAKE_RANGE);
+  const [includeSmall, setIncludeSmall] = useState(linked.includeSmall ?? false);
+  const [layers, setLayers] = useState<Record<LayerKey, boolean>>(() =>
+    initialView.layers
+      ? (Object.fromEntries(LAYER_KEYS.map((k) => [k, initialView.layers!.includes(k)])) as Record<LayerKey, boolean>)
+      : { earthquake: true, volcano: true, typhoon: true, other: true },
+  );
+  // List order: newest first (default) or highest level first.
+  const [sort, setSort] = useState<ListSort>("newest");
+  // The saved-places panel (opened from the area bar or the map's "My places").
+  const [placesOpen, setPlacesOpen] = useState(false);
   // Bumped whenever an event is chosen from the list, so the map brings it
   // into view even if it was already selected (e.g. after zooming out).
-  const [focusRequest, setFocusRequest] = useState(0);
+  const [focusRequest, setFocusRequest] = useState(linked.id ? 1 : 0);
   // Height of the collapsed list panel (measured), kept clear when fitting the country.
   const [sheetPeek, setSheetPeek] = useState(0);
   const narrow = useNarrowScreen();
@@ -109,21 +150,6 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
   );
   useAlertCenter(incidents, placeRisks);
 
-  // The event the reader chose (marker, list row): its card opens as a
-  // bottom sheet on phones and a popover on wide screens.
-  const chosen: Incident | null = selectedIncidentId
-    ? incidents.find((i) => i.id === selectedIncidentId) ?? null
-    : null;
-  // Escape closes the card.
-  useEffect(() => {
-    if (!chosen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedIncidentId("");
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [chosen]);
-
   // ── 10-day window, from midnight Philippine time (server and browser agree) ──
   const tenDayCutoff = useMemo(() => phtDayStart(10), []);
   const allRecentIncidents = useMemo(() => {
@@ -140,11 +166,15 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
 
   // ── Place-first: everything below (counters, chips, feed, map) follows
   //    the visitor's chosen area, so all views share one filter state. ──
-  const [area, setArea] = useSelectedArea();
-  const recentIncidents = useMemo(() => {
-    const effective = resolveArea(area, places);
-    return shownRecent.filter((i) => incidentInArea(i, effective, places));
-  }, [shownRecent, area, places]);
+  const [serverArea] = useState<SelectedArea>(() =>
+    initialView.region ? { kind: "region", region: initialView.region } : ALL_AREAS,
+  );
+  const [area, setArea] = useSelectedArea(serverArea);
+  const effectiveArea = useMemo(() => resolveArea(area, places), [area, places]);
+  const recentIncidents = useMemo(
+    () => shownRecent.filter((i) => incidentInArea(i, effectiveArea, places)),
+    [shownRecent, effectiveArea, places],
+  );
 
   // ── Filtered incidents for the main view ──
   const filteredIncidents = useMemo(() => {
@@ -155,6 +185,44 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
     }
     return filterIncidentsByType(recentIncidents, activeFilter);
   }, [recentIncidents, activeFilter]);
+
+  // The list, in the order the reader chose (the map does not depend on it).
+  const listIncidents = useMemo(() => sortForList(filteredIncidents, sort), [filteredIncidents, sort]);
+
+  // The event the reader chose (marker, list row, shared link): its card opens
+  // as a bottom sheet on phones and a popover on wide screens. It counts only
+  // while the event is in the current view (area, tab, time and magnitude
+  // filters); otherwise nothing is chosen, in the page and in the URL.
+  const chosen: Incident | null = selectedIncidentId
+    ? filteredIncidents.find((i) => i.id === selectedIncidentId) ?? null
+    : null;
+  const chosenId = chosen?.id ?? "";
+  // Escape closes the card.
+  useEffect(() => {
+    if (!chosen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedIncidentId("");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [chosen]);
+
+  // Shareable URL: the view's allowed settings only (view-url.ts). Never a
+  // saved place, a location, or a region found from the device's location.
+  const sharedRegion =
+    effectiveArea.kind === "region" && !effectiveArea.fromLocation ? effectiveArea.region : null;
+  useEffect(() => {
+    const query = viewQuery({
+      region: sharedRegion,
+      tab: activeFilter,
+      layers,
+      range: quakeRange,
+      includeSmall,
+      event: chosenId || null,
+    });
+    const { pathname, search, hash } = window.location;
+    if (query !== search) window.history.replaceState(null, "", pathname + query + hash);
+  }, [sharedRegion, activeFilter, layers, quakeRange, includeSmall, chosenId]);
 
   // Map: the same events, minus layers switched off in the Layers panel.
   const mapIncidents = useMemo(
@@ -316,11 +384,12 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
                 ))}
               </div>
 
+              {filteredIncidents.length > 1 && <SortToggle sort={sort} onSort={setSort} locale={locale} />}
               <div className="flex-1 overflow-y-auto scrollbar-none">
                 <EventList
-                  incidents={filteredIncidents}
+                  incidents={listIncidents}
                   locale={locale}
-                  selectedId={selectedIncidentId || null}
+                  selectedId={chosenId || null}
                   onSelect={(incident) => {
                     setSelectedIncidentId(incident.id);
                     setFocusRequest((n) => n + 1);
@@ -356,6 +425,8 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
                 places={places}
                 recentIncidents={allRecentIncidents}
                 warningCount={criticalCount}
+                placesOpen={placesOpen}
+                onPlacesOpen={setPlacesOpen}
               />
               <div className="px-4 pb-2.5 md:px-5">
                 <SourcesLine statuses={sourceStatuses} locale={locale} offline={!isOnline} checkedAt={generatedAt} />
@@ -448,7 +519,7 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
               communityReports={[]}
               // Only an explicit selection moves the map. The detail panels
               // fall back to the newest event, but the camera must not.
-              selectedIncidentId={selectedIncidentId}
+              selectedIncidentId={chosenId}
               hoveredIncidentId={hoveredIncidentId}
               onHoverIncident={setHoveredIncidentId}
               onSelectIncident={(incident) => {
@@ -476,6 +547,13 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
                 ) : null
               }
               hoverPreviews={!narrow}
+              savedPlaces={places}
+              showPlacePins={effectiveArea.kind === "places" || effectiveArea.kind === "place"}
+              onMyPlaces={() => setArea({ kind: "places" })}
+              onAddPlace={() => {
+                setFocusMode(false);
+                setPlacesOpen(true);
+              }}
             />
 
             {/* ── Phones and tablets: the event list as a panel over the map ── */}
@@ -486,9 +564,11 @@ export function DisasterPHCommand({ initial }: { initial?: IncidentsPayload }) {
                 open={listOpen}
                 onToggle={() => setListOpen((v) => !v)}
                 onPeekHeight={setSheetPeek}
-                incidents={filteredIncidents}
+                incidents={listIncidents}
+                sort={sort}
+                onSort={setSort}
                 locale={locale}
-                selectedId={selectedIncidentId || null}
+                selectedId={chosenId || null}
                 onSelect={(incident) => {
                   setSelectedIncidentId(incident.id);
                   setListOpen(false); // show the map with the event

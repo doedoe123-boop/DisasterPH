@@ -195,7 +195,7 @@ function EventCardBody({
           {eventLabel(incident.event_type, locale)}
         </span>
         {badge && (
-          <span className="event-card-badge rounded-md border border-orange-500/40 bg-orange-500/12 px-1.5 py-0.5 text-[11px] font-bold text-orange-300">
+          <span className="event-card-badge rounded-md border border-orange-500/40 bg-orange-500/12 px-1.5 py-0.5 text-[11px] font-bold text-orange-300" suppressHydrationWarning>
             {badge}
           </span>
         )}

@@ -69,6 +69,8 @@ export const copy = {
       label: "Your area",
       all: "All of the Philippines",
       savedPlaces: "Saved places",
+      allSavedPlaces: "All my saved places",
+      yourSavedPlaces: "your saved places",
       regions: "Regions",
       useLocation: "Use my location",
       locating: "Finding your region…",
@@ -247,9 +249,16 @@ export const copy = {
         noCyclone: "No active tropical cyclone",
         cycloneUnknown: "PAGASA unavailable",
       },
+      list: {
+        sortLabel: "Sort",
+        newest: "Newest",
+        severity: "Highest level",
+        showMore: "Show {n} more",
+      },
       eventSheet: {
         one: "1 event, newest first",
         many: "{n} events, newest first",
+        manySeverity: "{n} events, highest level first",
         none: "No events for this filter",
         show: "Show list",
         hide: "Hide list",
@@ -392,6 +401,20 @@ export const copy = {
       resetView: "Reset map view",
       resetViewTitle: "Show all of the Philippines, flat and north-up",
       keyboardNote: "Map of events. To choose an event with the keyboard, use the event list.",
+      myPlaces: "My places",
+      myPlacesTitle: "Zoom to your saved places and list events near them",
+      myPlacesEmpty: "No saved places yet. Save a place to see events near it.",
+      addPlace: "Add a place",
+      locate: "Show my location",
+      locateTitle: "Shows where you are on this map. Your location stays on this device: it is not saved or sent.",
+      locating: "Finding your location…",
+      locateDenied: "Location permission was not given.",
+      locateUnavailable: "Your location could not be found.",
+      dismiss: "Close",
+      shareTitleArea: "{area}: recent events · DisasterPH",
+      shareTitleEvent: "{title} · DisasterPH",
+      shareSources: "Official data from PHIVOLCS and PAGASA, checked {time}.",
+      shareEventSource: "Source: {source} · {time}.",
     },
     notification: {
       enabledTitle: "Alerts active",
@@ -653,6 +676,8 @@ export const copy = {
       label: "Inyong lugar",
       all: "Buong Pilipinas",
       savedPlaces: "Mga naka-save na lugar",
+      allSavedPlaces: "Lahat ng naka-save kong lugar", // NEEDS NATIVE REVIEW
+      yourSavedPlaces: "mga naka-save mong lugar", // NEEDS NATIVE REVIEW
       regions: "Mga rehiyon",
       useLocation: "Gamitin ang aking lokasyon",
       locating: "Hinahanap ang inyong rehiyon…",
@@ -831,9 +856,16 @@ export const copy = {
         noCyclone: "Walang aktibong bagyo", // NEEDS NATIVE REVIEW
         cycloneUnknown: "Hindi maabot ang PAGASA", // NEEDS NATIVE REVIEW
       },
+      list: {
+        sortLabel: "Ayos", // NEEDS NATIVE REVIEW
+        newest: "Pinakabago", // NEEDS NATIVE REVIEW
+        severity: "Pinakamataas na antas", // NEEDS NATIVE REVIEW
+        showMore: "Ipakita ang {n} pa", // NEEDS NATIVE REVIEW
+      },
       eventSheet: {
         one: "1 pangyayari, pinakabago muna", // NEEDS NATIVE REVIEW
         many: "{n} pangyayari, pinakabago muna", // NEEDS NATIVE REVIEW
+        manySeverity: "{n} pangyayari, pinakamataas na antas muna", // NEEDS NATIVE REVIEW
         none: "Walang pangyayari para sa filter na ito", // NEEDS NATIVE REVIEW
         show: "Ipakita ang listahan", // NEEDS NATIVE REVIEW
         hide: "Itago ang listahan", // NEEDS NATIVE REVIEW
@@ -976,6 +1008,20 @@ export const copy = {
       resetView: "Ibalik ang mapa",
       resetViewTitle: "Ipakita ang buong Pilipinas, patag at nakaharap sa hilaga",
       keyboardNote: "Mapa ng mga pangyayari. Para pumili gamit ang keyboard, gamitin ang listahan ng pangyayari.", // NEEDS NATIVE REVIEW
+      myPlaces: "Aking mga lugar", // NEEDS NATIVE REVIEW
+      myPlacesTitle: "Ipakita sa mapa ang naka-save mong mga lugar at ilista ang mga pangyayari malapit sa mga ito", // NEEDS NATIVE REVIEW
+      myPlacesEmpty: "Wala ka pang naka-save na lugar. Mag-save ng lugar para makita ang mga pangyayari malapit dito.", // NEEDS NATIVE REVIEW
+      addPlace: "Magdagdag ng lugar", // NEEDS NATIVE REVIEW
+      locate: "Ipakita ang aking lokasyon", // NEEDS NATIVE REVIEW
+      locateTitle: "Ipinapakita kung nasaan ka sa mapang ito. Nananatili sa device na ito ang lokasyon mo: hindi ito itinatago o ipinapadala.", // NEEDS NATIVE REVIEW
+      locating: "Hinahanap ang lokasyon mo…", // NEEDS NATIVE REVIEW
+      locateDenied: "Hindi pinayagan ang lokasyon.", // NEEDS NATIVE REVIEW
+      locateUnavailable: "Hindi matukoy ang lokasyon mo.", // NEEDS NATIVE REVIEW
+      dismiss: "Isara", // NEEDS NATIVE REVIEW
+      shareTitleArea: "{area}: mga kamakailang pangyayari · DisasterPH", // NEEDS NATIVE REVIEW
+      shareTitleEvent: "{title} · DisasterPH",
+      shareSources: "Opisyal na datos mula sa PHIVOLCS at PAGASA, sinuri noong {time}.", // NEEDS NATIVE REVIEW
+      shareEventSource: "Pinagmulan: {source} · {time}.", // NEEDS NATIVE REVIEW
     },
     notification: {
       enabledTitle: "Aktibo ang mga alerto",

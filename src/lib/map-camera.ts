@@ -49,10 +49,15 @@ export function popoverFitsBesideZone(width: number, leftInset = 0): boolean {
   return width - p.left - p.right - POPOVER_SIDE_ROOM >= 260;
 }
 
+/** Phones: the map's Home / location / My places buttons sit in one row at
+ *  the top left (3 × 44 px + gaps, from 12 px): fits keep that width clear. */
+export const PHONE_BUTTON_ROW_RIGHT = 164;
+
 /**
- * Padding for fitting a volcano danger zone: the clear map area and, when the
- * popover sits beside the zone, room on the right for the popover. (The
- * zone's label sits just inside the top of the circle.)
+ * Padding for fitting something to look at (a volcano danger zone, saved
+ * places, the device's location): the clear map area, the phone button row
+ * and, when the popover sits beside a zone, room on the right for it. (A
+ * zone's label sits just inside the top of its circle.)
  */
 export function zonePadding(
   width: number,
@@ -69,7 +74,7 @@ export function zonePadding(
   return {
     top: p.top,
     bottom: small ? Math.max(4, p.bottom - 24) : p.bottom,
-    left: p.left,
+    left: small ? Math.max(p.left, PHONE_BUTTON_ROW_RIGHT) : p.left,
     right: p.right + (besidePopover ? POPOVER_SIDE_ROOM : 0),
   };
 }
