@@ -1,4 +1,5 @@
 import type { Incident, SourceStatus } from "@/types/incident";
+import { t, type Locale } from "@/lib/i18n";
 
 /**
  * The factual status strip: counts and levels copied from official data,
@@ -67,4 +68,38 @@ export function statusParts(incidents: Incident[], sources: SourceStatus[], now:
     cyclones,
     cyclonesUnknown: !ok("PAGASA") && cyclones.length === 0,
   };
+}
+
+/** The strip as one line of text (the page and shared-link previews). */
+export function statusText(incidents: Incident[], sources: SourceStatus[], locale: Locale, now: number = Date.now()): string {
+  const copy = t(locale).common.statusStrip;
+  const p = statusParts(incidents, sources, now);
+  const parts: string[] = [];
+
+  if (p.volcanoUnknown) parts.push(copy.volcanoUnknown);
+  else {
+    for (const v of p.namedVolcanoes) parts.push(copy.volcanoNamed.replace("{name}", v.name).replace("{n}", String(v.level)));
+    if (p.levelOneCount > 0) parts.push(copy.volcanoLevelOne.replace("{n}", String(p.levelOneCount)));
+  }
+
+  if (p.quakesUnknown) parts.push(copy.quakesUnknown);
+  else
+    parts.push(
+      p.quakesM4Last24h === 0
+        ? copy.quakesNone
+        : p.quakesM4Last24h === 1
+          ? copy.quakesOne
+          : copy.quakesMany.replace("{n}", String(p.quakesM4Last24h)),
+    );
+
+  if (p.cyclones.length > 0) {
+    for (const c of p.cyclones)
+      parts.push(
+        c.signal > 0
+          ? copy.cyclone.replace("{name}", c.name).replace("{n}", String(c.signal))
+          : copy.cycloneNoSignal.replace("{name}", c.name),
+      );
+  } else parts.push(p.cyclonesUnknown ? copy.cycloneUnknown : copy.noCyclone);
+
+  return parts.join(" · ");
 }

@@ -15,7 +15,9 @@ import {
 import { eventTimeFull } from "@/lib/event-time";
 import { PHIVOLCS_TSUNAMI_URL, showTsunamiPointer } from "@/lib/tsunami-check";
 import { loadMapLibre } from "@/lib/maplibre-loader";
-import { Mountain, LocateFixed } from "lucide-react";
+import { House, MapPinned, Mountain, Navigation, X } from "lucide-react";
+import type { SavedPlace } from "@/types/incident";
+import { boundsAround, syncUserLayers, type DeviceLocation } from "@/lib/map-user-layers";
 import { TERRAIN_CONFIG, TERRAIN_SOURCE, disableTerrain, enableTerrain } from "@/lib/terrain";
 import { focusZoom, isInView, mapPadding, popoverFitsBesideZone, zonePadding } from "@/lib/map-camera";
 import { displayRegion } from "@/lib/geo/ph-regions";
@@ -61,7 +63,21 @@ interface Props {
   popover?: ReactNode;
   /** Small preview when hovering a marker (wide screens with a pointer). */
   hoverPreviews?: boolean;
+  /** The visitor's saved places (this browser only). */
+  savedPlaces?: SavedPlace[];
+  /** Draw the saved places as pins ("My places" or one saved place chosen). */
+  showPlacePins?: boolean;
+  /** "My places": list events near the saved places. */
+  onMyPlaces?: () => void;
+  /** No saved places yet: open the saved-places panel. */
+  onAddPlace?: () => void;
 }
+
+const NO_PLACES: SavedPlace[] = [];
+
+/** Top-left map buttons: 44 px on touch screens, compact with a label on wider ones. */
+const MAP_BUTTON =
+  "flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg border border-overlay/15 bg-[var(--bg-panel)]/90 px-2.5 py-1.5 text-[12px] font-medium text-[var(--text-primary)] shadow transition hover:bg-[var(--bg-panel)] disabled:opacity-60 sm:min-h-0 sm:min-w-0 aria-pressed:border-cyan-500/50";
 
 /** Flat, north-up view of the whole country inside the unobstructed area. */
 function fitNational(map: MlMap, leftInset: number, duration: number, bottomInset = 0, topInset = 0) {
@@ -71,6 +87,25 @@ function fitNational(map: MlMap, leftInset: number, duration: number, bottomInse
     pitch: DEFAULT_CAMERA.pitch,
     bearing: DEFAULT_CAMERA.bearing,
     duration,
+    essential: false,
+  });
+}
+
+/** Fit bounds into the part of the map that panels and buttons leave clear. */
+function fitClear(
+  map: MlMap,
+  bounds: [[number, number], [number, number]],
+  maxZoom: number,
+  leftInset: number,
+  bottomInset: number,
+  topInset: number,
+) {
+  const { clientWidth: w, clientHeight: h } = map.getContainer();
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  map.fitBounds(bounds, {
+    padding: zonePadding(w, h, leftInset, bottomInset, topInset),
+    maxZoom,
+    duration: reduce ? 0 : 700,
     essential: false,
   });
 }
@@ -104,6 +139,10 @@ export default function MapLibreMapComponent({
   topInset = 0,
   popover = null,
   hoverPreviews = true,
+  savedPlaces = NO_PLACES,
+  showPlacePins = false,
+  onMyPlaces,
+  onAddPlace,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -127,11 +166,21 @@ export default function MapLibreMapComponent({
   // Set once the resident pans/zooms/selects; until then layout changes
   // re-fit the national view instead of leaving it off-centre.
   const userMovedRef = useRef(false);
+  // A fit just asked for ("My places", "Show my location"): the list panel
+  // often changes height right after (the list follows the new area), so the
+  // fit is re-applied with the new height for a short while.
+  const recentFitRef = useRef<{ bounds: [[number, number], [number, number]]; maxZoom: number; at: number } | null>(null);
   // Re-fit when the phone list panel appears or goes (until the resident moves the map).
   useEffect(() => {
     bottomInsetRef.current = bottomInset;
     const map = mapRef.current;
-    if (map && !userMovedRef.current && !selectedIdRef.current) fitNational(map, leftInsetRef.current, 0, bottomInset, topInsetRef.current);
+    if (!map) return;
+    const recent = recentFitRef.current;
+    if (recent && Date.now() - recent.at < 2000) {
+      fitClear(map, recent.bounds, recent.maxZoom, leftInsetRef.current, bottomInset, topInsetRef.current);
+      return;
+    }
+    if (!userMovedRef.current && !selectedIdRef.current) fitNational(map, leftInsetRef.current, 0, bottomInset, topInsetRef.current);
   }, [bottomInset]);
   const [mapReady, setMapReady] = useState(false);
   // Set when MapLibre cannot load or start. "unsupported" = no WebGL2 (a
@@ -161,6 +210,16 @@ export default function MapLibreMapComponent({
   useEffect(() => {
     zoneLabelRef.current = zoneLabel;
   }, [zoneLabel]);
+  // "Show my location": kept in memory for this page only (never stored or sent).
+  const [located, setLocated] = useState<DeviceLocation | null>(null);
+  const [locateState, setLocateState] = useState<"idle" | "locating" | "denied" | "unavailable">("idle");
+  // "My places" pressed with nothing saved: show how to add one.
+  const [placesNote, setPlacesNote] = useState(false);
+  const shownPlaces = showPlacePins ? savedPlaces : NO_PLACES;
+  const userLayersRef = useRef({ places: shownPlaces, location: located });
+  useEffect(() => {
+    userLayersRef.current = { places: shownPlaces, location: located };
+  }, [shownPlaces, located]);
   // Latest callbacks for the map's own event handlers (registered once).
   const onSelectRef = useRef(onSelectIncident);
   const onHoverRef = useRef(onHoverIncident);
@@ -272,6 +331,7 @@ export default function MapLibreMapComponent({
           applySky(map);
           applyBaseLabels(map);
           addAllSourcesAndLayers(map, incidentsRef.current, clusterWordRef.current, zoneLabelRef.current);
+          syncUserLayers(map, userLayersRef.current.places, userLayersRef.current.location);
           // Style swaps drop sources; restore terrain if it was on.
           if (terrainRef.current && TERRAIN_CONFIG) enableTerrain(map, TERRAIN_CONFIG, false);
         });
@@ -305,6 +365,13 @@ export default function MapLibreMapComponent({
     // resident moves the map; after that, leave their camera alone.
     const observer = new ResizeObserver(() => {
       map.resize();
+      // A fit just asked for ("My places", "Show my location") often changes
+      // the page above the map (the area summary): fit again at the new size.
+      const recent = recentFitRef.current;
+      if (recent && Date.now() - recent.at < 2000) {
+        fitClear(map, recent.bounds, recent.maxZoom, leftInsetRef.current, bottomInsetRef.current, topInsetRef.current);
+        return;
+      }
       if (!userMovedRef.current) fitNational(map, leftInsetRef.current, 0, bottomInsetRef.current, topInsetRef.current);
     });
     observer.observe(container);
@@ -651,6 +718,63 @@ export default function MapLibreMapComponent({
     fitNational(map, leftInsetRef.current, 600, bottomInsetRef.current, topInsetRef.current);
   };
 
+  // Saved-place pins and the location dot (drawn in this browser only).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && mapReady) syncUserLayers(map, shownPlaces, located);
+  }, [mapReady, shownPlaces, located]);
+
+  /** Fit points into the clear part of the map (not past `maxZoom`). */
+  const fitPoints = (points: { lat: number; lon: number }[], minKm: number, maxZoom: number) => {
+    const map = mapRef.current;
+    if (!map || points.length === 0) return;
+    userMovedRef.current = true;
+    const bounds = boundsAround(points, minKm);
+    recentFitRef.current = { bounds, maxZoom, at: Date.now() };
+    fitClear(map, bounds, maxZoom, leftInsetRef.current, bottomInsetRef.current, topInsetRef.current);
+  };
+
+  // "Show my location": asked only when pressed; the position stays in this
+  // page's memory and is never stored or sent (no request carries it).
+  const locateMe = () => {
+    setPlacesNote(false);
+    if (!("geolocation" in navigator)) {
+      setLocateState("unavailable");
+      return;
+    }
+    setLocateState("locating");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lon: pos.coords.longitude, accuracyM: pos.coords.accuracy };
+        setLocated(loc);
+        setLocateState("idle");
+        fitPoints([loc], Math.min(50, Math.max(1, (loc.accuracyM / 1000) * 1.3)), 13);
+      },
+      (err) => setLocateState(err.code === err.PERMISSION_DENIED ? "denied" : "unavailable"),
+      { enableHighAccuracy: false, maximumAge: 60_000, timeout: 15_000 },
+    );
+  };
+
+  // "My places": the list follows the saved places; the map shows them all.
+  const showMyPlaces = () => {
+    setLocateState((s) => (s === "locating" ? s : "idle"));
+    if (savedPlaces.length === 0) {
+      setPlacesNote(true);
+      return;
+    }
+    setPlacesNote(false);
+    onMyPlaces?.();
+    fitPoints(savedPlaces.map((p) => ({ lat: p.latitude, lon: p.longitude })), 15, 10);
+  };
+  const locateMessage =
+    locateState === "locating"
+      ? mapCopy.locating
+      : locateState === "denied"
+        ? mapCopy.locateDenied
+        : locateState === "unavailable"
+          ? mapCopy.locateUnavailable
+          : null;
+
   return (
     <div
       className="map-root relative h-full w-full"
@@ -666,17 +790,77 @@ export default function MapLibreMapComponent({
           // The inset panel (focus-mode card) is only shown at lg and up.
           className="absolute left-3 top-[calc(var(--map-toolbar-h,0px)+0.75rem)] z-10 flex flex-col items-start gap-1.5 lg:left-[calc(var(--map-left-inset)+0.75rem)]"
         >
-          <button
-            className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg border border-overlay/15 bg-[var(--bg-panel)]/90 px-2.5 py-1.5 text-[12px] font-medium text-[var(--text-primary)] shadow transition hover:bg-[var(--bg-panel)] sm:min-h-0 sm:min-w-0"
-            onClick={resetView}
-            title={mapCopy.resetViewTitle}
-            aria-label={mapCopy.resetView}
-            type="button"
-          >
-            <LocateFixed aria-hidden className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-            {/* Phones: icon only, so the map keeps its height. */}
-            <span className="sr-only sm:not-sr-only">{mapCopy.resetView}</span>
-          </button>
+          {/* Phones: one row of icon buttons (labels for screen readers), so
+              the map keeps its height; wider screens: a labelled column. */}
+          <div className="flex flex-row items-start gap-1.5 sm:flex-col">
+            <button
+              className={MAP_BUTTON}
+              onClick={resetView}
+              title={mapCopy.resetViewTitle}
+              aria-label={mapCopy.resetView}
+              type="button"
+            >
+              <House aria-hidden className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+              <span className="sr-only sm:not-sr-only">{mapCopy.resetView}</span>
+            </button>
+            <button
+              className={MAP_BUTTON}
+              onClick={locateMe}
+              disabled={locateState === "locating"}
+              title={mapCopy.locateTitle}
+              aria-label={mapCopy.locate}
+              type="button"
+            >
+              <Navigation aria-hidden className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+              <span className="sr-only sm:not-sr-only">{mapCopy.locate}</span>
+            </button>
+            <button
+              className={MAP_BUTTON}
+              onClick={showMyPlaces}
+              aria-pressed={showPlacePins}
+              title={mapCopy.myPlacesTitle}
+              aria-label={mapCopy.myPlaces}
+              type="button"
+            >
+              <MapPinned aria-hidden className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+              <span className="sr-only sm:not-sr-only">{mapCopy.myPlaces}</span>
+            </button>
+          </div>
+          {(locateMessage || placesNote) && (
+            <div
+              role="status"
+              className="flex max-w-[16rem] items-start gap-2 rounded-lg border border-overlay/15 bg-[var(--bg-panel)] px-3 py-2 text-[12px] leading-snug text-[var(--text-primary)] shadow"
+            >
+              <div className="min-w-0 flex-1">
+                <p>{placesNote ? mapCopy.myPlacesEmpty : locateMessage}</p>
+                {placesNote && onAddPlace && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPlacesNote(false);
+                      onAddPlace();
+                    }}
+                    className="mt-1.5 min-h-11 rounded-md border border-cyan-500/40 px-2.5 text-[12px] font-semibold text-[var(--text-primary)] sm:min-h-8"
+                  >
+                    {mapCopy.addPlace}
+                  </button>
+                )}
+              </div>
+              {locateState !== "locating" && (
+                <button
+                  type="button"
+                  aria-label={mapCopy.dismiss}
+                  onClick={() => {
+                    setPlacesNote(false);
+                    setLocateState("idle");
+                  }}
+                  className="-m-2 flex h-11 w-11 shrink-0 items-center justify-center text-[var(--text-dim)] sm:h-8 sm:w-8"
+                >
+                  <X aria-hidden className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          )}
           {TERRAIN_CONFIG && (
           <button
             aria-pressed={terrainOn}

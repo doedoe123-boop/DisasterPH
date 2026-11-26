@@ -5,17 +5,18 @@ import { ServiceWorkerRegistrar } from "@/components/disasterph/sw-registrar";
 import { ServerLocaleProvider } from "@/hooks/useLocale";
 import { LOCALE_KEY, normalizeLocale } from "@/lib/i18n";
 import { THEME_KEY, type Theme } from "@/lib/theme";
+import { SITE_DESCRIPTION, SITE_TITLE } from "@/lib/site-meta";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DisasterPH — Disaster Awareness for Filipinos",
-  description:
-    "Monitor disasters in the Philippines, check if your loved ones are affected, and know what to do next. Live data from PHIVOLCS, PAGASA, and NASA EONET.",
+  // Never "affected" or "safe": the site shows official alerts near places,
+  // not whether people there are okay.
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
   metadataBase: new URL("https://disaster-ph.vercel.app"),
   openGraph: {
-    title: "DisasterPH — Disaster Awareness for Filipinos",
-    description:
-      "Monitor disasters in the Philippines, check if your loved ones are affected, and know what to do next.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     url: "https://disaster-ph.vercel.app",
     siteName: "DisasterPH",
     images: [
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "DisasterPH — Real-time disaster monitoring for the Philippines",
+        alt: "DisasterPH: official hazard information for the Philippines on a map",
       },
     ],
     locale: "en_PH",
@@ -31,9 +32,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "DisasterPH — Disaster Awareness for Filipinos",
-    description:
-      "Monitor disasters in the Philippines, check if your loved ones are affected, and know what to do next.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     images: ["/og-image.png"],
   },
   icons: {

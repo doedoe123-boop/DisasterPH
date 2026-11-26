@@ -9,7 +9,7 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import type { CommunityReport, Incident } from "@/types/incident";
+import type { CommunityReport, Incident, SavedPlace } from "@/types/incident";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -95,6 +95,10 @@ interface CommandMapProps {
   /** Wide screens: the chosen event's card, anchored to its marker. */
   popover?: ReactNode;
   hoverPreviews?: boolean;
+  savedPlaces?: SavedPlace[];
+  showPlacePins?: boolean;
+  onMyPlaces?: () => void;
+  onAddPlace?: () => void;
 }
 
 export function CommandMap({
@@ -116,6 +120,10 @@ export function CommandMap({
   toolbar = null,
   popover = null,
   hoverPreviews = true,
+  savedPlaces,
+  showPlacePins = false,
+  onMyPlaces,
+  onAddPlace,
 }: CommandMapProps) {
   const { locale } = useLocale();
   const controls = t(locale).controls;
@@ -140,6 +148,10 @@ export function CommandMap({
         popover={popover}
         hoverPreviews={hoverPreviews}
         focusRequest={focusRequest}
+        savedPlaces={savedPlaces}
+        showPlacePins={showPlacePins}
+        onMyPlaces={onMyPlaces}
+        onAddPlace={onAddPlace}
       />
 
       {/* Map controls */}

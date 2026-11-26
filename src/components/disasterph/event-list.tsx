@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -18,6 +18,7 @@ import { severityText, t, type Locale } from "@/lib/i18n";
 import { eventTimeWithAge } from "@/lib/event-time";
 import { HazardEmptyState } from "@/components/disasterph/hazard-empty-state";
 import { EventCard } from "@/components/disasterph/event-card";
+import type { ListSort } from "@/lib/list-sort";
 
 const HAZARD_ICON: Record<string, typeof Waves> = {
   earthquake: Waves,
@@ -28,8 +29,68 @@ const HAZARD_ICON: Record<string, typeof Waves> = {
   wildfire: AlertTriangle,
 };
 
-/** Rows rendered at most (the alert list page has everything). */
+/** Rows rendered at first; "Show more" adds this many (the alert list page has everything). */
 export const LIST_LIMIT = 30;
+
+/**
+ * Rows to render: the first `limit`, extended to include the chosen event so
+ * a marker chosen on the map always has its row.
+ */
+function visibleCount(incidents: Incident[], limit: number, selectedId: string | null): number {
+  const at = selectedId ? incidents.findIndex((i) => i.id === selectedId) : -1;
+  return Math.min(incidents.length, Math.max(limit, at + 1));
+}
+
+/** Bring the chosen event's row into view inside its scrolling list. */
+function useScrollToSelected(listRef: React.RefObject<HTMLUListElement | null>, selectedId: string | null, active = true) {
+  useEffect(() => {
+    if (!active || !selectedId) return;
+    const row = listRef.current?.querySelector<HTMLElement>(`[data-event-id="${CSS.escape(selectedId)}"]`);
+    if (!row) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    row.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+  }, [listRef, selectedId, active]);
+}
+
+/** Newest / Highest level. Buttons with aria-pressed; 44 px tall on touch screens. */
+export function SortToggle({ sort, onSort, locale }: { sort: ListSort; onSort: (s: ListSort) => void; locale: Locale }) {
+  const copy = t(locale).common.list;
+  return (
+    <div role="group" aria-label={copy.sortLabel} className="flex items-center gap-1.5 px-4 py-2 lg:px-5">
+      <span aria-hidden className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-dim)]">
+        {copy.sortLabel}
+      </span>
+      {(["newest", "severity"] as const).map((key) => (
+        <button
+          key={key}
+          type="button"
+          aria-pressed={sort === key}
+          onClick={() => onSort(key)}
+          className={`min-h-11 rounded-lg border px-2.5 text-[12px] font-semibold transition lg:min-h-8 ${
+            sort === key
+              ? "border-orange-500/50 bg-orange-500/12 text-[var(--text-primary)]"
+              : "border-overlay/10 text-[var(--text-muted)] hover:bg-overlay/6"
+          }`}
+        >
+          {key === "newest" ? copy.newest : copy.severity}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ShowMore({ hidden, onMore, locale }: { hidden: number; onMore: () => void; locale: Locale }) {
+  if (hidden <= 0) return null;
+  return (
+    <button
+      type="button"
+      onClick={onMore}
+      className="flex min-h-11 w-full items-center justify-center text-[13px] font-semibold text-[var(--text-primary)] hover:bg-overlay/4"
+    >
+      {t(locale).common.list.showMore.replace("{n}", String(Math.min(LIST_LIMIT, hidden)))}
+    </button>
+  );
+}
 
 /**
  * One event: the row shows it on the map; the arrow opens its page. Plain
@@ -51,6 +112,7 @@ export function EventRow({
   const i18n = t(locale);
   return (
     <li
+      data-event-id={incident.id}
       className={`flex items-stretch border-b border-overlay/5 border-l-2 ${
         selected ? "border-l-orange-400 bg-overlay/8" : "border-l-transparent hover:bg-overlay/4"
       }`}
@@ -118,21 +180,29 @@ interface ListProps {
 
 /** The event list (wide screens: the sidebar). */
 export function EventList({ incidents, locale, selectedId, onSelect, filter, sourceStatuses }: ListProps) {
+  const [limit, setLimit] = useState(LIST_LIMIT);
+  const listRef = useRef<HTMLUListElement>(null);
+  // A marker chosen on the map: scroll its row into view.
+  useScrollToSelected(listRef, selectedId);
   if (incidents.length === 0) {
     return <HazardEmptyState filter={filter} locale={locale} sourceStatuses={sourceStatuses} />;
   }
+  const shown = visibleCount(incidents, limit, selectedId);
   return (
-    <ul className="flex flex-col">
-      {incidents.slice(0, LIST_LIMIT).map((incident) => (
-        <EventRow
-          key={incident.id}
-          incident={incident}
-          locale={locale}
-          selected={selectedId === incident.id}
-          onSelect={onSelect}
-        />
-      ))}
-    </ul>
+    <>
+      <ul ref={listRef} className="flex flex-col">
+        {incidents.slice(0, shown).map((incident) => (
+          <EventRow
+            key={incident.id}
+            incident={incident}
+            locale={locale}
+            selected={selectedId === incident.id}
+            onSelect={onSelect}
+          />
+        ))}
+      </ul>
+      <ShowMore hidden={incidents.length - shown} onMore={() => setLimit(shown + LIST_LIMIT)} locale={locale} />
+    </>
   );
 }
 
@@ -147,8 +217,12 @@ export function EventSheet({
   onPeekHeight,
   chosen = null,
   onCloseChosen,
+  sort,
+  onSort,
   ...list
 }: ListProps & {
+  sort: ListSort;
+  onSort: (sort: ListSort) => void;
   open: boolean;
   onToggle: () => void;
   /** Height of the panel as it sits over the map (kept clear by the camera). */
@@ -160,6 +234,10 @@ export function EventSheet({
   const copy = t(list.locale).common.eventSheet;
   const listId = useId();
   const ref = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const [limit, setLimit] = useState(LIST_LIMIT);
+  // Opening the list shows the chosen event's row.
+  useScrollToSelected(listRef, list.selectedId, open && !chosen);
   const report = useRef(onPeekHeight);
   useEffect(() => {
     report.current = onPeekHeight;
@@ -223,7 +301,10 @@ export function EventSheet({
   }
   const count = list.incidents.length;
   const heading =
-    count === 0 ? copy.none : (count === 1 ? copy.one : copy.many).replace("{n}", String(count));
+    count === 0
+      ? copy.none
+      : (count === 1 ? copy.one : sort === "severity" ? copy.manySeverity : copy.many).replace("{n}", String(count));
+  const shown = open ? visibleCount(list.incidents, limit, list.selectedId) : 1;
   return (
     <div
       ref={ref}
@@ -246,11 +327,12 @@ export function EventSheet({
         </span>
       </button>
       <div id={listId} className={open ? "min-h-0 overflow-y-auto overscroll-contain" : ""}>
+        {open && count > 1 && <SortToggle sort={sort} onSort={onSort} locale={list.locale} />}
         {count === 0 ? (
           <HazardEmptyState filter={list.filter} locale={list.locale} sourceStatuses={list.sourceStatuses} />
         ) : (
-          <ul className="flex flex-col">
-            {(open ? list.incidents.slice(0, LIST_LIMIT) : list.incidents.slice(0, 1)).map((incident) => (
+          <ul ref={listRef} className="flex flex-col">
+            {list.incidents.slice(0, shown).map((incident) => (
               <EventRow
                 key={incident.id}
                 incident={incident}
@@ -260,6 +342,9 @@ export function EventSheet({
               />
             ))}
           </ul>
+        )}
+        {open && (
+          <ShowMore hidden={count - shown} onMore={() => setLimit(shown + LIST_LIMIT)} locale={list.locale} />
         )}
         {open && count > LIST_LIMIT && (
           <Link
