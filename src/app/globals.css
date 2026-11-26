@@ -712,24 +712,17 @@ select {
   filter: none;
 }
 
+/* MapLibre's corner controls. The bottom ones sit just above whatever covers
+   the bottom of the map (the phone list panel, measured: --map-bottom-inset).
+   The page itself is padded for the fixed hotline and tab bars. */
 .maplibregl-ctrl-bottom-right {
   right: 0.75rem !important;
-  bottom: calc(9.25rem + env(safe-area-inset-bottom)) !important;
+  bottom: calc(var(--map-bottom-inset, 0px) + 0.75rem) !important;
 }
 
 .maplibregl-ctrl-bottom-left {
   left: 0.75rem !important;
-  bottom: calc(4.75rem + env(safe-area-inset-bottom)) !important;
-}
-
-@media (min-width: 768px) {
-  .maplibregl-ctrl-bottom-right {
-    bottom: 4.5rem !important;
-  }
-
-  .maplibregl-ctrl-bottom-left {
-    bottom: 1rem !important;
-  }
+  bottom: calc(var(--map-bottom-inset, 0px) + 0.75rem) !important;
 }
 
 /* Leaflet – theme-aware (future) */
@@ -921,12 +914,6 @@ select {
 
 [data-theme="day"] .shelter-call-link:hover {
   color: hsl(195 86% 30%);
-}
-
-/* MapLibre's bottom controls (attribution, zoom) sit above the phone list panel. */
-.map-root .maplibregl-ctrl-bottom-left,
-.map-root .maplibregl-ctrl-bottom-right {
-  bottom: var(--map-bottom-inset, 0px);
 }
 
 /* Sources line warning (a source delayed, or offline) on the light theme. */

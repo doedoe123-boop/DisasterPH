@@ -173,6 +173,35 @@ export const copy = {
         openInMaps: "Open in Google Maps",
       },
       noneActive: "None active",
+      mapFilters: {
+        rangeLabel: "Earthquakes from the last",
+        ranges: { "1h": "1h", "6h": "6h", "24h": "24h", "48h": "48h", "7d": "7d" },
+        rangeNames: { "1h": "hour", "6h": "6 hours", "24h": "24 hours", "48h": "48 hours", "7d": "7 days" },
+        layers: "Layers",
+        layersTitle: "Map layers",
+        layerNames: { earthquake: "Earthquakes", volcano: "Volcanoes", typhoon: "Tropical cyclones", other: "Other (NASA EONET)" },
+        includeSmall: "Include smaller earthquakes (M3.0 to 3.4)",
+        about: "About {layer}",
+        info: { source: "Source", updates: "Updates", limits: "Limits", ours: "Computed by DisasterPH" },
+        close: "Close",
+        filterNote: "Earthquakes: last {range}, {mag}",
+        magDefault: "M3.5 and up",
+        magAll: "M3.0 and up",
+      },
+      statusStrip: {
+        label: "Nationwide, official data",
+        volcanoNamed: "{name} at Alert Level {n}",
+        volcanoLevelOne: "{n} at Alert Level 1",
+        volcanoUnknown: "Volcano levels unavailable",
+        quakesMany: "{n} earthquakes M4.0+ in the last 24 h",
+        quakesOne: "1 earthquake M4.0+ in the last 24 h",
+        quakesNone: "No earthquakes M4.0+ in the last 24 h",
+        quakesUnknown: "Earthquake data unavailable",
+        cyclone: "Tropical cyclone {name}: Signal No. {n}",
+        cycloneNoSignal: "Tropical cyclone {name}: no wind signal raised",
+        noCyclone: "No active tropical cyclone",
+        cycloneUnknown: "PAGASA unavailable",
+      },
       eventSheet: {
         one: "1 event, newest first",
         many: "{n} events, newest first",
@@ -208,6 +237,15 @@ export const copy = {
         volcanoLevels: "Alert levels 1 to 5",
         typhoon: "Tropical cyclone: highest wind signal",
         ringTitle: "Earthquake ring colour = severity",
+        age: "Fainter earthquake = older (solid = last hour)",
+        levelsTitle: "Info, Watch, Warning, Critical are DisasterPH's own labels:",
+        levelDefs: {
+          advisory: "below M4.0 · Alert Level 1",
+          watch: "M4.0 to 4.9 · Alert Level 2 · Signal No. 1",
+          warning: "M5.0 to 6.4 · Alert Level 3 · Signal No. 2",
+          critical: "M6.5+ · Alert Level 4 to 5 · Signal No. 3+",
+        },
+        official: "Official: magnitudes, PHIVOLCS alert levels and PAGASA wind signals.",
         dangerZone: "Volcano danger zone (radius from PHIVOLCS)",
         track: "Storm track (NASA EONET); dashed = forecast",
         note: "Tap a marker for details. Severity is also written in each popup and list item.",
@@ -674,6 +712,35 @@ export const copy = {
         openInMaps: "Buksan sa Google Maps", // NEEDS NATIVE REVIEW
       },
       noneActive: "Walang aktibo", // NEEDS NATIVE REVIEW
+      mapFilters: {
+        rangeLabel: "Mga lindol sa nakalipas na", // NEEDS NATIVE REVIEW
+        ranges: { "1h": "1h", "6h": "6h", "24h": "24h", "48h": "48h", "7d": "7d" },
+        rangeNames: { "1h": "oras", "6h": "6 na oras", "24h": "24 na oras", "48h": "48 na oras", "7d": "7 araw" }, // NEEDS NATIVE REVIEW
+        layers: "Mga layer", // NEEDS NATIVE REVIEW
+        layersTitle: "Mga layer ng mapa", // NEEDS NATIVE REVIEW
+        layerNames: { earthquake: "Mga lindol", volcano: "Mga bulkan", typhoon: "Mga bagyo", other: "Iba pa (NASA EONET)" }, // NEEDS NATIVE REVIEW
+        includeSmall: "Isama ang mas mahinang lindol (M3.0 hanggang 3.4)", // NEEDS NATIVE REVIEW
+        about: "Tungkol sa {layer}", // NEEDS NATIVE REVIEW
+        info: { source: "Pinagmulan", updates: "Update", limits: "Limitasyon", ours: "Kinukuwenta ng DisasterPH" }, // NEEDS NATIVE REVIEW
+        close: "Isara", // NEEDS NATIVE REVIEW
+        filterNote: "Mga lindol: nakalipas na {range}, {mag}", // NEEDS NATIVE REVIEW
+        magDefault: "M3.5 pataas", // NEEDS NATIVE REVIEW
+        magAll: "M3.0 pataas", // NEEDS NATIVE REVIEW
+      },
+      statusStrip: {
+        label: "Buong bansa, opisyal na datos", // NEEDS NATIVE REVIEW
+        volcanoNamed: "{name} sa Alert Level {n}", // NEEDS NATIVE REVIEW
+        volcanoLevelOne: "{n} sa Alert Level 1", // NEEDS NATIVE REVIEW
+        volcanoUnknown: "Hindi makuha ang alert level ng bulkan", // NEEDS NATIVE REVIEW
+        quakesMany: "{n} lindol na M4.0+ sa nakalipas na 24 oras", // NEEDS NATIVE REVIEW
+        quakesOne: "1 lindol na M4.0+ sa nakalipas na 24 oras", // NEEDS NATIVE REVIEW
+        quakesNone: "Walang lindol na M4.0+ sa nakalipas na 24 oras", // NEEDS NATIVE REVIEW
+        quakesUnknown: "Hindi makuha ang datos ng lindol", // NEEDS NATIVE REVIEW
+        cyclone: "Bagyong {name}: Signal No. {n}", // NEEDS NATIVE REVIEW
+        cycloneNoSignal: "Bagyong {name}: walang nakataas na wind signal", // NEEDS NATIVE REVIEW
+        noCyclone: "Walang aktibong bagyo", // NEEDS NATIVE REVIEW
+        cycloneUnknown: "Hindi maabot ang PAGASA", // NEEDS NATIVE REVIEW
+      },
       eventSheet: {
         one: "1 pangyayari, pinakabago muna", // NEEDS NATIVE REVIEW
         many: "{n} pangyayari, pinakabago muna", // NEEDS NATIVE REVIEW
@@ -709,6 +776,15 @@ export const copy = {
         volcanoLevels: "Alert level 1 hanggang 5", // NEEDS NATIVE REVIEW
         typhoon: "Bagyo: pinakamataas na wind signal", // NEEDS NATIVE REVIEW
         ringTitle: "Kulay ng gilid ng lindol = antas", // NEEDS NATIVE REVIEW
+        age: "Mas malabong lindol = mas luma (buo = nakaraang oras)", // NEEDS NATIVE REVIEW
+        levelsTitle: "Sariling label ng DisasterPH ang Info, Bantayan, Babala, Kritikal:", // NEEDS NATIVE REVIEW
+        levelDefs: {
+          advisory: "mas mababa sa M4.0 · Alert Level 1", // NEEDS NATIVE REVIEW
+          watch: "M4.0 hanggang 4.9 · Alert Level 2 · Signal No. 1", // NEEDS NATIVE REVIEW
+          warning: "M5.0 hanggang 6.4 · Alert Level 3 · Signal No. 2", // NEEDS NATIVE REVIEW
+          critical: "M6.5+ · Alert Level 4 hanggang 5 · Signal No. 3+", // NEEDS NATIVE REVIEW
+        },
+        official: "Opisyal: magnitude, alert level ng PHIVOLCS at wind signal ng PAGASA.", // NEEDS NATIVE REVIEW
         dangerZone: "Danger zone ng bulkan (radius mula sa PHIVOLCS)", // NEEDS NATIVE REVIEW
         track: "Dinaanan ng bagyo (NASA EONET); putol-putol = forecast", // NEEDS NATIVE REVIEW
         note: "Pindutin ang marker para sa detalye. Nakasulat din ang antas sa bawat popup at listahan.", // NEEDS NATIVE REVIEW

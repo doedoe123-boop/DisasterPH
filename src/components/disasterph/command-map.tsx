@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties, ReactNode } from "react";
 import dynamic from "next/dynamic";
 import {
   ChevronUp,
@@ -89,6 +90,8 @@ interface CommandMapProps {
   mapBottomInset?: number;
   /** Changes each time an event is chosen from the list. */
   focusRequest?: number;
+  /** Controls over the top of the map (earthquake time chips, Layers). */
+  toolbar?: ReactNode;
 }
 
 export function CommandMap({
@@ -107,12 +110,18 @@ export function CommandMap({
   mapLeftInset = 0,
   mapBottomInset = 0,
   focusRequest = 0,
+  toolbar = null,
 }: CommandMapProps) {
   const { locale } = useLocale();
   const controls = t(locale).controls;
 
   return (
-    <div className="relative h-full overflow-hidden bg-background">
+    <div
+      className="relative h-full overflow-hidden bg-background"
+      // The toolbar row: the map's own top-left buttons and the legend start below it.
+      style={{ "--map-toolbar-h": toolbar ? "3.25rem" : "0px" } as CSSProperties}
+    >
+      {toolbar}
       <MapboxMap
         incidents={incidents}
         communityReports={communityReports}
@@ -122,6 +131,7 @@ export function CommandMap({
         onSelectIncident={onSelectIncident}
         leftInset={mapLeftInset}
         bottomInset={mapBottomInset}
+        topInset={toolbar ? 52 : 0}
         focusRequest={focusRequest}
       />
 
