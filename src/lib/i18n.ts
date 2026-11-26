@@ -127,7 +127,8 @@ export const copy = {
       noSignals: "No active signals",
       noFilterMatches: "No incidents match the current filter.",
       noEventsMatch: "No events match your current filters.",
-      offlineShowingCached: "Offline — showing cached data",
+      offlineSaved: "Offline: showing last saved data from {time}.",
+      offlineSavedNoTime: "Offline: showing last saved data.",
       whatThisMeans: "What this means",
       whatToDo: "What to do",
       whatToDoNow: "What To Do Now",
@@ -401,6 +402,7 @@ export const copy = {
       resetView: "Reset map view",
       resetViewTitle: "Show all of the Philippines, flat and north-up",
       keyboardNote: "Map of events. To choose an event with the keyboard, use the event list.",
+      outlineUnavailable: "Base map unavailable: showing a simple outline of the Philippines.",
       myPlaces: "My places",
       myPlacesTitle: "Zoom to your saved places and list events near them",
       myPlacesEmpty: "No saved places yet. Save a place to see events near it.",
@@ -734,7 +736,8 @@ export const copy = {
       noSignals: "Walang aktibong abiso",
       noFilterMatches: "Walang tumugmang abiso sa filter.",
       noEventsMatch: "Walang tumugmang kaganapan sa filter.",
-      offlineShowingCached: "Offline — huling naka-save na datos ang ipinapakita",
+      offlineSaved: "Offline: ipinapakita ang huling naka-save na datos mula {time}.", // NEEDS NATIVE REVIEW
+      offlineSavedNoTime: "Offline: ipinapakita ang huling naka-save na datos.", // NEEDS NATIVE REVIEW
       whatThisMeans: "Ano ang ibig sabihin nito",
       whatToDo: "Ano ang gagawin",
       whatToDoNow: "Gawin Ngayon",
@@ -1008,6 +1011,7 @@ export const copy = {
       resetView: "Ibalik ang mapa",
       resetViewTitle: "Ipakita ang buong Pilipinas, patag at nakaharap sa hilaga",
       keyboardNote: "Mapa ng mga pangyayari. Para pumili gamit ang keyboard, gamitin ang listahan ng pangyayari.", // NEEDS NATIVE REVIEW
+      outlineUnavailable: "Hindi ma-load ang base map: simpleng balangkas ng Pilipinas ang ipinapakita.", // NEEDS NATIVE REVIEW
       myPlaces: "Aking mga lugar", // NEEDS NATIVE REVIEW
       myPlacesTitle: "Ipakita sa mapa ang naka-save mong mga lugar at ilista ang mga pangyayari malapit sa mga ito", // NEEDS NATIVE REVIEW
       myPlacesEmpty: "Wala ka pang naka-save na lugar. Mag-save ng lugar para makita ang mga pangyayari malapit dito.", // NEEDS NATIVE REVIEW

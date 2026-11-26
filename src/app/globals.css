@@ -917,6 +917,12 @@ select {
 }
 
 /* Sources line warning (a source delayed, or offline) on the light theme. */
+/* Offline / outline-map banner: dark amber text on the light theme. */
+[data-theme="day"] .offline-banner {
+  color: hsl(28 85% 26%);
+  background: hsl(45 95% 92%);
+}
+
 [data-theme="day"] .sources-line-warn {
   color: hsl(28 85% 28%);
 }

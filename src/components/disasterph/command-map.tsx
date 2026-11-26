@@ -10,6 +10,7 @@ import {
   Minimize2,
 } from "lucide-react";
 import type { CommunityReport, Incident, SavedPlace } from "@/types/incident";
+import type { BaseMapState } from "@/lib/map-fallback";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -99,6 +100,8 @@ interface CommandMapProps {
   showPlacePins?: boolean;
   onMyPlaces?: () => void;
   onAddPlace?: () => void;
+  onBaseMapChange?: (state: BaseMapState) => void;
+  baseMapRetry?: number;
 }
 
 export function CommandMap({
@@ -124,6 +127,8 @@ export function CommandMap({
   showPlacePins = false,
   onMyPlaces,
   onAddPlace,
+  onBaseMapChange,
+  baseMapRetry = 0,
 }: CommandMapProps) {
   const { locale } = useLocale();
   const controls = t(locale).controls;
@@ -152,6 +157,8 @@ export function CommandMap({
         showPlacePins={showPlacePins}
         onMyPlaces={onMyPlaces}
         onAddPlace={onAddPlace}
+        onBaseMapChange={onBaseMapChange}
+        baseMapRetry={baseMapRetry}
       />
 
       {/* Map controls */}

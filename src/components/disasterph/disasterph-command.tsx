@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  Map as MapIcon,
   WifiOff,
   Activity,
   X,
@@ -30,6 +31,7 @@ import {
   type QuakeRange,
 } from "@/lib/quake-filters";
 import { viewQuery, type ViewState } from "@/lib/view-url";
+import type { BaseMapState } from "@/lib/map-fallback";
 import { eventLabel, t } from "@/lib/i18n";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
 import type { Incident, IncidentEventType } from "@/types/incident";
@@ -130,6 +132,10 @@ export function DisasterPHCommand({ initial, initialView = {} }: { initial?: Inc
   const [sort, setSort] = useState<ListSort>("newest");
   // The saved-places panel (opened from the area bar or the map's "My places").
   const [placesOpen, setPlacesOpen] = useState(false);
+  // The map's base: OpenFreeMap, or the outline of the Philippines when it
+  // cannot load (offline, or its server down). "Try again" bumps the retry.
+  const [baseMap, setBaseMap] = useState<BaseMapState>("normal");
+  const [baseMapRetry, setBaseMapRetry] = useState(0);
   // Bumped whenever an event is chosen from the list, so the map brings it
   // into view even if it was already selected (e.g. after zooming out).
   const [focusRequest, setFocusRequest] = useState(linked.id ? 1 : 0);
@@ -313,20 +319,36 @@ export function DisasterPHCommand({ initial, initialView = {} }: { initial?: Inc
       {/* ── Global Header ── */}
       <AppHeader />
 
-      {/* ── Offline warning ── */}
+      {/* ── Offline, or the base map unavailable (outline map) ── */}
       <AnimatePresence initial={false}>
-        {!isOnline && (
+        {(!isOnline || baseMap !== "normal") && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="flex items-center gap-2.5 border-b border-amber-400/25 bg-amber-400/10 px-5 py-2 text-sm text-amber-200 overflow-hidden"
+            role="status"
+            // Compact on phones: every line here is taken from the map's height.
+            className="offline-banner flex items-center gap-2 border-b border-amber-400/25 bg-amber-400/10 px-4 py-1.5 text-[13px] leading-5 text-amber-200 overflow-hidden md:gap-2.5 md:px-5 md:py-2 md:text-sm"
           >
-            <WifiOff className="h-4 w-4 shrink-0" />
-            <span suppressHydrationWarning>
-              {i18n.common.offlineShowingCached}
-              {generatedAt ? ` from ${formatDateTime(generatedAt)}` : ""}.
+            {isOnline ? <MapIcon aria-hidden className="h-4 w-4 shrink-0" /> : <WifiOff aria-hidden className="h-4 w-4 shrink-0" />}
+            <span className="min-w-0 flex-1" suppressHydrationWarning>
+              {!isOnline &&
+                (generatedAt
+                  ? i18n.common.offlineSaved.replace("{time}", formatDateTime(generatedAt))
+                  : i18n.common.offlineSavedNoTime)}
+              {/* Offline, the outline map speaks for itself: one short line keeps
+                  the phone map usable. Online, say why the map looks plain. */}
+              {isOnline && baseMap !== "normal" && i18n.map.outlineUnavailable}
             </span>
+            {isOnline && baseMap !== "normal" && (
+              <button
+                type="button"
+                onClick={() => setBaseMapRetry((n) => n + 1)}
+                className="-my-1 min-h-11 shrink-0 rounded-md border border-current/30 px-2.5 text-[13px] font-semibold md:min-h-8"
+              >
+                {i18n.map.retry}
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -554,6 +576,8 @@ export function DisasterPHCommand({ initial, initialView = {} }: { initial?: Inc
                 setFocusMode(false);
                 setPlacesOpen(true);
               }}
+              onBaseMapChange={setBaseMap}
+              baseMapRetry={baseMapRetry}
             />
 
             {/* ── Phones and tablets: the event list as a panel over the map ── */}

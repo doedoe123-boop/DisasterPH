@@ -1,9 +1,15 @@
 /// <reference lib="webworker" />
 
-const SHELL_CACHE = "disasterph-shell-v3";
+// v4: the map's offline outline (/map/ph-outline.json).
+const SHELL_CACHE = "disasterph-shell-v4";
 const ASSET_CACHE = "disasterph-assets-v2";
 // v3: drop any API entries cached before private endpoints were excluded.
 const API_CACHE = "disasterph-api-v3";
+// Map text needs OpenFreeMap's font files (glyphs); the ones already used are
+// kept so marker numbers and labels still draw offline on the outline map.
+const GLYPH_CACHE = "disasterph-glyphs-v1";
+const GLYPH_HOST = "tiles.openfreemap.org";
+const MAP_OUTLINE_URL = "/map/ph-outline.json";
 
 // Session-bound or private API responses are never cached or served offline.
 const PRIVATE_API_PREFIXES = [
@@ -20,6 +26,7 @@ const SHELL_URLS = [
   "/manifest.json",
   "/icon.svg",
   OFFLINE_URL,
+  MAP_OUTLINE_URL,
 ];
 
 // Max age for cached API responses (10 minutes)
@@ -33,7 +40,7 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  const keep = new Set([SHELL_CACHE, ASSET_CACHE, API_CACHE]);
+  const keep = new Set([SHELL_CACHE, ASSET_CACHE, API_CACHE, GLYPH_CACHE]);
   event.waitUntil(
     caches
       .keys()
@@ -53,6 +60,18 @@ self.addEventListener("fetch", (event) => {
   // Navigation — network first, fallback to the last cached page or app shell.
   if (event.request.mode === "navigate") {
     event.respondWith(networkFirstNavigation(event.request));
+    return;
+  }
+
+  // The map's outline (fallback base map): precached, served offline.
+  if (url.origin === self.location.origin && url.pathname === MAP_OUTLINE_URL) {
+    event.respondWith(cacheFirstRevalidate(event.request, SHELL_CACHE));
+    return;
+  }
+
+  // Map font files from OpenFreeMap: cache first (they never change).
+  if (url.hostname === GLYPH_HOST && url.pathname.startsWith("/fonts/") && url.pathname.endsWith(".pbf")) {
+    event.respondWith(cacheFirstRevalidate(event.request, GLYPH_CACHE));
     return;
   }
 
