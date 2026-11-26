@@ -920,3 +920,40 @@ select {
 [data-theme="day"] .sources-line-warn {
   color: hsl(28 85% 28%);
 }
+
+/* Chosen event on wide screens: its card in a popover anchored to the marker. */
+.bantay-popover {
+  z-index: 25;
+}
+.bantay-popover .maplibregl-popup-content {
+  padding: 0;
+  background: var(--bg-panel);
+  border: 1px solid rgb(var(--ui-overlay) / 0.14);
+  border-radius: 12px;
+  box-shadow: var(--shadow-elevated);
+  color: var(--text-primary);
+}
+/* Height is capped from script to the free space beside the marker. */
+.bantay-popover-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.bantay-popover.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.bantay-popover.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.bantay-popover.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: var(--bg-panel);
+}
+.bantay-popover.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.bantay-popover.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.bantay-popover.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: var(--bg-panel);
+}
+.bantay-popover.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--bg-panel);
+}
+.bantay-popover.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--bg-panel);
+}
+[data-theme="day"] .event-card-badge {
+  color: hsl(22 90% 32%);
+}

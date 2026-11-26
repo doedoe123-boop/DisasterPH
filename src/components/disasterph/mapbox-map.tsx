@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import type { CommunityReport, Incident } from "@/types/incident";
 import {
   PH_BOUNDS,
@@ -55,6 +56,10 @@ interface Props {
   focusRequest?: number;
   /** Height in pixels of controls over the top of the map (time chips). */
   topInset?: number;
+  /** Wide screens: the chosen event's card, shown in a popover anchored to its marker. */
+  popover?: ReactNode;
+  /** Small preview when hovering a marker (wide screens with a pointer). */
+  hoverPreviews?: boolean;
 }
 
 /** Flat, north-up view of the whole country inside the unobstructed area. */
@@ -96,6 +101,8 @@ export default function MapLibreMapComponent({
   bottomInset = 0,
   focusRequest = 0,
   topInset = 0,
+  popover = null,
+  hoverPreviews = true,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
@@ -108,6 +115,10 @@ export default function MapLibreMapComponent({
     leftInsetRef.current = leftInset;
   }, [leftInset]);
   const bottomInsetRef = useRef(bottomInset);
+  const selectedIdRef = useRef(selectedIncidentId);
+  useEffect(() => {
+    selectedIdRef.current = selectedIncidentId;
+  }, [selectedIncidentId]);
   const topInsetRef = useRef(topInset);
   useEffect(() => {
     topInsetRef.current = topInset;
@@ -119,7 +130,7 @@ export default function MapLibreMapComponent({
   useEffect(() => {
     bottomInsetRef.current = bottomInset;
     const map = mapRef.current;
-    if (map && !userMovedRef.current) fitNational(map, leftInsetRef.current, 0, bottomInset, topInsetRef.current);
+    if (map && !userMovedRef.current && !selectedIdRef.current) fitNational(map, leftInsetRef.current, 0, bottomInset, topInsetRef.current);
   }, [bottomInset]);
   const [mapReady, setMapReady] = useState(false);
   // Set when MapLibre cannot load or start. "unsupported" = no WebGL2 (a
@@ -389,15 +400,13 @@ export default function MapLibreMapComponent({
     // incidents: a refresh re-creates features, so state is re-applied.
   }, [selectedIncidentId, hoveredIncidentId, incidents, mapReady]);
 
-  // ── Popup: the hovered event, otherwise the selected one ──
-  // Showing it for the selection gives an offshore pin its context (place
-  // and source description) on touch screens too, where there is no hover.
+  // ── Hover preview: a small popup for a hovered marker other than the chosen one ──
   useEffect(() => {
     const map = mapRef.current;
     const ml = mlRef.current;
     if (!map || !ml || !mapReady) return;
 
-    const popupId = hoveredIncidentId ?? (selectedIncidentId || null);
+    const popupId = hoverPreviews && hoveredIncidentId !== selectedIncidentId ? hoveredIncidentId : null;
     const incident = popupId ? incidents.find((i) => i.id === popupId) : undefined;
     if (incident) {
 
@@ -419,7 +428,76 @@ export default function MapLibreMapComponent({
       popupRef.current?.remove();
       popupRef.current = null;
     }
-  }, [hoveredIncidentId, selectedIncidentId, incidents, mapReady, locale]);
+  }, [hoveredIncidentId, selectedIncidentId, incidents, mapReady, locale, hoverPreviews]);
+
+  // ── Chosen event (wide screens): its card in a popover anchored to the marker ──
+  const popoverRef = useRef<MlPopup | null>(null);
+  const [popoverNode, setPopoverNode] = useState<HTMLDivElement | null>(null);
+  const chosen = selectedIncidentId ? incidents.find((i) => i.id === selectedIncidentId) : undefined;
+  const chosenLng = chosen?.longitude;
+  const chosenLat = chosen?.latitude;
+  const hasPopover = Boolean(popover);
+  useEffect(() => {
+    const map = mapRef.current;
+    const ml = mlRef.current;
+    if (!map || !ml || !mapReady || !hasPopover || chosenLng === undefined || chosenLat === undefined) {
+      popoverRef.current?.remove();
+      popoverRef.current = null;
+      setPopoverNode(null);
+      return;
+    }
+    if (!popoverRef.current) {
+      const node = document.createElement("div");
+      node.className = "bantay-popover-body";
+      popoverRef.current = new ml.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 20,
+        className: "bantay-popover",
+        maxWidth: "340px",
+        // The card moves focus to its own heading.
+        focusAfterOpen: false,
+      })
+        .setDOMContent(node)
+        .setLngLat([chosenLng, chosenLat])
+        .addTo(map);
+      setPopoverNode(node);
+    } else {
+      popoverRef.current.setLngLat([chosenLng, chosenLat]);
+    }
+  }, [mapReady, hasPopover, chosenLng, chosenLat, selectedIncidentId]);
+  // Keep the popover inside the map: cap its height to the larger free side
+  // of the marker, then let MapLibre re-place it (it picks the side that
+  // fits). Re-run when the card grows (details load) or the map moves.
+  useEffect(() => {
+    const map = mapRef.current;
+    const popup = popoverRef.current;
+    if (!map || !popup || !popoverNode || chosenLng === undefined || chosenLat === undefined) return;
+    const place = () => {
+      const h = map.getContainer().clientHeight;
+      const y = map.project([chosenLng, chosenLat]).y;
+      const room = Math.max(y - (topInsetRef.current + 12), h - y - 12) - 36;
+      const body = popup.getElement()?.querySelector<HTMLElement>(".bantay-popover-body");
+      if (body) body.style.maxHeight = `${Math.max(160, Math.round(room))}px`;
+      popup.setLngLat([chosenLng, chosenLat]);
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    const body = popup.getElement()?.querySelector(".bantay-popover-body");
+    if (body) observer.observe(body);
+    map.on("moveend", place);
+    return () => {
+      observer.disconnect();
+      map.off("moveend", place);
+    };
+  }, [popoverNode, chosenLng, chosenLat]);
+  useEffect(
+    () => () => {
+      popoverRef.current?.remove();
+      popoverRef.current = null;
+    },
+    [],
+  );
 
   // ── Community report markers (visually distinct from official data) ──
   useEffect(() => {
@@ -483,7 +561,8 @@ export default function MapLibreMapComponent({
       essential: false,
     });
     // focusRequest: choosing the same event again from the list re-runs this.
-  }, [selectedIncidentId, mapReady, focusRequest]);
+    // bottomInset: the phone card changes how much of the map is clear.
+  }, [selectedIncidentId, mapReady, focusRequest, bottomInset]);
 
   // Apply the terrain toggle (no DEM request happens until it is turned on).
   useEffect(() => {
@@ -521,6 +600,7 @@ export default function MapLibreMapComponent({
       style={{ "--map-left-inset": `${leftInset}px`, "--map-bottom-inset": `${bottomInset}px` } as CSSProperties}
     >
       <div ref={containerRef} className="h-full w-full" data-map-container />
+      {popoverNode && popover ? createPortal(popover, popoverNode) : null}
       <p className="sr-only">{mapCopy.keyboardNote}</p>
       <MapLegend locale={locale} />
       {mapReady && !mapFailed && (

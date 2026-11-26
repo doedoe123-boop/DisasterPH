@@ -173,6 +173,40 @@ export const copy = {
         openInMaps: "Open in Google Maps",
       },
       noneActive: "None active",
+      card: {
+        close: "Close",
+        alertBadge: "Alert Level {n} of 5",
+        signalBadge: "Signal No. {n}",
+        noSignal: "No wind signal",
+        dangerZone: "Danger zone",
+        radiusKm: "{n} km radius",
+        bulletin: "Bulletin",
+        depth: "Depth",
+        time: "Time",
+        wind: "Winds",
+        gust: "gusts",
+        whatItMeans: "What this means",
+        whatToDo: "What to do",
+        volcanoMeaning: "PHIVOLCS: Alert Level {n}, {status}.",
+        hazards: "Possible hazards (PHIVOLCS):",
+        notAllowed: "Should not be allowed (PHIVOLCS):",
+        reportedIntensity: "Reported Intensity {n} in {places} (PHIVOLCS).",
+        expectations: "PHIVOLCS expects damage: {damage}. Aftershocks: {aftershocks}.",
+        yes: "yes",
+        no: "no",
+        notStated: "not stated",
+        pagasaWhatToDo: "PAGASA advises:",
+        pagasaPrecautions: "PAGASA precautions:",
+        referenceOnly: "Reported by NASA EONET. Reference only: not a Philippine warning.",
+        officialRecord: "Official record",
+        officialBulletin: "Official bulletin",
+        openInMaps: "Open in Maps",
+        details: "Full details",
+        source: "Source: {source}",
+        checked: "checked {age}",
+        usgsFallback: "backup while PHIVOLCS is unavailable",
+        backToList: "Back to list",
+      },
       mapFilters: {
         rangeLabel: "Earthquakes from the last",
         ranges: { "1h": "1h", "6h": "6h", "24h": "24h", "48h": "48h", "7d": "7d" },
@@ -712,6 +746,40 @@ export const copy = {
         openInMaps: "Buksan sa Google Maps", // NEEDS NATIVE REVIEW
       },
       noneActive: "Walang aktibo", // NEEDS NATIVE REVIEW
+      card: {
+        close: "Isara", // NEEDS NATIVE REVIEW
+        alertBadge: "Alert Level {n} sa 5", // NEEDS NATIVE REVIEW
+        signalBadge: "Signal No. {n}",
+        noSignal: "Walang wind signal", // NEEDS NATIVE REVIEW
+        dangerZone: "Danger zone",
+        radiusKm: "{n} km na radius", // NEEDS NATIVE REVIEW
+        bulletin: "Bulletin",
+        depth: "Lalim",
+        time: "Oras",
+        wind: "Hangin", // NEEDS NATIVE REVIEW
+        gust: "bugso", // NEEDS NATIVE REVIEW
+        whatItMeans: "Ano ang ibig sabihin", // NEEDS NATIVE REVIEW
+        whatToDo: "Ano ang gagawin", // NEEDS NATIVE REVIEW
+        volcanoMeaning: "PHIVOLCS: Alert Level {n}, {status}.",
+        hazards: "Mga posibleng panganib (PHIVOLCS):", // NEEDS NATIVE REVIEW
+        notAllowed: "Hindi dapat payagan (PHIVOLCS):", // NEEDS NATIVE REVIEW
+        reportedIntensity: "Naiulat na Intensity {n} sa {places} (PHIVOLCS).", // NEEDS NATIVE REVIEW
+        expectations: "Inaasahan ng PHIVOLCS ang pinsala: {damage}. Aftershock: {aftershocks}.", // NEEDS NATIVE REVIEW
+        yes: "oo",
+        no: "hindi",
+        notStated: "hindi nakasaad", // NEEDS NATIVE REVIEW
+        pagasaWhatToDo: "Payo ng PAGASA:", // NEEDS NATIVE REVIEW
+        pagasaPrecautions: "Pag-iingat mula sa PAGASA:", // NEEDS NATIVE REVIEW
+        referenceOnly: "Iniulat ng NASA EONET. Sanggunian lang: hindi babala ng Pilipinas.", // NEEDS NATIVE REVIEW
+        officialRecord: "Opisyal na record", // NEEDS NATIVE REVIEW
+        officialBulletin: "Opisyal na bulletin", // NEEDS NATIVE REVIEW
+        openInMaps: "Buksan sa Maps", // NEEDS NATIVE REVIEW
+        details: "Buong detalye", // NEEDS NATIVE REVIEW
+        source: "Pinagmulan: {source}", // NEEDS NATIVE REVIEW
+        checked: "sinuri {age}", // NEEDS NATIVE REVIEW
+        usgsFallback: "pansamantala habang hindi maabot ang PHIVOLCS", // NEEDS NATIVE REVIEW
+        backToList: "Bumalik sa listahan", // NEEDS NATIVE REVIEW
+      },
       mapFilters: {
         rangeLabel: "Mga lindol sa nakalipas na", // NEEDS NATIVE REVIEW
         ranges: { "1h": "1h", "6h": "6h", "24h": "24h", "48h": "48h", "7d": "7d" },

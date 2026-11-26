@@ -3,7 +3,7 @@
 Everything a visitor sees is either **copied from an agency** (PHIVOLCS, PAGASA,
 NASA EONET, USGS) or **computed by DisasterPH**. This list covers the second
 kind: what we compute, from what, where in the code, and what it is based on.
-Review it whenever a rule changes. Last reviewed: 2026-11-26 (map Phase 2b).
+Review it whenever a rule changes. Last reviewed: 2026-11-26 (map Phase 3a).
 
 Legend for "Basis":
 - **Official**: follows a published agency rule or table (source linked).
@@ -95,7 +95,8 @@ uses these four words. They exist to sort and colour events consistently.
 |---|---|---|---|
 | "What this means" line | One sentence per hazard type and severity | `src/lib/plain-alert.ts` | **Ours, paraphrased.** To be replaced in map Phase 3a by official PHIVOLCS/PAGASA wording with a source link next to each entry |
 | "What to do now" tips | Tips per hazard type, filtered by severity | `src/lib/prep-guidance.ts` | **Ours, no source cited.** To be checked against NDRRMC/PHIVOLCS/PAGASA material in Phase 3a |
-| Intensity words ("V · Strong") | PHIVOLCS Earthquake Intensity Scale names | `src/lib/i18n.ts` `quake.scale` | Official (English); Filipino is ours, needs native review |
+| Intensity names ("Strong") | **Not shown since map Phase 3a.** They were written from memory, not copied from PHIVOLCS, so they were wrongly listed here as official. Pages and cards now show only what the bulletin says ("Intensity V" and the places). Restore only after checking the PHIVOLCS Earthquake Intensity Scale page (its site blocks automated access; needs a copy saved from a browser) | `src/lib/i18n.ts` `quake.scale` (unused) | Unverified |
+| Event card (phone sheet, desktop popover) | Shows only agency text where it says "PHIVOLCS"/"PAGASA": volcano status name, hazards and "should not be allowed" from the bulletin; earthquake reported intensity, damage and aftershock expectations from the bulletin; PAGASA's what-to-do. Rows without data are left out | `src/components/disasterph/event-card.tsx` | Official text, quoted |
 | Tsunami pointer ("DisasterPH doesn't show tsunami warnings …") | Shown when magnitude and depth fall in a PHIVOLCS local-tsunami advisory/warning band: 6.5–7.0 and depth ≤ 50 km; 7.0–7.5 and ≤ 60; 7.5–8.0 and ≤ 70; 8.0+ and ≤ 100 | `src/lib/tsunami-check.ts` | Official bands (PHIVOLCS criteria table, Tsunami Ready Philippines workshop, 11 Dec 2025). It is a pointer to PHIVOLCS, never a tsunami status |
 | Volcano "should not be allowed", hazards, monitoring | Copied from the bulletin | `phivolcs-volcano.ts` | Official |
 | Typhoon precautions | Copied from the bulletin | `pagasa.ts` | Official |

@@ -39,15 +39,12 @@ function IntensityList({
           <li key={`${g.level}-${g.places}`} className="grid grid-cols-[5.5rem_1fr] items-start gap-3 text-sm">
             <span
               className={`rounded-md border px-2 py-0.5 text-center text-[11.5px] font-bold ${intensityTone(g.level)}`}
-              title={copy.scale[g.level]}
             >
               {copy.intensity.replace("{n}", ROMAN_NUMERALS[g.level])}
             </span>
-            <span className="leading-6 text-[var(--text-primary)]">
-              <span className="font-semibold">{copy.scale[g.level]}</span>
-              <span className="text-[var(--text-muted)]"> · </span>
-              {g.places}
-            </span>
+            {/* Only what the bulletin says ("Intensity V" and the places). Scale
+                names like "Strong" are not shown until checked against PHIVOLCS. */}
+            <span className="leading-6 text-[var(--text-primary)]">{g.places}</span>
           </li>
         ))}
       </ul>

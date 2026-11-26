@@ -45,6 +45,8 @@ const L = {
   statusHit: "events-status-hit",
   status: "events-status-icon",
   quakeBlock: "events-quake-block",
+  quakeRing: "events-quake-selected-ring",
+  statusRing: "events-status-selected-ring",
   clusterBlock: "events-cluster-block",
 } as const;
 
@@ -282,6 +284,16 @@ export function ensureEventLayers(map: MlMap, incidents: Incident[], largestLabe
     paint: { "text-color": "#111827", "text-halo-color": "#ffffff", "text-halo-width": 1.6 } });
 
   // Single earthquakes
+  // The chosen event: a bold orange ring (links the marker to its card).
+  const selectedOpacity: ExpressionSpecification = ["case", ["boolean", ["feature-state", "selected"], false], 1, 0];
+  add({ id: L.quakeRing, type: "circle", source: QUAKE_SOURCE, filter: single,
+    paint: {
+      "circle-radius": ["+", QUAKE_RADIUS, 7],
+      "circle-color": "rgba(0,0,0,0)",
+      "circle-stroke-color": "#f97316",
+      "circle-stroke-width": 4,
+      "circle-stroke-opacity": selectedOpacity,
+    } });
   add({ id: L.quakeHit, type: "circle", source: QUAKE_SOURCE, filter: single,
     paint: { "circle-radius": ["max", 22, ["+", QUAKE_RADIUS, 8]], "circle-opacity": 0, "circle-stroke-opacity": 0 } });
   add({ id: L.quake, type: "circle", source: QUAKE_SOURCE, filter: single,
@@ -311,6 +323,14 @@ export function ensureEventLayers(map: MlMap, incidents: Incident[], largestLabe
     paint: { "text-color": "#111827", "text-opacity": ["max", 0.75, AGE_OPACITY] } });
 
   // Volcanoes, cyclones, other (above earthquakes)
+  add({ id: L.statusRing, type: "circle", source: STATUS_SOURCE,
+    paint: {
+      "circle-radius": 21,
+      "circle-color": "rgba(0,0,0,0)",
+      "circle-stroke-color": "#f97316",
+      "circle-stroke-width": 4,
+      "circle-stroke-opacity": ["case", ["boolean", ["feature-state", "selected"], false], 1, 0],
+    } });
   add({ id: L.statusHit, type: "circle", source: STATUS_SOURCE,
     paint: { "circle-radius": 22, "circle-opacity": 0, "circle-stroke-opacity": 0 } });
   add({ id: L.status, type: "symbol", source: STATUS_SOURCE,

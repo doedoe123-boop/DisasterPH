@@ -92,6 +92,9 @@ interface CommandMapProps {
   focusRequest?: number;
   /** Controls over the top of the map (earthquake time chips, Layers). */
   toolbar?: ReactNode;
+  /** Wide screens: the chosen event's card, anchored to its marker. */
+  popover?: ReactNode;
+  hoverPreviews?: boolean;
 }
 
 export function CommandMap({
@@ -111,6 +114,8 @@ export function CommandMap({
   mapBottomInset = 0,
   focusRequest = 0,
   toolbar = null,
+  popover = null,
+  hoverPreviews = true,
 }: CommandMapProps) {
   const { locale } = useLocale();
   const controls = t(locale).controls;
@@ -132,6 +137,8 @@ export function CommandMap({
         leftInset={mapLeftInset}
         bottomInset={mapBottomInset}
         topInset={toolbar ? 52 : 0}
+        popover={popover}
+        hoverPreviews={hoverPreviews}
         focusRequest={focusRequest}
       />
 
