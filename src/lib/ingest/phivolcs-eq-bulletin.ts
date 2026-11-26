@@ -275,3 +275,75 @@ export async function withEqBulletin(incident: Incident): Promise<Incident> {
   if (!bulletin) return incident;
   return { ...incident, metadata: { ...incident.metadata, ...eqBulletinMetadata(bulletin) } };
 }
+
+/* ── Background reading for the event list (map phase 3b) ── */
+
+/** Earthquakes whose bulletins are read in the background (felt reports are rare below this). */
+export const BACKGROUND_MIN_MAGNITUDE = 4.0;
+/** At most this many new bulletins per refresh (every 3 minutes), newest quakes first. */
+export const BACKGROUND_MAX_NEW = 12;
+const BACKGROUND_CONCURRENCY = 3;
+/** The refresh waits at most this long; slower bulletins finish in the background for the next one. */
+export const BACKGROUND_BUDGET_MS = 2_500;
+
+/** A fresh cached bulletin (null = known unreadable), or undefined when not cached. */
+function cachedBulletin(url: string, now: number): EqBulletin | null | undefined {
+  const hit = cache.get(url);
+  if (!hit || now - hit.at >= (hit.value ? OK_TTL_MS : FAIL_TTL_MS)) return undefined;
+  return hit.value;
+}
+
+function wantsBulletin(i: Incident): i is Incident & { metadata: { bulletin_url: string } } {
+  return (
+    i.source === "PHIVOLCS" &&
+    i.event_type === "earthquake" &&
+    typeof i.metadata.bulletin_url === "string" &&
+    Number(i.metadata.magnitude) >= BACKGROUND_MIN_MAGNITUDE
+  );
+}
+
+/**
+ * Merge bulletin details (felt intensities, damage/aftershock expectation)
+ * into M4+ PHIVOLCS earthquakes, so the list and the map's event card have
+ * them without a request of their own. Cached bulletins are used at once;
+ * up to BACKGROUND_MAX_NEW missing ones (newest first) are read, three at a
+ * time, for at most BACKGROUND_BUDGET_MS. Anything slower lands in the cache
+ * and is merged on the next refresh. An unreadable bulletin leaves the
+ * earthquake as it was. A revised bulletin has a new URL, so it is read again.
+ */
+export async function enrichQuakesWithBulletins(
+  events: Incident[],
+  { budgetMs = BACKGROUND_BUDGET_MS, maxNew = BACKGROUND_MAX_NEW, concurrency = BACKGROUND_CONCURRENCY } = {},
+): Promise<Incident[]> {
+  const now = Date.now();
+  const missing = [
+    ...new Map(
+      events
+        .filter(wantsBulletin)
+        .filter((i) => cachedBulletin(i.metadata.bulletin_url, now) === undefined)
+        .sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at))
+        .map((i) => [i.metadata.bulletin_url, i.metadata.bulletin_url]),
+    ).values(),
+  ].slice(0, maxNew);
+
+  if (missing.length > 0) {
+    let next = 0;
+    const worker = async () => {
+      while (next < missing.length) {
+        const url = missing[next++];
+        await loadEqBulletin(url);
+      }
+    };
+    const all = Promise.all(Array.from({ length: Math.min(concurrency, missing.length) }, worker));
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([all, new Promise<void>((resolve) => (timer = setTimeout(resolve, budgetMs)))]);
+    if (timer) clearTimeout(timer);
+  }
+
+  const at = Date.now();
+  return events.map((i) => {
+    if (!wantsBulletin(i)) return i;
+    const bulletin = cachedBulletin(i.metadata.bulletin_url, at);
+    return bulletin ? { ...i, metadata: { ...i.metadata, ...eqBulletinMetadata(bulletin) } } : i;
+  });
+}
