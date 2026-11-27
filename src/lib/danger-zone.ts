@@ -74,7 +74,7 @@ export function placeChecks(incident: Incident, places: SavedPlace[]): PlaceChec
   if (places.length === 0) return [];
   // Typhoon wind signals and PAGASA rainfall/flood warnings name regions:
   // a saved place there is listed by region, not by distance.
-  if (incident.event_type === "typhoon" || (incident.event_type === "flood" && incident.source === "PAGASA")) {
+  if (incident.event_type === "typhoon" || incident.event_type === "tsunami" || (incident.event_type === "flood" && incident.source === "PAGASA")) {
     const regions = namedRegions(incident);
     if (regions.length === 0) return [];
     return places

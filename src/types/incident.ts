@@ -7,7 +7,9 @@ export type IncidentEventType =
   | "earthquake"
   | "volcano"
   | "landslide"
-  | "wildfire";
+  | "wildfire"
+  // PHIVOLCS tsunami warnings and advisories (Tsunami Information).
+  | "tsunami";
 
 export type IncidentSeverity = "advisory" | "watch" | "warning" | "critical";
 
@@ -38,7 +40,7 @@ export interface Incident {
 /** Status entries: one per incident source, plus PHIVOLCS volcano bulletins
  *  (their incidents are published as "PHIVOLCS") and PAGASA rainfall and
  *  flood warnings (published as "PAGASA", event type "flood"). */
-export type SourceKey = IncidentSource | "PHIVOLCS_VOLCANO" | "PAGASA_RAIN";
+export type SourceKey = IncidentSource | "PHIVOLCS_VOLCANO" | "PAGASA_RAIN" | "PHIVOLCS_TSUNAMI";
 
 export interface SourceStatus {
   source: SourceKey;

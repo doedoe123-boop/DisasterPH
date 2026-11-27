@@ -43,6 +43,10 @@ const ALIASES: Record<string, string> = {
   "Isabela City": "@BARMM",
   "Davao City": "@Davao Region",
   "Zamboanga City": "@Zamboanga Peninsula",
+  // PHIVOLCS tsunami bulletins list "CITY OF GENERAL SANTOS" (in South Cotabato's area).
+  "City of General Santos": "South Cotabato",
+  "General Santos City": "South Cotabato",
+  "General Santos": "South Cotabato",
 };
 
 export interface ProvinceMatch {

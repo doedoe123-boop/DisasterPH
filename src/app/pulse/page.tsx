@@ -28,6 +28,7 @@ import type {
   IncidentSeverity,
 } from "@/types/incident";
 import { useIncidents } from "@/hooks/use-incidents";
+import { TsunamiBanner } from "@/components/disasterph/tsunami-info";
 import { HazardEmptyState } from "@/components/disasterph/hazard-empty-state";
 import { useLocale } from "@/hooks/useLocale";
 import { AppHeader } from "@/components/disasterph/header";
@@ -209,6 +210,7 @@ export default function PulseFeedPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg-base)] text-[var(--text-primary)]">
       <AppHeader />
+      <TsunamiBanner incidents={incidents} locale={locale} />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 sm:py-8 lg:px-10 pb-20 md:pb-8">
         {/* ── Page heading ── */}

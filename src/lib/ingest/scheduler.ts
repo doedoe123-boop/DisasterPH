@@ -1,4 +1,6 @@
 import {
+  getTsunamiInfos,
+  setTsunamiInfos,
   upsertIncidents,
   replaceSourceIncidents,
   clearSource,
@@ -15,6 +17,7 @@ import { BULLETIN_STALE_MS, fetchPhivolcsVolcanoes } from "./phivolcs-volcano";
 import { enrichQuakesWithBulletins } from "./phivolcs-eq-bulletin";
 import { TC_BULLETIN_STALE_MS, fetchPagasaEvents, type SourceFetchResult } from "./pagasa";
 import { fetchPagasaRainFlood } from "./pagasa-rain";
+import { fetchPhivolcsTsunami, tsunamiIncidents } from "./phivolcs-tsunami";
 
 /** Cache TTL: 3 min in prod, 30 s in dev. */
 const CACHE_TTL_MS =
@@ -33,10 +36,16 @@ let inFlight: Promise<void> | null = null;
  */
 export async function ensureFreshData(): Promise<void> {
   const now = Date.now();
-  if (now - getLastRefresh() < CACHE_TTL_MS) return;
+  // Tsunami information is checked every minute, on its own schedule.
+  const tsunami = ensureFreshTsunami(now);
+  if (now - getLastRefresh() < CACHE_TTL_MS) {
+    await tsunami;
+    return;
+  }
 
   if (inFlight) {
     if (getLastRefresh() === 0) await inFlight;
+    await tsunami;
     return;
   }
 
@@ -54,7 +63,58 @@ export async function ensureFreshData(): Promise<void> {
       inFlight = null;
     }
   })();
-  await inFlight;
+  await Promise.all([inFlight, tsunami]);
+}
+
+/** PHIVOLCS tsunami page: every minute in production (a warning is time-critical). */
+const TSUNAMI_TTL_MS = process.env.NODE_ENV === "production" ? 60_000 : 30_000;
+let tsunamiLast = 0;
+let tsunamiInFlight: Promise<void> | null = null;
+
+function ensureFreshTsunami(now: number): Promise<void> {
+  if (tsunamiInFlight) return tsunamiInFlight;
+  if (now - tsunamiLast < TSUNAMI_TTL_MS) return Promise.resolve();
+  tsunamiInFlight = ingestTsunami().finally(() => {
+    tsunamiLast = Date.now();
+    tsunamiInFlight = null;
+  });
+  return tsunamiInFlight;
+}
+
+/** PHIVOLCS Tsunami Information; replaceable in tests. */
+export const tsunamiFetchers = { page: fetchPhivolcsTsunami };
+
+/**
+ * Tsunami warnings and advisories (event type "tsunami", published as
+ * "PHIVOLCS", status entry "PHIVOLCS_TSUNAMI"). If the page can't be read,
+ * the last known bulletins stay, and still drop off 24 hours after issue.
+ */
+async function ingestTsunami(): Promise<void> {
+  const start = Date.now();
+  try {
+    const result = await tsunamiFetchers.page();
+    setTsunamiInfos(result.infos);
+    replaceSourceIncidents("PHIVOLCS", result.events, { eventType: "tsunami" });
+    recordFetch({
+      source: "PHIVOLCS_TSUNAMI",
+      fetched_at: new Date().toISOString(),
+      success: true,
+      latency_ms: Date.now() - start,
+      event_count: result.events.length,
+      note: result.note,
+      ...(result.uncertain && { uncertain: true }),
+    });
+  } catch (error) {
+    replaceSourceIncidents("PHIVOLCS", tsunamiIncidents(getTsunamiInfos()), { eventType: "tsunami" });
+    recordFetch({
+      source: "PHIVOLCS_TSUNAMI",
+      fetched_at: new Date().toISOString(),
+      success: false,
+      latency_ms: Date.now() - start,
+      event_count: 0,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
 }
 
 const EQ_WINDOW_MS = EQ_WINDOW_DAYS * 86_400_000;

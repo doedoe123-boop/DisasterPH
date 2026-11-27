@@ -4,6 +4,7 @@ import type {
   SourceStatus,
 } from "@/types/incident";
 import type { FetchLog, SourceHealthRecord } from "./types";
+import type { TsunamiInfo } from "./phivolcs-tsunami";
 
 /* ── Module-level storage (persists across requests in same process) ── */
 
@@ -11,6 +12,17 @@ const incidents = new Map<string, Incident>();
 let fetchLogs: FetchLog[] = [];
 const sourceHealth = new Map<string, SourceHealthRecord>();
 let lastRefresh = 0;
+// PHIVOLCS tsunami information for recently evaluated earthquakes (including
+// "no tsunami threat"), shown on the earthquake cards.
+let tsunamiInfos: TsunamiInfo[] = [];
+
+export function setTsunamiInfos(infos: TsunamiInfo[]): void {
+  tsunamiInfos = infos;
+}
+
+export function getTsunamiInfos(): TsunamiInfo[] {
+  return tsunamiInfos;
+}
 
 const STALE_MS = 5 * 60_000;
 const DELAYED_MS = 15 * 60_000;
@@ -155,7 +167,7 @@ export function getSourceHealth(): SourceStatus[] {
   }
 
   // Guarantee every primary source appears (USGS only appears as a fallback)
-  for (const src of ["PAGASA", "PAGASA_RAIN", "PHIVOLCS", "PHIVOLCS_VOLCANO", "EONET"] as const) {
+  for (const src of ["PAGASA", "PAGASA_RAIN", "PHIVOLCS", "PHIVOLCS_VOLCANO", "PHIVOLCS_TSUNAMI", "EONET"] as const) {
     if (!out.find((s) => s.source === src)) {
       out.push({
         source: src,

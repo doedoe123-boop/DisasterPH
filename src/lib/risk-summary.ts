@@ -33,6 +33,8 @@ const hazardRadiusKm: Record<Incident["event_type"], number> = {
   volcano: 140,
   landslide: 85,
   wildfire: 90,
+  // Matched only by the provinces PHIVOLCS names (never by distance).
+  tsunami: 0,
 };
 
 function highestSeverity(incidents: Incident[]): IncidentSeverity | null {

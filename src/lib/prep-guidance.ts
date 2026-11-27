@@ -165,6 +165,8 @@ const tipsByType: Record<IncidentEventType, PrepTip[]> = {
   volcano: volcanoTips,
   landslide: landslideTips,
   wildfire: wildfireTips,
+  // None of our own: PHIVOLCS's recommended action is shown instead.
+  tsunami: [],
 };
 
 /**

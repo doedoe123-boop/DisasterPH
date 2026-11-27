@@ -3,7 +3,7 @@
 Everything a visitor sees is either **copied from an agency** (PHIVOLCS, PAGASA,
 NASA EONET, USGS) or **computed by DisasterPH**. This list covers the second
 kind: what we compute, from what, where in the code, and what it is based on.
-Review it whenever a rule changes. Last reviewed: 2026-11-26 (PAGASA rainfall and flood warnings).
+Review it whenever a rule changes. Last reviewed: 2026-11-27 (PHIVOLCS tsunami information).
 
 Legend for "Basis":
 - **Official**: follows a published agency rule or table (source linked).
@@ -22,6 +22,7 @@ uses these four words. They exist to sort and colour events consistently.
 | EONET earthquakes | Same bands | `src/lib/ingest/eonet.ts` `deriveSeverity` | Ours |
 | EONET storms | wind >= 100 kt Critical, >= 64 Warning, >= 34 Watch | `src/lib/ingest/eonet.ts` `deriveSeverity` | Ours (34/64 kt match common storm-strength cut-offs) |
 | EONET other | Watch | same | Ours |
+| PHIVOLCS tsunami bulletins | Heading with "WARNING" Critical, with "ADVISORY" Warning, any other heading besides "NO TSUNAMI THREAT" Watch; "NO TSUNAMI THREAT" makes no event (shown on the earthquake's card) | `src/lib/ingest/phivolcs-tsunami.ts` `kindOf`, `tsunamiIncidents` | Ours, mapped from PHIVOLCS's heading (shown verbatim) |
 | PHIVOLCS volcanoes | Alert Level >= 4 Critical, 3 Warning, 2 Watch, 1 Info | `src/lib/ingest/phivolcs-volcano.ts` `volcanoSeverity` | Ours, mapped from the official Alert Level (which is shown alongside) |
 | PAGASA tropical cyclones | Highest wind signal >= 3 Critical, 2 Warning, 1 Watch, none Info | `src/lib/ingest/pagasa.ts` `tcSeverity` | Ours, mapped from the official Wind Signal (shown alongside) |
 | PAGASA Heavy Rainfall Warnings | RED warning level Critical, ORANGE Warning, YELLOW Watch; Rainfall Advisory Info | `src/lib/ingest/pagasa-rain.ts` `LEVEL_SEVERITY` | Ours, mapped from the official warning level (shown alongside) |
@@ -96,6 +97,11 @@ uses these four words. They exist to sort and colour events consistently.
 | Chosen event | Counts only while the event is in the current view (area, tab, earthquake filters); otherwise no card and no `event` in the URL | `src/components/disasterph/disasterph-command.tsx` | Ours (display) |
 | Shareable view URL | Allowed parameters only (view, show, layers, range, mag, event), each checked against a fixed list; defaults left out; never saved places, coordinates or a location-derived region | `src/lib/view-url.ts` | Ours |
 | Link preview text (Messenger, Viber…) | Region links: the area summary counts above plus "Official data from PHIVOLCS and PAGASA, checked {time}", with the not-an-all-clear caveat when there are none; event links: the event title, its publisher and its time as on the card; otherwise the status strip | `src/lib/share-preview.ts` | Official values; counts and wording ours |
+| Tsunami bulletin on an earthquake | PHIVOLCS's latest readable Tsunami Information for a listed earthquake within 10 minutes and 150 km of it (PHIVOLCS revises times and locations) | `phivolcs-tsunami.ts` `tsunamiForQuake` | Ours (matching); the bulletin is official |
+| Tsunami warning shown for | 24 hours after the bulletin was issued; bulletins of earthquakes from the last 7 days are read (each once) | `phivolcs-tsunami.ts` `TSUNAMI_SHOW_MS`, `TSUNAMI_RECENT_MS` | Ours |
+| Newer tsunami bulletin as a PDF | When the latest bulletin is a PDF only, the earlier HTML bulletin is shown as earlier ("may be out of date") with the PDF linked; DisasterPH does not read PDFs | `phivolcs-tsunami.ts` `fetchPhivolcsTsunami`, `tsunami-info.tsx` | Official links; the note is ours |
+| Tsunami check frequency | Every minute (other sources every 3 minutes); pages poll every minute | `src/lib/ingest/scheduler.ts` `TSUNAMI_TTL_MS` | Ours |
+| Tsunami marker and "your area" | Marker at the middle of the coastal provinces PHIVOLCS names (card: not an exact location); "your area" and saved places by their regions; never hidden by area, tab or layer filters | `phivolcs-tsunami.ts`, `disasterph-command.tsx` | Ours (display); the provinces are PHIVOLCS's |
 | Rainfall warning marker | One per warning level, at the average position of the listed provinces (each province's centre = the average of its town positions); the card says it is not an exact location and has no "Open in Maps" | `pagasa-rain.ts` `placeOf`, `provinceCentroid` | Ours (display); the provinces are PAGASA's |
 | River basin provinces | Which provinces each of the 18 basins and 4 dam sub-basins covers, used for the marker and for "your area". **From general geography, not from PAGASA; verify** | `pagasa-rain.ts` `BASIN_PROVINCES` | Ours (unverified lookup); the card says so |
 | Rainfall/flood "your area" and saved places | The regions of the provinces PAGASA lists ("warning_regions"), like a typhoon's wind-signal regions | `src/lib/event-regions.ts` `namedRegions` | Ours (province to region), provinces official |
@@ -110,6 +116,7 @@ uses these four words. They exist to sort and colour events consistently.
 | Flood and Landslide tabs | Hidden unless a source reports one (these hazards aren't monitored; only NASA EONET reports them, rarely) | `disasterph-command.tsx`, `src/app/pulse/page.tsx` | Ours |
 | Typhoon tab "None active" | Shown when no tropical cyclone is listed anywhere (PAGASA is read every 3 min) | `disasterph-command.tsx` | Ours, from PAGASA data |
 | Rain & flood tab "None active" and empty text | No PAGASA rainfall warning, rainfall advisory or basin status other than "Non-Flood Watch"; the empty text says "not an official all-clear", and only claims "none" when PAGASA's pages were read | `disasterph-command.tsx`, `hazard-empty-state.tsx` | Ours, from PAGASA data |
+| Status line tsunami part | Each PHIVOLCS tsunami warning or advisory in effect, first: its heading and areas as published | `src/lib/status-strip.ts` | Official values; wording ours |
 | Status line rain parts | Highest Heavy Rainfall Warning level with PAGASA's areas ("and N more"), basins grouped by PAGASA's status, and "PAGASA Weather Advisory No. N"; nothing when none in effect | `src/lib/status-strip.ts` | Official values; wording ours |
 | Rainfall hazard, advice and basin forecasts | Copied from the warning or basin page ("ASSOCIATED HAZARD", the "advised to" sentence, water-level and rainfall statements) | `pagasa-rain.ts` | Official |
 | Base-map labels | English name, else Latin-script, else local name; place labels outside a box around the Philippines hidden | `src/lib/map-labels.ts` | Ours (display), names from OpenStreetMap via OpenFreeMap |

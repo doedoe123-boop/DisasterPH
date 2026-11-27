@@ -6,7 +6,7 @@ import { formatRelativeTime } from "@/lib/incidents";
 import { t, type Locale } from "@/lib/i18n";
 
 /** The sources DisasterPH always reads. USGS appears only as a backup. */
-const PRIMARY: SourceKey[] = ["PHIVOLCS", "PHIVOLCS_VOLCANO", "PAGASA", "PAGASA_RAIN", "EONET"];
+const PRIMARY: SourceKey[] = ["PHIVOLCS", "PHIVOLCS_VOLCANO", "PHIVOLCS_TSUNAMI", "PAGASA", "PAGASA_RAIN", "EONET"];
 
 /**
  * "Sources: 4 of 4 live · updated 3m ago", or, when something is wrong,

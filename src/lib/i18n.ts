@@ -149,6 +149,7 @@ export const copy = {
         publishers: {
           PHIVOLCS: "PHIVOLCS earthquake information",
           PHIVOLCS_VOLCANO: "PHIVOLCS volcano bulletin",
+          PHIVOLCS_TSUNAMI: "PHIVOLCS Tsunami Information",
           USGS: "USGS earthquake catalogue",
           PAGASA: "PAGASA",
           NASA_EONET: "NASA EONET",
@@ -215,6 +216,21 @@ export const copy = {
         issued: "Issued",
         basinStatus: "Status",
         firstSeen: "First seen by DisasterPH",
+        tsunamiInfo: "PHIVOLCS Tsunami Information No. {n}",
+        tsunamiIssued: "issued {time}",
+        tsunamiEvaluation: "Evaluation (PHIVOLCS)",
+        tsunamiAreas: "Coastal areas named (PHIVOLCS)",
+        tsunamiAction: "Recommended action (PHIVOLCS)",
+        tsunamiArrival: "First waves (PHIVOLCS)",
+        tsunamiArrivalValue: "{from} to {to}",
+        tsunamiNewerPdf: "PHIVOLCS has issued Tsunami Information No. {n}, which DisasterPH can't read (it is a PDF). Open it now: the text here is from No. {old} and may be out of date.",
+        tsunamiOpenNewer: "Open Tsunami Information No. {n} (PDF)",
+        tsunamiRead: "Read the PHIVOLCS bulletin",
+        tsunamiShowDetails: "Show areas and times",
+        tsunamiHideDetails: "Hide areas and times",
+        tsunamiNewerShort: "A newer bulletin (No. {n}) is a PDF: open it from the details.",
+        tsunamiApproxPlace: "The marker is placed in the middle of the coastal provinces PHIVOLCS names. It is not an exact location.",
+        placeTsunami: "{place} is in {region}, one of the regions with a coastal area named in this PHIVOLCS bulletin.",
         hazardPagasa: "Associated hazard (PAGASA)",
         alsoInWarning: "Also in this warning (PAGASA)",
         advisoryAreas: "Rainfall advisory (PAGASA)",
@@ -273,6 +289,7 @@ export const copy = {
         basinMany: "{status}: {n} river basins",
         weatherAdvisory: "PAGASA Weather Advisory No. {n}",
         rainUnknown: "PAGASA rainfall warnings unavailable",
+        tsunami: "{heading} (PHIVOLCS): {areas}",
       },
       list: {
         sortLabel: "Sort",
@@ -302,6 +319,7 @@ export const copy = {
           PHIVOLCS: "PHIVOLCS earthquakes",
           PHIVOLCS_VOLCANO: "PHIVOLCS volcanoes",
           PAGASA_RAIN: "PAGASA rainfall and flood",
+          PHIVOLCS_TSUNAMI: "PHIVOLCS tsunami information",
           PAGASA: "PAGASA",
           EONET: "NASA EONET",
           USGS: "USGS",
@@ -318,6 +336,7 @@ export const copy = {
         typhoon: "Tropical cyclone: highest wind signal",
         rain: "PAGASA Heavy Rainfall Warning: R = Red, O = Orange, Y = Yellow (A = Rainfall Advisory); placed in the middle of the listed provinces",
         basin: "River basin flood status (PAGASA), e.g. FW = Flood Watch",
+        tsunami: "PHIVOLCS tsunami bulletin: TW = Tsunami Warning, TA = Tsunami Advisory; placed in the middle of the coastal provinces named",
         ringTitle: "Earthquake ring colour = severity",
         age: "Fainter earthquake = older (solid = last hour)",
         levelsTitle: "Info, Watch, Warning, Critical are DisasterPH's own labels:",
@@ -333,7 +352,7 @@ export const copy = {
         note: "Tap a marker for details. Severity is also written in each popup and list item.",
       },
       tsunami: {
-        pointer: "DisasterPH doesn't show tsunami warnings. This earthquake's magnitude and depth are in the range where PHIVOLCS may issue a tsunami advisory or warning.",
+        pointer: "No PHIVOLCS Tsunami Information for this earthquake on the pages DisasterPH reads yet. Its magnitude and depth are in the range where PHIVOLCS may issue a tsunami advisory or warning.",
         link: "Check PHIVOLCS Tsunami Information",
       },
       quake: {
@@ -683,6 +702,7 @@ export const copy = {
       volcano: "Volcano",
       landslide: "Landslide",
       wildfire: "Wildfire",
+      tsunami: "Tsunami",
     },
     prepUrgency: {
       now: "Do Now",
@@ -787,6 +807,7 @@ export const copy = {
         publishers: {
           PHIVOLCS: "Impormasyon sa lindol ng PHIVOLCS",
           PHIVOLCS_VOLCANO: "Volcano bulletin ng PHIVOLCS",
+          PHIVOLCS_TSUNAMI: "Tsunami Information ng PHIVOLCS", // NEEDS NATIVE REVIEW
           USGS: "USGS earthquake catalogue",
           PAGASA: "PAGASA",
           NASA_EONET: "NASA EONET",
@@ -853,6 +874,21 @@ export const copy = {
         issued: "Inilabas", // NEEDS NATIVE REVIEW
         basinStatus: "Status",
         firstSeen: "Unang nakita ng DisasterPH", // NEEDS NATIVE REVIEW
+        tsunamiInfo: "Tsunami Information Blg. {n} ng PHIVOLCS", // NEEDS NATIVE REVIEW
+        tsunamiIssued: "inilabas {time}", // NEEDS NATIVE REVIEW
+        tsunamiEvaluation: "Pagsusuri (PHIVOLCS)", // NEEDS NATIVE REVIEW
+        tsunamiAreas: "Mga baybaying lugar na nakasaad (PHIVOLCS)", // NEEDS NATIVE REVIEW
+        tsunamiAction: "Inirerekomendang aksyon (PHIVOLCS)", // NEEDS NATIVE REVIEW
+        tsunamiArrival: "Unang alon (PHIVOLCS)", // NEEDS NATIVE REVIEW
+        tsunamiArrivalValue: "{from} hanggang {to}", // NEEDS NATIVE REVIEW
+        tsunamiNewerPdf: "Naglabas ang PHIVOLCS ng Tsunami Information Blg. {n}, na hindi mabasa ng DisasterPH (PDF ito). Buksan ito ngayon: mula sa Blg. {old} ang nakasulat dito at maaaring luma na.", // NEEDS NATIVE REVIEW
+        tsunamiOpenNewer: "Buksan ang Tsunami Information Blg. {n} (PDF)", // NEEDS NATIVE REVIEW
+        tsunamiRead: "Basahin ang bulletin ng PHIVOLCS", // NEEDS NATIVE REVIEW
+        tsunamiShowDetails: "Ipakita ang mga lugar at oras", // NEEDS NATIVE REVIEW
+        tsunamiHideDetails: "Itago ang mga lugar at oras", // NEEDS NATIVE REVIEW
+        tsunamiNewerShort: "PDF ang mas bagong bulletin (Blg. {n}): buksan ito sa detalye.", // NEEDS NATIVE REVIEW
+        tsunamiApproxPlace: "Nasa gitna ng mga baybaying probinsyang nakasaad ng PHIVOLCS ang marker. Hindi ito eksaktong lokasyon.", // NEEDS NATIVE REVIEW
+        placeTsunami: "Ang {place} ay nasa {region}, isa sa mga rehiyong may baybaying lugar na nakasaad sa bulletin na ito ng PHIVOLCS.", // NEEDS NATIVE REVIEW
         hazardPagasa: "Kaugnay na panganib (PAGASA)", // NEEDS NATIVE REVIEW
         alsoInWarning: "Kasama rin sa babalang ito (PAGASA)", // NEEDS NATIVE REVIEW
         advisoryAreas: "Rainfall advisory (PAGASA)",
@@ -911,6 +947,7 @@ export const copy = {
         basinMany: "{status}: {n} river basin", // NEEDS NATIVE REVIEW
         weatherAdvisory: "Weather Advisory ng PAGASA Blg. {n}", // NEEDS NATIVE REVIEW
         rainUnknown: "Hindi makuha ang rainfall warning ng PAGASA", // NEEDS NATIVE REVIEW
+        tsunami: "{heading} (PHIVOLCS): {areas}",
       },
       list: {
         sortLabel: "Ayos", // NEEDS NATIVE REVIEW
@@ -940,6 +977,7 @@ export const copy = {
           PHIVOLCS: "Lindol ng PHIVOLCS", // NEEDS NATIVE REVIEW
           PHIVOLCS_VOLCANO: "Bulkan ng PHIVOLCS", // NEEDS NATIVE REVIEW
           PAGASA_RAIN: "Ulan at baha ng PAGASA", // NEEDS NATIVE REVIEW
+          PHIVOLCS_TSUNAMI: "Tsunami information ng PHIVOLCS", // NEEDS NATIVE REVIEW
           PAGASA: "PAGASA",
           EONET: "NASA EONET",
           USGS: "USGS",
@@ -956,6 +994,7 @@ export const copy = {
         typhoon: "Bagyo: pinakamataas na wind signal", // NEEDS NATIVE REVIEW
         rain: "Heavy Rainfall Warning ng PAGASA: R = Red, O = Orange, Y = Yellow (A = Rainfall Advisory); nasa gitna ng mga nakalistang probinsya", // NEEDS NATIVE REVIEW
         basin: "Flood status ng river basin (PAGASA), hal. FW = Flood Watch", // NEEDS NATIVE REVIEW
+        tsunami: "Tsunami bulletin ng PHIVOLCS: TW = Tsunami Warning, TA = Tsunami Advisory; nasa gitna ng mga nakasaad na baybaying probinsya", // NEEDS NATIVE REVIEW
         ringTitle: "Kulay ng gilid ng lindol = antas", // NEEDS NATIVE REVIEW
         age: "Mas malabong lindol = mas luma (buo = nakaraang oras)", // NEEDS NATIVE REVIEW
         levelsTitle: "Sariling label ng DisasterPH ang Info, Bantayan, Babala, Kritikal:", // NEEDS NATIVE REVIEW
@@ -971,7 +1010,7 @@ export const copy = {
         note: "Pindutin ang marker para sa detalye. Nakasulat din ang antas sa bawat popup at listahan.", // NEEDS NATIVE REVIEW
       },
       tsunami: {
-        pointer: "Hindi nagpapakita ang DisasterPH ng tsunami warning. Pasok ang lakas at lalim ng lindol na ito sa saklaw kung saan maaaring maglabas ang PHIVOLCS ng tsunami advisory o warning.", // NEEDS NATIVE REVIEW
+        pointer: "Wala pang Tsunami Information ng PHIVOLCS para sa lindol na ito sa mga pahinang binabasa ng DisasterPH. Pasok ang lakas at lalim nito sa saklaw kung saan maaaring maglabas ang PHIVOLCS ng tsunami advisory o warning.", // NEEDS NATIVE REVIEW
         link: "Tingnan ang Tsunami Information ng PHIVOLCS", // NEEDS NATIVE REVIEW
       },
       quake: { // NEEDS NATIVE REVIEW (whole quake block, added in PR #38)
@@ -1322,6 +1361,7 @@ export const copy = {
       volcano: "Bulkan",
       landslide: "Pagguho",
       wildfire: "Sunog sa Gubat",
+      tsunami: "Tsunami",
     },
     prepUrgency: {
       now: "Gawin Ngayon",
