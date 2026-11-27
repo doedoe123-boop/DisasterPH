@@ -35,6 +35,8 @@ export interface StatusParts {
   weatherAdvisory: number | null;
   /** PAGASA's rainfall pages could not be read and nothing is known. */
   rainUnknown: boolean;
+  /** PHIVOLCS tsunami warnings and advisories in effect: heading and areas, as published. */
+  tsunamis: Array<{ heading: string; areas: string[] }>;
 }
 
 function volcanoName(incident: Incident): string {
@@ -78,7 +80,14 @@ export function statusParts(incidents: Incident[], sources: SourceStatus[], now:
   }
   const rainSource = sources.find((x) => x.source === "PAGASA_RAIN");
   const rainEvents = incidents.filter((i) => i.source === "PAGASA" && i.event_type === "flood");
+  const tsunamis = incidents
+    .filter((i) => i.event_type === "tsunami")
+    .map((i) => ({
+      heading: String(i.metadata.tsunami_heading ?? ""),
+      areas: typeof i.metadata.tsunami_areas === "string" ? i.metadata.tsunami_areas.split("\n").filter(Boolean) : [],
+    }));
   return {
+    tsunamis,
     rainTop: top
       ? { level: String(top.metadata.warning_level), areas: String(top.metadata.level_areas ?? ""), more: rain.length - 1 }
       : null,
@@ -100,6 +109,11 @@ export function statusText(incidents: Incident[], sources: SourceStatus[], local
   const copy = t(locale).common.statusStrip;
   const p = statusParts(incidents, sources, now);
   const parts: string[] = [];
+  // A tsunami warning or advisory comes first.
+  for (const ts of p.tsunamis) {
+    const areas = ts.areas.length > 3 ? `${ts.areas.slice(0, 3).join(", ")} +${ts.areas.length - 3}` : ts.areas.join(", ");
+    parts.push(copy.tsunami.replace("{heading}", ts.heading).replace("{areas}", areas));
+  }
 
   if (p.volcanoUnknown) parts.push(copy.volcanoUnknown);
   else {

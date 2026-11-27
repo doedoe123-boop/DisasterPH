@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ensureFreshData } from "@/lib/ingest/scheduler";
-import { getIncidentById } from "@/lib/ingest/store";
+import { getIncidentById, getTsunamiInfos } from "@/lib/ingest/store";
+import { tsunamiForQuake, tsunamiMetadata } from "@/lib/ingest/phivolcs-tsunami";
 import { withEqBulletin } from "@/lib/ingest/phivolcs-eq-bulletin";
 
 export const dynamic = "force-dynamic";
@@ -20,5 +21,10 @@ export async function GET(
 
   // PHIVOLCS earthquakes: add the bulletin's details (felt intensities,
   // expected damage and aftershocks, map). Unchanged if it can't be read.
-  return NextResponse.json({ data: await withEqBulletin(incident) });
+  const detailed = await withEqBulletin(incident);
+  // And PHIVOLCS's Tsunami Information for it, when PHIVOLCS evaluated it.
+  const tsunami = tsunamiForQuake(detailed, getTsunamiInfos());
+  return NextResponse.json({
+    data: tsunami ? { ...detailed, metadata: { ...detailed.metadata, ...tsunamiMetadata(tsunami) } } : detailed,
+  });
 }

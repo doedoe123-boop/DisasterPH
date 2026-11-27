@@ -106,6 +106,16 @@ export function MapLegend({ locale }: { locale: Locale }) {
             </span>
             <span>{copy.basin}</span>
           </li>
+          <li className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="inline-flex h-[20px] w-[22px] shrink-0 rotate-45 scale-[0.8] items-center justify-center rounded-[3px]"
+              style={{ background: RAIN_COLORS["ev-tsunami-warning"] }}
+            >
+              <span className="-rotate-45 text-[8px] font-bold text-white">TW</span>
+            </span>
+            <span>{copy.tsunami}</span>
+          </li>
         </ul>
         <p className="mt-2.5 flex items-center gap-2">
           <span aria-hidden className="flex w-[22px] shrink-0 items-center gap-0.5">

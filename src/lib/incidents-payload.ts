@@ -1,5 +1,6 @@
 import { ensureFreshData } from "@/lib/ingest/scheduler";
-import { getIncidents, getSourceHealth } from "@/lib/ingest/store";
+import { getIncidents, getSourceHealth, getTsunamiInfos } from "@/lib/ingest/store";
+import { tsunamiForQuake, tsunamiMetadata } from "@/lib/ingest/phivolcs-tsunami";
 import { buildDashboardStats, filterIncidentsByType } from "@/lib/incidents";
 import type { DashboardStats, Incident, SourceStatus } from "@/types/incident";
 
@@ -22,7 +23,14 @@ export async function buildIncidentsPayload(
 ): Promise<IncidentsPayload> {
   await ensureFreshData();
   const sourceHealth = getSourceHealth();
-  let incidents = filterIncidentsByType(getIncidents(), type);
+  // Earthquakes PHIVOLCS evaluated for a tsunami carry its latest Tsunami
+  // Information (including "no tsunami threat"), for their cards.
+  const tsunami = getTsunamiInfos();
+  const withTsunami = getIncidents().map((i) => {
+    const info = tsunami.length ? tsunamiForQuake(i, tsunami) : null;
+    return info ? { ...i, metadata: { ...i.metadata, ...tsunamiMetadata(info) } } : i;
+  });
+  let incidents = filterIncidentsByType(withTsunami, type);
   if (source) incidents = incidents.filter((i) => i.source === source);
   return {
     data: incidents,

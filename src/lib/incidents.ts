@@ -14,6 +14,7 @@ export const eventTypeLabel: Record<IncidentEventType, string> = {
   volcano: "Volcano",
   landslide: "Landslide",
   wildfire: "Wildfire",
+  tsunami: "Tsunami",
 };
 
 export function filterIncidentsByType(

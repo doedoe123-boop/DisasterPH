@@ -11,6 +11,7 @@ import { sourceInfo } from "@/lib/source-info";
 import { displayRegion } from "@/lib/geo/ph-regions";
 import { intensityGroups, ROMAN_NUMERALS } from "@/lib/quake-intensity";
 import { PHIVOLCS_TSUNAMI_URL, showTsunamiPointer } from "@/lib/tsunami-check";
+import { TsunamiInfoBox } from "@/components/disasterph/tsunami-info";
 import { pdzRadiusKm, placeChecks, type PlaceCheck } from "@/lib/danger-zone";
 import { useSavedPlaces } from "@/hooks/use-saved-places";
 
@@ -120,7 +121,9 @@ function EventCardBody({
       ? "PHIVOLCS_VOLCANO"
       : incident.source === "PAGASA" && incident.event_type === "flood"
         ? "PAGASA_RAIN"
-        : incident.source;
+        : incident.event_type === "tsunami"
+          ? "PHIVOLCS_TSUNAMI"
+          : incident.source;
   const pagasaFlood = incident.source === "PAGASA" && incident.event_type === "flood";
   // Notes under "What this means" (DisasterPH's own, kept apart from PAGASA's words).
   const notes: string[] = [];
@@ -185,6 +188,24 @@ function EventCardBody({
     const doNow = lines(m.what_to_do);
     if (doNow.length) todo = { title: copy.pagasaWhatToDo, items: doNow };
     else if (lines(m.precautions).length) todo = { title: copy.pagasaPrecautions, items: lines(m.precautions) };
+  } else if (incident.event_type === "tsunami") {
+    // PHIVOLCS's bulletin, as written.
+    badge = typeof m.tsunami_heading === "string" ? m.tsunami_heading : null;
+    heading = incident.title.split(" · ").slice(1).join(" · ") || incident.title;
+    subline = [
+      copy.tsunamiInfo.replace("{n}", String(m.tsunami_no ?? "?")),
+      [m.magnitude != null ? `M${Number(m.magnitude).toFixed(1)}` : null, typeof m.quake_place === "string" ? m.quake_place : null].filter(Boolean).join(" "),
+    ].filter(Boolean).join(" · ");
+    if (typeof m.arrival_from === "string" && typeof m.arrival_to === "string")
+      stats.push({ label: copy.tsunamiArrival, value: copy.tsunamiArrivalValue.replace("{from}", m.arrival_from).replace("{to}", m.arrival_to) });
+    stats.push({ label: copy.issued, value: eventTimeFull(incident, locale) });
+    const evaluation = lines(m.evaluation);
+    if (evaluation.length) meaning.push({ title: copy.tsunamiEvaluation, items: evaluation });
+    const areas = lines(m.tsunami_areas);
+    if (areas.length) meaning.push({ title: copy.tsunamiAreas, items: areas });
+    const action = lines(m.action);
+    if (action.length) todo = { title: copy.tsunamiAction, items: action };
+    if (m.newer_pdf_no != null) notes.unshift(copy.tsunamiNewerPdf.replace("{n}", String(m.newer_pdf_no)).replace("{old}", String(m.tsunami_no ?? "?")));
   } else if (pagasaFlood && m.product === "basin") {
     badge = typeof m.basin_status === "string" ? m.basin_status : null;
     heading = typeof m.basin_name === "string" ? m.basin_name : incident.title;
@@ -218,7 +239,7 @@ function EventCardBody({
     meaning = [{ items: [copy.referenceOnly] }];
   }
   // Basins have their own note (their provinces are our lookup, not PAGASA's list).
-  if (m.location_approx === true && m.product !== "basin") notes.push(copy.approxPlace);
+  if (m.location_approx === true && m.product !== "basin") notes.push(incident.event_type === "tsunami" ? copy.tsunamiApproxPlace : copy.approxPlace);
 
   const pad = variant === "popover" ? "p-3.5" : "px-4 pb-4 pt-1";
   return (
@@ -267,8 +288,11 @@ function EventCardBody({
         </dl>
       )}
 
-      {/* Tsunami pointer (only for strong, shallow quakes; never a status) */}
-      {showTsunamiPointer(incident) && (
+      {/* PHIVOLCS Tsunami Information for this earthquake (its words), when PHIVOLCS evaluated it */}
+      <TsunamiInfoBox incident={incident} locale={locale} />
+
+      {/* Tsunami pointer (only for strong, shallow quakes without a PHIVOLCS bulletin; never a status) */}
+      {showTsunamiPointer(incident) && typeof m.tsunami_heading !== "string" && m.tsunami_newer_pdf_no == null && (
         <p className="mt-3 rounded-lg border border-cyan-400/30 bg-cyan-400/[0.07] p-2.5 text-[12px]">
           {t(locale).common.tsunami.pointer}{" "}
           <a className="font-semibold text-cyan-400 underline" href={PHIVOLCS_TSUNAMI_URL} target="_blank" rel="noopener noreferrer">
@@ -358,7 +382,8 @@ function placeSentence(check: PlaceCheck, incident: Incident, locale: Locale): s
     case "inside": return fill(copy.placeInside);
     case "edge": return fill(copy.placeEdge);
     case "outside": return fill(copy.placeOutside);
-    case "signal": return fill(incident.event_type === "typhoon" ? copy.placeSignal : copy.placeWarning);
+    case "signal":
+      return fill(incident.event_type === "typhoon" ? copy.placeSignal : incident.event_type === "tsunami" ? copy.placeTsunami : copy.placeWarning);
     default: return fill(incident.event_type === "volcano" ? copy.placeNearVolcano : copy.placeNearQuake);
   }
 }

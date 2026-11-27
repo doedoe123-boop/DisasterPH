@@ -17,6 +17,11 @@ export function plainAlertInterpretation(
   // PAGASA rainfall warnings, advisories and river basins: PAGASA's own words
   // (the warning's associated hazard, the advisory text, the basin forecast),
   // never a sentence of ours.
+  if (incident.event_type === "tsunami") {
+    const m = incident.metadata;
+    const first = typeof m.action === "string" ? m.action.split("\n")[0] : null;
+    return `PHIVOLCS: ${String(m.tsunami_heading ?? "")}.${first ? ` ${first}` : ""}`;
+  }
   if (incident.source === "PAGASA" && incident.event_type === "flood") {
     const m = incident.metadata;
     const firstLine = typeof m.body === "string" ? m.body.split("\n")[0] : null;

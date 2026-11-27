@@ -29,6 +29,7 @@ import { PrepGuidance } from "@/components/disasterph/prep-guidance";
 import { VolcanoBulletin } from "@/components/disasterph/volcano-bulletin";
 import { TyphoonBulletin } from "@/components/disasterph/typhoon-bulletin";
 import { RainBulletin } from "@/components/disasterph/rain-bulletin";
+import { TsunamiBulletin, TsunamiInfoBox } from "@/components/disasterph/tsunami-info";
 import { QuakeBulletin } from "@/components/disasterph/quake-bulletin";
 import { PHIVOLCS_TSUNAMI_URL, showTsunamiPointer } from "@/lib/tsunami-check";
 import { PulseDetailSkeleton } from "@/components/disasterph/page-skeletons";
@@ -341,8 +342,14 @@ export default function PulseDetailPage() {
                   </p>
                 </div>
 
-                {/* Strong, shallow quakes: point to PHIVOLCS Tsunami Information (no status of our own) */}
-                {showTsunamiPointer(incident) && (
+                {/* PHIVOLCS Tsunami Information for this earthquake, when PHIVOLCS evaluated it */}
+                {incident.event_type === "earthquake" && <TsunamiInfoBox incident={incident} locale={locale} />}
+
+                {/* PHIVOLCS tsunami warning or advisory */}
+                {incident.event_type === "tsunami" && <TsunamiBulletin incident={incident} locale={locale} />}
+
+                {/* Strong, shallow quakes without a PHIVOLCS bulletin: point to PHIVOLCS (no status of our own) */}
+                {showTsunamiPointer(incident) && typeof incident.metadata.tsunami_heading !== "string" && incident.metadata.tsunami_newer_pdf_no == null && (
                   <div className="rounded-xl border border-cyan-400/25 bg-cyan-400/[0.06] p-4 text-sm leading-6 text-[var(--text-primary)]">
                     <p>{i18n.common.tsunami.pointer}</p>
                     <a

@@ -38,6 +38,7 @@ export const HAZARD_COLORS: Record<IncidentEventType, string> = {
   flood: "#39d0ff",
   landslide: "#ffa726",
   wildfire: "#ff5d5d",
+  tsunami: "#ef4444",
 };
 
 /** Severity to ring color */

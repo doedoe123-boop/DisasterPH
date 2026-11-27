@@ -7,7 +7,7 @@ import { formatDateTime } from "@/lib/incidents";
  */
 export interface SourceInfo {
   /** Who published the data this record was built from. */
-  publisher: "PHIVOLCS" | "PHIVOLCS_VOLCANO" | "USGS" | "PAGASA" | "NASA_EONET" | "OTHER";
+  publisher: "PHIVOLCS" | "PHIVOLCS_VOLCANO" | "PHIVOLCS_TSUNAMI" | "USGS" | "PAGASA" | "NASA_EONET" | "OTHER";
   /** Link to this event's own record at the publisher, when known and safe. */
   recordUrl: string | null;
   /** Responsible Philippine agency for official information, if any. */
@@ -37,6 +37,15 @@ export function sourceInfo(incident: Incident): SourceInfo {
     // the record link is the event's official bulletin. Volcano alert levels
     // link the volcano's latest daily bulletin (ingest/phivolcs-volcano.ts).
     case "PHIVOLCS":
+      // Tsunami warnings and advisories: the bulletin on PHIVOLCS's tsunami page.
+      if (incident.event_type === "tsunami") {
+        return {
+          publisher: "PHIVOLCS_TSUNAMI",
+          recordUrl: safeRecordUrl(m.bulletin_url, "phivolcs.dost.gov.ph"),
+          agency: { name: "PHIVOLCS", url: "https://tsunami.phivolcs.dost.gov.ph/" },
+          referenceOnly: false,
+        };
+      }
       if (incident.event_type === "volcano") {
         return {
           publisher: "PHIVOLCS_VOLCANO",

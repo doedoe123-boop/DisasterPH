@@ -9,6 +9,7 @@ import {
   ChevronUp,
   Droplets,
   Mountain,
+  Siren,
   TriangleAlert,
   Waves,
   Wind,
@@ -27,6 +28,7 @@ const HAZARD_ICON: Record<string, typeof Waves> = {
   volcano: Mountain,
   landslide: TriangleAlert,
   wildfire: AlertTriangle,
+  tsunami: Siren,
 };
 
 /** Rows rendered at first; "Show more" adds this many (the alert list page has everything). */

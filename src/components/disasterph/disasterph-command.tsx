@@ -32,6 +32,7 @@ import {
 } from "@/lib/quake-filters";
 import { viewQuery, type ViewState } from "@/lib/view-url";
 import type { BaseMapState } from "@/lib/map-fallback";
+import { TsunamiBanner } from "@/components/disasterph/tsunami-info";
 import { eventLabel, t } from "@/lib/i18n";
 import { computeAllPlaceRisks } from "@/lib/risk-summary";
 import type { Incident, IncidentEventType } from "@/types/incident";
@@ -199,8 +200,13 @@ export function DisasterPHCommand({ initial, initialView = {} }: { initial?: Inc
   // as a bottom sheet on phones and a popover on wide screens. It counts only
   // while the event is in the current view (area, tab, time and magnitude
   // filters); otherwise nothing is chosen, in the page and in the URL.
+  // Tsunami warnings and advisories are never hidden by the area, tab or
+  // layer filters: they are always on the map and can always be opened.
+  const tsunamiEvents = useMemo(() => incidents.filter((i) => i.event_type === "tsunami"), [incidents]);
   const chosen: Incident | null = selectedIncidentId
-    ? filteredIncidents.find((i) => i.id === selectedIncidentId) ?? null
+    ? filteredIncidents.find((i) => i.id === selectedIncidentId) ??
+      tsunamiEvents.find((i) => i.id === selectedIncidentId) ??
+      null
     : null;
   const chosenId = chosen?.id ?? "";
   // Escape closes the card.
@@ -232,8 +238,11 @@ export function DisasterPHCommand({ initial, initialView = {} }: { initial?: Inc
 
   // Map: the same events, minus layers switched off in the Layers panel.
   const mapIncidents = useMemo(
-    () => filteredIncidents.filter((i) => layers[layerOf(i)]),
-    [filteredIncidents, layers],
+    () => [
+      ...filteredIncidents.filter((i) => i.event_type !== "tsunami" && layers[layerOf(i)]),
+      ...tsunamiEvents,
+    ],
+    [filteredIncidents, layers, tsunamiEvents],
   );
   const layerCounts = useMemo(() => {
     const counts = Object.fromEntries(LAYER_KEYS.map((k) => [k, 0])) as Record<LayerKey, number>;
@@ -318,6 +327,18 @@ export function DisasterPHCommand({ initial, initialView = {} }: { initial?: Inc
     <main className="flex h-screen flex-col overflow-hidden bg-background text-foreground pb-[calc(var(--hotline-bar-h,3rem)+3.5rem+env(safe-area-inset-bottom))] md:pb-[var(--hotline-bar-h,3rem)]">
       {/* ── Global Header ── */}
       <AppHeader />
+
+      {/* ── PHIVOLCS tsunami warning or advisory: first, on every view ── */}
+      <TsunamiBanner
+        incidents={incidents}
+        locale={locale}
+        onShow={(incident) => {
+          setFocusMode(false);
+          setActiveFilter("all");
+          setSelectedIncidentId(incident.id);
+          setFocusRequest((n) => n + 1);
+        }}
+      />
 
       {/* ── Offline, or the base map unavailable (outline map) ── */}
       <AnimatePresence initial={false}>

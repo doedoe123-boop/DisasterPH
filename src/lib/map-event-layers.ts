@@ -93,6 +93,13 @@ function statusKind(incident: Incident): { icon: string; label: string } {
     const signal = Number(m.signal_number);
     return { icon: "ev-typhoon", label: Number.isFinite(signal) && signal > 0 ? String(signal) : "TC" };
   }
+  if (incident.event_type === "tsunami") {
+    // PHIVOLCS tsunami bulletin: TW (warning) or TA (advisory), else T.
+    const kind = String(m.tsunami_kind ?? "");
+    return kind === "warning"
+      ? { icon: "ev-tsunami-warning", label: "TW" }
+      : { icon: "ev-tsunami-advisory", label: kind === "advisory" ? "TA" : "T" };
+  }
   if (incident.event_type === "flood" && incident.source === "PAGASA") {
     // PAGASA rainfall warning: the level's initial on a drop in its colour
     // (R / O / Y; A for a rainfall advisory). River basin: the status's
@@ -167,6 +174,8 @@ export const RAIN_COLORS: Record<string, string> = {
   "ev-rain-yellow": "#facc15",
   "ev-rain-advisory": "#64748b",
   "ev-basin": "#2563eb",
+  "ev-tsunami-warning": "#b91c1c",
+  "ev-tsunami-advisory": "#f59e0b",
 };
 const RAIN_TEXT: Record<string, string> = {
   "ev-rain-red": "#ffffff",
@@ -174,6 +183,8 @@ const RAIN_TEXT: Record<string, string> = {
   "ev-rain-yellow": "#111827",
   "ev-rain-advisory": "#ffffff",
   "ev-basin": "#ffffff",
+  "ev-tsunami-warning": "#ffffff",
+  "ev-tsunami-advisory": "#111827",
 };
 
 /* ── Icons (drawn once per style on a canvas; no image files to fetch) ── */
@@ -242,6 +253,26 @@ function addIcons(map: MlMap) {
         ctx.bezierCurveTo(cx + r * 0.35, s * 0.25, cx + r, cy - r * 0.6, cx + r, cy);
         ctx.arc(cx, cy, r, 0, Math.PI);
         ctx.bezierCurveTo(cx - r, cy - r * 0.6, cx - r * 0.35, s * 0.25, cx, s * 0.06);
+        ctx.closePath();
+        ctx.fillStyle = RAIN_COLORS[name];
+        ctx.fill();
+        ctx.lineWidth = s * 0.07;
+        ctx.strokeStyle = "#ffffff";
+        ctx.stroke();
+      }),
+    );
+  }
+  // Tsunami bulletin: a diamond (its own shape, so it reads without colour).
+  for (const name of ["ev-tsunami-warning", "ev-tsunami-advisory"]) {
+    add(
+      name,
+      drawIcon((ctx, s) => {
+        const pad = s * 0.04;
+        ctx.beginPath();
+        ctx.moveTo(s / 2, pad);
+        ctx.lineTo(s - pad, s / 2);
+        ctx.lineTo(s / 2, s - pad);
+        ctx.lineTo(pad, s / 2);
         ctx.closePath();
         ctx.fillStyle = RAIN_COLORS[name];
         ctx.fill();
